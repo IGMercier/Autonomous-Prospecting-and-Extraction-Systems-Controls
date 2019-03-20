@@ -6622,52 +6622,6 @@ Details see: &lt;a href="http://katalog.we-online.de/en/led/WL-SMRW?m"&gt;http:/
 <wire x1="96.52" y1="22.86" x2="104.14" y2="22.86" width="0.1524" layer="91"/>
 <junction x="104.14" y="22.86"/>
 </segment>
-</net>
-<net name="5V" class="0">
-<segment>
-<pinref part="RASPBERRRY_PI_3_B+" gate="G$1" pin="5V@2"/>
-<pinref part="RASPBERRRY_PI_3_B+" gate="G$1" pin="5V@4"/>
-<wire x1="111.76" y1="86.36" x2="111.76" y2="83.82" width="0.1524" layer="91"/>
-<pinref part="SUPPLY4" gate="G$1" pin="5V"/>
-<junction x="111.76" y="86.36"/>
-</segment>
-<segment>
-<pinref part="WOB" gate="G$1" pin="1"/>
-<wire x1="165.1" y1="35.56" x2="157.48" y2="35.56" width="0.1524" layer="91"/>
-<label x="160.02" y="35.56" size="1.778" layer="95"/>
-<pinref part="SUPPLY11" gate="G$1" pin="5V"/>
-</segment>
-<segment>
-<wire x1="93.98" y1="99.06" x2="93.98" y2="96.52" width="0.1524" layer="91"/>
-<pinref part="SUPPLY19" gate="G$1" pin="5V"/>
-<junction x="93.98" y="99.06"/>
-<pinref part="5V_SUPPLY" gate="G$1" pin="2"/>
-</segment>
-</net>
-<net name="CUR1" class="0">
-<segment>
-<pinref part="IC1" gate="G$1" pin="CH5"/>
-<wire x1="236.22" y1="66.04" x2="256.54" y2="66.04" width="0.1524" layer="91"/>
-<label x="246.38" y="66.04" size="1.778" layer="95" rot="MR0"/>
-<pinref part="AMMETER1" gate="J$1" pin="3"/>
-<wire x1="256.54" y1="66.04" x2="256.54" y2="45.72" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$1" class="0">
-<segment>
-<wire x1="73.66" y1="73.66" x2="68.58" y2="73.66" width="0.1524" layer="91"/>
-<pinref part="U1" gate="G$1" pin="A1"/>
-<pinref part="R1" gate="G$1" pin="2"/>
-</segment>
-</net>
-<net name="N$2" class="0">
-<segment>
-<wire x1="73.66" y1="68.58" x2="68.58" y2="68.58" width="0.1524" layer="91"/>
-<pinref part="U1" gate="G$1" pin="A2"/>
-<pinref part="R2" gate="G$1" pin="2"/>
-</segment>
-</net>
-<net name="HV-GND" class="0">
 <segment>
 <wire x1="55.88" y1="71.12" x2="53.34" y2="71.12" width="0.1524" layer="91"/>
 <wire x1="53.34" y1="71.12" x2="53.34" y2="66.04" width="0.1524" layer="91"/>
@@ -6721,6 +6675,50 @@ Details see: &lt;a href="http://katalog.we-online.de/en/led/WL-SMRW?m"&gt;http:/
 <pinref part="HL2" gate="G$1" pin="1"/>
 <wire x1="-40.64" y1="43.18" x2="-40.64" y2="58.42" width="0.1524" layer="91"/>
 <junction x="-40.64" y="43.18"/>
+</segment>
+</net>
+<net name="5V" class="0">
+<segment>
+<pinref part="RASPBERRRY_PI_3_B+" gate="G$1" pin="5V@2"/>
+<pinref part="RASPBERRRY_PI_3_B+" gate="G$1" pin="5V@4"/>
+<wire x1="111.76" y1="86.36" x2="111.76" y2="83.82" width="0.1524" layer="91"/>
+<pinref part="SUPPLY4" gate="G$1" pin="5V"/>
+<junction x="111.76" y="86.36"/>
+</segment>
+<segment>
+<pinref part="WOB" gate="G$1" pin="1"/>
+<wire x1="165.1" y1="35.56" x2="157.48" y2="35.56" width="0.1524" layer="91"/>
+<label x="160.02" y="35.56" size="1.778" layer="95"/>
+<pinref part="SUPPLY11" gate="G$1" pin="5V"/>
+</segment>
+<segment>
+<wire x1="93.98" y1="99.06" x2="93.98" y2="96.52" width="0.1524" layer="91"/>
+<pinref part="SUPPLY19" gate="G$1" pin="5V"/>
+<junction x="93.98" y="99.06"/>
+<pinref part="5V_SUPPLY" gate="G$1" pin="2"/>
+</segment>
+</net>
+<net name="CUR1" class="0">
+<segment>
+<pinref part="IC1" gate="G$1" pin="CH5"/>
+<wire x1="236.22" y1="66.04" x2="256.54" y2="66.04" width="0.1524" layer="91"/>
+<label x="246.38" y="66.04" size="1.778" layer="95" rot="MR0"/>
+<pinref part="AMMETER1" gate="J$1" pin="3"/>
+<wire x1="256.54" y1="66.04" x2="256.54" y2="45.72" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$1" class="0">
+<segment>
+<wire x1="73.66" y1="73.66" x2="68.58" y2="73.66" width="0.1524" layer="91"/>
+<pinref part="U1" gate="G$1" pin="A1"/>
+<pinref part="R1" gate="G$1" pin="2"/>
+</segment>
+</net>
+<net name="N$2" class="0">
+<segment>
+<wire x1="73.66" y1="68.58" x2="68.58" y2="68.58" width="0.1524" layer="91"/>
+<pinref part="U1" gate="G$1" pin="A2"/>
+<pinref part="R2" gate="G$1" pin="2"/>
 </segment>
 </net>
 <net name="IN1" class="0">
