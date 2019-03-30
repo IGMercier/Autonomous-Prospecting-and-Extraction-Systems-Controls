@@ -1,0 +1,3 @@
+src/*.o
+src/test
+src/*pyc
