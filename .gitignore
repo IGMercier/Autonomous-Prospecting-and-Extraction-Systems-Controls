@@ -1,5 +1,5 @@
 src/libraries/*.o
 src/libraries/test
 src/libraries/*pyc
-src/libraries/include
+src/include
 src/libraries/hx711.py
