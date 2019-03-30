@@ -1,3 +1,5 @@
 src/*.o
 src/test
 src/*pyc
+src/include
+src/hx711.py
