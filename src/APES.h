@@ -5,15 +5,17 @@
 
 class APES {
     private:
+        pybind11::object spi;
         pybind11::object time;
         pybind11::object GPIO;
-    public:
         pybind11::object HX711;
+    public:
         APES();
         ~APES();
         void setup();
         void finish();
         void measWOB();
+        int measMCP3008(int channel);
 };
 
 #endif
