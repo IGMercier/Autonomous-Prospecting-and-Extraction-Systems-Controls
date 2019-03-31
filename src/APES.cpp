@@ -19,19 +19,19 @@ void APES::setup() {
     py::scoped_interpreter guard{};
 
     // imports python modules
-    //py::object hx711 = py::module::import("hx711").attr("HX711");
+    py::object hx711 = py::module::import("hx711").attr("HX711");
 
     this->GPIO = py::module::import("RPi.GPIO");
 
     // instantiates HX711 object
-    //this->HX711 = hx711(5, 6);
+    this->HX711 = hx711(5, 6);
 
     // setup of HX711 module
-    //this->HX711.attr("set_reading_format")("MSB, MSB");
-    //this->HX711.attr("set_reference_unit")(1);
-    //this->HX711.attr("reset")();
-    //this->HX711.attr("tare")();
-    //py::print("Tare done! Add weight now!");
+    this->HX711.attr("set_reading_format")("MSB, MSB");
+    this->HX711.attr("set_reference_unit")(1);
+    this->HX711.attr("reset")();
+    this->HX711.attr("tare")();
+    py::print("Tare done! Add weight now!");
     
     wiringPiSPISetup(0, 500000);
 
