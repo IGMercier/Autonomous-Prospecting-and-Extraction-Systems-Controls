@@ -5,7 +5,6 @@
 
 class APES {
     private:
-        pybind11::object GPIO;
         pybind11::object HX711;
     public:
         APES();
