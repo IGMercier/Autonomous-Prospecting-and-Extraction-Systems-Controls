@@ -40,7 +40,12 @@ void APES::setup() {
 
 void APES::finish() {
     this->HX711.attr("finish")();
+    
+    // python objects cannot outlive
+    // the interpreter!!! <- super important
     this->HX711.release();
+
+    // kills the python interpreter
     py::finalize_interpreter();
     return;
 }
