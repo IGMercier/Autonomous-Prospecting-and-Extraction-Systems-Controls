@@ -15,16 +15,24 @@ APES::~APES() {
 }
 
 /* object methods */
-void APES::setup() {
+int APES::setup() {
     
     // starts python interpreter
     py::initialize_interpreter();
 
     // imports python modules
     py::object hx711 = py::module::import("hx711").attr("HX711");
+    if (hx711 == NULL) {
+        fprintf(stderr, "Cannot import module hx711.py!\n");
+	return -1;
+    }
 
     // instantiates HX711 object
     this->HX711 = hx711(5, 6);
+    if (this->HX711 == NULL) {
+        fprintf(stderr, "Cannot instantiate object HX711!\n");
+	return -1;
+    }
 
     // setup of HX711 module
     this->HX711.attr("set_reading_format")("byte_format"_a="MSB", "bit_format"_a="MSB");
@@ -35,19 +43,22 @@ void APES::setup() {
     
     wiringPiSPISetup(0, 500000);
 
-    return;
+    return 0;
 }
 
-void APES::finish() {
-    this->HX711.attr("finish")();
+int APES::finish() {
+
+    if (this->HX711 != NULL) {
+        this->HX711.attr("finish")();
     
-    // python objects cannot outlive
-    // the interpreter!!! <- super important
-    this->HX711.release();
+        // python objects cannot outlive
+        // the interpreter!!! <- super important
+        this->HX711.release();
+    }
 
     // kills the python interpreter
     py::finalize_interpreter();
-    return;
+    return 0;
 }
 
 void APES::measWOB() {

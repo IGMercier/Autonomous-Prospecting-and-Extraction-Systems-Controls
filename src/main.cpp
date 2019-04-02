@@ -10,13 +10,14 @@ int main() {
     signal(SIGINT, sigint_handler);
 
 
-    robot.setup();
+    if (robot.setup() == -1) {
+        robot.finish();
+    }
+
     int data = robot.measMCP3008(0);
     printf("adc val = %d\n", data);
     robot.measWOB();
     
-    //robot.finish();
-   	
     return 0;
 }
 

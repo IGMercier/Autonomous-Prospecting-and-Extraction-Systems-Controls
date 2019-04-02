@@ -9,8 +9,8 @@ class APES {
     public:
         APES();
         ~APES();
-        void setup();
-        void finish();
+        int setup();
+        int finish();
         void measWOB();
         int measMCP3008(int channel);
 };
