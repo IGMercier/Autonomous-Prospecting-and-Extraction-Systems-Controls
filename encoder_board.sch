@@ -2160,16 +2160,16 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <part name="R6" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="10KOHM" device="-HORIZ-1/4W-1%" package3d_urn="urn:adsk.eagle:package:39658/1" value="10k"/>
 <part name="Q2" library="SparkFun" deviceset="MOSFET-NCHANNEL" device="SMD" value="BSS138"/>
 <part name="U1" library="_hhn_attiny25_45_85" deviceset="ATTINY85*" device="P" technology="-20"/>
-<part name="ENCDR_OUT" library="SparkFun-Connectors" library_urn="urn:adsk.eagle:library:513" deviceset="CONN_03" device="" package3d_urn="urn:adsk.eagle:package:38063/1"/>
-<part name="ENCDR_PWR" library="SparkFun-Connectors" library_urn="urn:adsk.eagle:library:513" deviceset="CONN_03" device="" package3d_urn="urn:adsk.eagle:package:38063/1"/>
-<part name="PWR" library="SparkFun-Connectors" library_urn="urn:adsk.eagle:library:513" deviceset="CONN_03" device="" package3d_urn="urn:adsk.eagle:package:38063/1"/>
-<part name="I2C" library="SparkFun-Connectors" library_urn="urn:adsk.eagle:library:513" deviceset="CONN_03" device="" package3d_urn="urn:adsk.eagle:package:38063/1"/>
 <part name="R1" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="10KOHM" device="-HORIZ-1/4W-1%" package3d_urn="urn:adsk.eagle:package:39658/1" value="10k"/>
 <part name="R2" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="10KOHM" device="-HORIZ-1/4W-1%" package3d_urn="urn:adsk.eagle:package:39658/1" value="10k"/>
 <part name="SUPPLY1" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="VCC" device="" value="3.3V"/>
 <part name="SUPPLY2" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="VCC" device="" value="3.3V"/>
 <part name="SUPPLY3" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="VCC" device="" value="3.3V"/>
 <part name="GND1" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="GND" device=""/>
+<part name="I2C" library="SparkFun-Connectors" library_urn="urn:adsk.eagle:library:513" deviceset="CONN_03" device="JST-PTH-VERT" package3d_urn="urn:adsk.eagle:package:38080/1"/>
+<part name="ENCDR_OUT" library="SparkFun-Connectors" library_urn="urn:adsk.eagle:library:513" deviceset="CONN_03" device="JST-PTH-VERT" package3d_urn="urn:adsk.eagle:package:38080/1"/>
+<part name="ENCDR_PWR" library="SparkFun-Connectors" library_urn="urn:adsk.eagle:library:513" deviceset="CONN_03" device="JST-PTH-VERT" package3d_urn="urn:adsk.eagle:package:38080/1"/>
+<part name="PWR" library="SparkFun-Connectors" library_urn="urn:adsk.eagle:library:513" deviceset="CONN_03" device="JST-PTH-VERT" package3d_urn="urn:adsk.eagle:package:38080/1"/>
 </parts>
 <sheets>
 <sheet>
@@ -2189,16 +2189,28 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <attribute name="VALUE" x="89.154" y="52.832" size="1.778" layer="96" rot="MR0"/>
 </instance>
 <instance part="U1" gate="G$1" x="119.38" y="86.36"/>
-<instance part="ENCDR_OUT" gate="J$1" x="67.056" y="42.672" rot="R90"/>
-<instance part="ENCDR_PWR" gate="J$1" x="48.26" y="104.14" rot="R270"/>
-<instance part="PWR" gate="J$1" x="27.94" y="86.36"/>
-<instance part="I2C" gate="J$1" x="177.8" y="81.28" rot="R180"/>
 <instance part="R1" gate="G$1" x="154.94" y="91.44" rot="R90"/>
 <instance part="R2" gate="G$1" x="162.56" y="96.52" rot="R90"/>
 <instance part="SUPPLY1" gate="G$1" x="154.94" y="104.14"/>
 <instance part="SUPPLY2" gate="G$1" x="162.56" y="104.14"/>
 <instance part="SUPPLY3" gate="G$1" x="139.7" y="93.98"/>
 <instance part="GND1" gate="1" x="149.86" y="68.58"/>
+<instance part="I2C" gate="J$1" x="180.34" y="81.28" smashed="yes" rot="MR0">
+<attribute name="VALUE" x="182.88" y="73.914" size="1.778" layer="96" font="vector" rot="MR0"/>
+<attribute name="NAME" x="185.42" y="86.868" size="1.778" layer="95" font="vector" rot="MR270"/>
+</instance>
+<instance part="ENCDR_OUT" gate="J$1" x="67.056" y="42.672" smashed="yes" rot="MR90">
+<attribute name="VALUE" x="59.69" y="40.132" size="1.778" layer="96" font="vector" rot="MR90"/>
+<attribute name="NAME" x="72.644" y="37.592" size="1.778" layer="95" font="vector" rot="MR0"/>
+</instance>
+<instance part="ENCDR_PWR" gate="J$1" x="48.26" y="104.14" smashed="yes" rot="MR270">
+<attribute name="VALUE" x="55.626" y="106.68" size="1.778" layer="96" font="vector" rot="MR270"/>
+<attribute name="NAME" x="42.672" y="109.22" size="1.778" layer="95" font="vector" rot="MR180"/>
+</instance>
+<instance part="PWR" gate="J$1" x="27.94" y="86.36" smashed="yes" rot="MR180">
+<attribute name="VALUE" x="25.4" y="93.726" size="1.778" layer="96" font="vector" rot="MR180"/>
+<attribute name="NAME" x="22.86" y="80.772" size="1.778" layer="95" font="vector" rot="MR90"/>
+</instance>
 </instances>
 <busses>
 </busses>
@@ -2223,11 +2235,11 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <pinref part="R4" gate="G$1" pin="2"/>
 <wire x1="55.88" y1="58.42" x2="58.42" y2="58.42" width="0.1524" layer="91"/>
 <wire x1="58.42" y1="58.42" x2="58.42" y2="60.96" width="0.1524" layer="91"/>
-<pinref part="ENCDR_OUT" gate="J$1" pin="3"/>
 <wire x1="58.42" y1="58.42" x2="64.516" y2="58.42" width="0.1524" layer="91"/>
 <wire x1="64.516" y1="58.42" x2="64.516" y2="50.292" width="0.1524" layer="91"/>
 <junction x="58.42" y="58.42"/>
 <label x="63.5" y="58.42" size="1.27" layer="95" rot="R270"/>
+<pinref part="ENCDR_OUT" gate="J$1" pin="1"/>
 </segment>
 </net>
 <net name="CHAN_B3.3V" class="0">
@@ -2252,14 +2264,13 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <wire x1="76.2" y1="58.42" x2="78.74" y2="58.42" width="0.1524" layer="91"/>
 <wire x1="76.2" y1="58.42" x2="69.596" y2="58.42" width="0.1524" layer="91"/>
 <junction x="76.2" y="58.42"/>
-<pinref part="ENCDR_OUT" gate="J$1" pin="1"/>
 <wire x1="69.596" y1="58.42" x2="69.596" y2="50.292" width="0.1524" layer="91"/>
 <label x="68.58" y="58.42" size="1.27" layer="95" rot="R270"/>
+<pinref part="ENCDR_OUT" gate="J$1" pin="3"/>
 </segment>
 </net>
 <net name="12V" class="0">
 <segment>
-<pinref part="PWR" gate="J$1" pin="3"/>
 <wire x1="35.56" y1="88.9" x2="45.72" y2="88.9" width="0.1524" layer="91"/>
 <label x="35.56" y="88.9" size="1.778" layer="95"/>
 <pinref part="R4" gate="G$1" pin="1"/>
@@ -2269,14 +2280,13 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <junction x="58.42" y="88.9"/>
 <pinref part="R5" gate="G$1" pin="1"/>
 <wire x1="76.2" y1="71.12" x2="76.2" y2="88.9" width="0.1524" layer="91"/>
-<pinref part="ENCDR_PWR" gate="J$1" pin="1"/>
 <wire x1="45.72" y1="96.52" x2="45.72" y2="88.9" width="0.1524" layer="91"/>
 <junction x="45.72" y="88.9"/>
+<pinref part="ENCDR_PWR" gate="J$1" pin="3"/>
 </segment>
 </net>
 <net name="3.3V" class="0">
 <segment>
-<pinref part="PWR" gate="J$1" pin="2"/>
 <wire x1="35.56" y1="86.36" x2="50.8" y2="86.36" width="0.1524" layer="91"/>
 <label x="35.56" y="86.36" size="1.778" layer="95"/>
 <pinref part="U1" gate="G$1" pin="VCC"/>
@@ -2319,56 +2329,54 @@ You are welcome to use this library for commercial purposes. For attribution, we
 </net>
 <net name="GND" class="0">
 <segment>
-<pinref part="PWR" gate="J$1" pin="1"/>
 <wire x1="35.56" y1="83.82" x2="48.26" y2="83.82" width="0.1524" layer="91"/>
 <label x="35.56" y="83.82" size="1.778" layer="95"/>
 <pinref part="U1" gate="G$1" pin="GND"/>
 <wire x1="48.26" y1="83.82" x2="67.056" y2="83.82" width="0.1524" layer="91"/>
 <wire x1="67.056" y1="83.82" x2="104.14" y2="83.82" width="0.1524" layer="91"/>
 <wire x1="104.14" y1="83.82" x2="104.14" y2="78.74" width="0.1524" layer="91"/>
-<pinref part="ENCDR_OUT" gate="J$1" pin="2"/>
 <wire x1="67.056" y1="50.292" x2="67.056" y2="83.82" width="0.1524" layer="91"/>
-<pinref part="ENCDR_PWR" gate="J$1" pin="2"/>
 <wire x1="48.26" y1="96.52" x2="48.26" y2="93.98" width="0.1524" layer="91"/>
 <junction x="48.26" y="83.82"/>
 <wire x1="48.26" y1="93.98" x2="48.26" y2="83.82" width="0.1524" layer="91"/>
 <wire x1="48.26" y1="93.98" x2="50.8" y2="93.98" width="0.1524" layer="91"/>
 <junction x="48.26" y="93.98"/>
-<pinref part="ENCDR_PWR" gate="J$1" pin="3"/>
 <wire x1="50.8" y1="93.98" x2="50.8" y2="96.52" width="0.1524" layer="91"/>
+<pinref part="ENCDR_OUT" gate="J$1" pin="2"/>
+<pinref part="ENCDR_PWR" gate="J$1" pin="1"/>
+<pinref part="ENCDR_PWR" gate="J$1" pin="2"/>
 </segment>
 <segment>
-<pinref part="I2C" gate="J$1" pin="2"/>
 <pinref part="U1" gate="G$1" pin="PB1"/>
-<wire x1="170.18" y1="81.28" x2="149.86" y2="81.28" width="0.1524" layer="91"/>
-<wire x1="147.32" y1="81.28" x2="137.16" y2="81.28" width="0.1524" layer="91"/>
-<wire x1="147.32" y1="81.28" x2="149.86" y2="81.28" width="0.1524" layer="91"/>
+<wire x1="172.72" y1="81.28" x2="149.86" y2="81.28" width="0.1524" layer="91"/>
+<wire x1="149.86" y1="81.28" x2="137.16" y2="81.28" width="0.1524" layer="91"/>
 <wire x1="149.86" y1="81.28" x2="149.86" y2="71.12" width="0.1524" layer="91"/>
 <pinref part="GND1" gate="1" pin="GND"/>
+<pinref part="I2C" gate="J$1" pin="2"/>
 </segment>
 </net>
 <net name="SDA" class="0">
 <segment>
 <pinref part="U1" gate="G$1" pin="PB0"/>
-<pinref part="I2C" gate="J$1" pin="3"/>
 <wire x1="137.16" y1="78.74" x2="154.94" y2="78.74" width="0.1524" layer="91"/>
 <label x="165.1" y="78.74" size="1.778" layer="95"/>
 <pinref part="R1" gate="G$1" pin="1"/>
-<wire x1="154.94" y1="78.74" x2="170.18" y2="78.74" width="0.1524" layer="91"/>
+<wire x1="154.94" y1="78.74" x2="172.72" y2="78.74" width="0.1524" layer="91"/>
 <wire x1="154.94" y1="86.36" x2="154.94" y2="78.74" width="0.1524" layer="91"/>
 <junction x="154.94" y="78.74"/>
+<pinref part="I2C" gate="J$1" pin="1"/>
 </segment>
 </net>
 <net name="SCK" class="0">
 <segment>
 <pinref part="U1" gate="G$1" pin="PB2"/>
-<pinref part="I2C" gate="J$1" pin="1"/>
 <wire x1="137.16" y1="83.82" x2="162.56" y2="83.82" width="0.1524" layer="91"/>
 <label x="165.1" y="83.82" size="1.778" layer="95"/>
 <pinref part="R2" gate="G$1" pin="1"/>
-<wire x1="162.56" y1="83.82" x2="170.18" y2="83.82" width="0.1524" layer="91"/>
+<wire x1="162.56" y1="83.82" x2="172.72" y2="83.82" width="0.1524" layer="91"/>
 <wire x1="162.56" y1="91.44" x2="162.56" y2="83.82" width="0.1524" layer="91"/>
 <junction x="162.56" y="83.82"/>
+<pinref part="I2C" gate="J$1" pin="3"/>
 </segment>
 </net>
 </nets>
