@@ -21,7 +21,7 @@ int APES::setup() {
     py::initialize_interpreter();
 
     // imports python modules
-    py::object hx711 = py::module::import("hx711").attr("HX711");
+   /* py::object hx711 = py::module::import("libraries/hx711").attr("HX711");
     if (hx711 == NULL) {
         fprintf(stderr, "Cannot import module hx711.py!\n");
 	return -1;
@@ -40,7 +40,7 @@ int APES::setup() {
     this->HX711.attr("reset")();
     this->HX711.attr("tare")();
     printf("Tare done! Add weight now!\n");
-    
+    */
     wiringPiSPISetup(0, 500000);
 
     return 0;

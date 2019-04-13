@@ -13,10 +13,12 @@ int main() {
     if (robot.setup() == -1) {
         robot.finish();
     }
-
-    int data = robot.measMCP3008(0);
-    printf("adc val = %d\n", data);
-    robot.measWOB();
+    while(1)
+    {
+    	int data = robot.measMCP3008(7);
+    	printf("adc val = %d\n", data);
+    	//robot.measWOB();
+    }
     
     return 0;
 }
