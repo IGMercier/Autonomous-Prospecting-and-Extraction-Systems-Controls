@@ -15,7 +15,7 @@ int main() {
     }
     while(1)
     {
-    	int data = robot.measMCP3008(7);
+    	int data = robot.measMCP3008(0, 7);
     	printf("adc val = %d\n", data);
     	//robot.measWOB();
     }

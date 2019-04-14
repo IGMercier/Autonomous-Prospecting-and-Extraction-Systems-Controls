@@ -12,7 +12,7 @@ class APES {
         int setup();
         int finish();
         void measWOB();
-        int measMCP3008(int channel);
+        int measMCP3008(int bus, int channel);
 };
 
 #endif
