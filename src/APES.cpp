@@ -42,6 +42,7 @@ int APES::setup() {
     printf("Tare done! Add weight now!\n");
     */
     wiringPiSPISetup(0, 500000);
+    wiringPiSPISetup(1, 500000);
 
     return 0;
 }
