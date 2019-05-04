@@ -72,14 +72,14 @@ int main(int argc, char** argv) {
     }
 
     if (close(server_fd) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerr(errno));
+        fprintf(stderr, "ERROR: %s\n", strerror(errno));
     }
     return 0;
 }
 
 static void *thread(void *arg) {
     if (pthread_detach(pthread_self()) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerr(errno));
+        fprintf(stderr, "ERROR: %s\n", strerror(errno));
     }
 
     int client_fd = (int)(long)arg;
@@ -91,7 +91,7 @@ static void *thread(void *arg) {
     return NULL;
 }
 
-static int accept_data(client_fd) {
+static int accept_data(int client_fd) {
     rio_t buf;
     Rio_readinitb(&buf, client_fd);
 
