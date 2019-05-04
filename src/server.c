@@ -61,6 +61,8 @@ int main(int argc, char** argv) {
             continue;
         }
 
+        fprintf(stdout, "Connected...\n");
+
         if (pthread_create(&tid, NULL, thread, (void *)(long)client_fd) < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             if (client_fd < 0) {
