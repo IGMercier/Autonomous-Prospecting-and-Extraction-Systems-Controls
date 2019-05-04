@@ -41,6 +41,10 @@ int APES::setup() {
     this->HX711.attr("tare")();
     printf("Tare done! Add weight now!\n");
     */
+    this->thermo = make_thermo();
+    this->ammeter = make_amm();
+    this->wlevel = make_level();
+
     wiringPiSPISetup(0, 500000);
     wiringPiSPISetup(1, 500000);
 
@@ -59,6 +63,10 @@ int APES::finish() {
 
     // kills the python interpreter
     py::finalize_interpreter();
+
+    free(this->thermo);
+    free(this->ammeter);
+    free(this->wlevel);
     return 0;
 }
 

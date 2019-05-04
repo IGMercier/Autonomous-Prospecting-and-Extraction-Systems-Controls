@@ -7,7 +7,6 @@ APES robot;
 static void sigint_handler(int sig);
 
 int main() {
-    signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, sigint_handler);
     
     // start up robot
