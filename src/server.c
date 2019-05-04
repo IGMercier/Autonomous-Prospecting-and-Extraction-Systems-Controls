@@ -17,22 +17,7 @@ int main(int argc, char** argv) {
     char *port = NULL;
 
     // signal(SIGPIPE, SIG_IGN);
-    
-    // process args
-    char c;
-    while ((c = getopt(argc, argv, "-h"))) {
-        switch (c) {
-            case 1:
-                port = optarg;
-                break;
-            case 'h':
-                fprintf(stdout, "ARGS: -p portNumber\n");
-                return -1;
-            case '?':
-            default:
-                port = "22";
-        }
-    }
+    port = argv[1];
     assert(port != NULL);
 
     server_fd = open_listenfd(port);
@@ -61,7 +46,7 @@ int main(int argc, char** argv) {
             continue;
         }
 
-        fprintf(stdout, "Connected...\n");
+        fprintf(stderr, "Connected...\n");
 
         if (pthread_create(&tid, NULL, thread, (void *)(long)client_fd) < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
@@ -86,8 +71,9 @@ static void *thread(void *arg) {
 
     int client_fd = (int)(long)arg;
 
-    while (1) {
-        accept_data(client_fd);
+    accept_data(client_fd);
+    if (close(client_fd) < 0) {
+        fprintf(stderr, "ERROR: %s\n", strerror(errno));
     }
 
     return NULL;
