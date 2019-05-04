@@ -51,6 +51,11 @@ int APES::setup() {
     return 0;
 }
 
+int APES::standby() {
+    // ensure that everything is off
+    return 0;
+}
+
 int APES::finish() {
 
     if (this->HX711 != NULL) {

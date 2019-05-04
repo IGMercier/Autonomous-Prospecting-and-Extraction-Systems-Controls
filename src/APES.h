@@ -14,6 +14,7 @@ class APES {
         APES();
         ~APES();
         int setup();
+        int standby();
         int finish();
         void measWOB();
 };
