@@ -6,13 +6,11 @@
 APES robot;
 static void sigint_handler(int sig);
 
-int checkConnection() {
-
-}
-
 int main() {
+    signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, sigint_handler);
-
+    
+    // start up robot
     if (robot.setup() == -1) {
         fprintf(stderr, "ERROR: APES system setup failure!");
         fprintf(stderr, " Shutting down!\n");
@@ -20,11 +18,7 @@ int main() {
     }
 
 
-
-
-
-
-    while(checkConnection())
+    while(1)
     {
     	int data = robot.measMCP3008(0, 7);
     	printf("adc val = %d\n", data);
