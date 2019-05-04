@@ -15,19 +15,17 @@ typedef enum parseline_return {
     PARSELINE_ERROR
 } parseline_return;
 
-typedef enum builtin_state {
-    BUILTIN_NONE,
-    BUILTIN_STANDBY,
-    BUILTIN_FG,
-    BUILTIN_BG,
-    BUILTIN_QUIT
-} builtin_state;
+typedef enum command_state {
+    NONE,
+    STANDBY,
+    QUIT
+} command_state;
 
 typedef struct token {
     char text[MAXLINE]; 
     int argc;
     char *argv[MAXARGS];
-    builtin_state builtin;
+    command_state command;
 } token;
 
 parseline_return parseline(const char *cmdline, token *tk);

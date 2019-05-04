@@ -18,6 +18,7 @@ static int serverSetup(char *port);
 static int clientSetup(int server_fd);
 static void *thread(void *arg);
 void eval(const char *cmdline);
+int command(token *tk);
 
 int main(int argc, char** argv) {
     /* @TODO:
@@ -85,14 +86,11 @@ static void *thread(void *arg) {
     while((n = Rio_readlineb(&buf, cmdline, RIO_BUFSIZE)) != 0) {
         fprintf(stdout, "Received: %s", cmdline);
         cmdline[strlen(cmdline)-1] = '\0';
-        //eval(cmdline);
+        eval(cmdline);
         fflush(stdout);
-        //token *tk = eval(command);
-	    //parse_token(tk);
 	
     }
 
-    // acceptData(client_fd);
     if (close(client_fd) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
     }
@@ -143,8 +141,64 @@ static int clientSetup(int server_fd) {
 
 void eval(const char *cmdline) {
     parseline_return parse_result;
-    struct cmdline_tokens token;
+    token tk;
 
-    parse_result = parseline(cmdline, &token);
+    parse_result = parseline(cmdline, &tk);
+    if (parse_result == PARSELINE_ERROR || parse_result == PARSELINE_EMPTY) {
+        return;
+    }
+
+    if (!command(&tk)) {
+        // @TODO: report to client that command is not known
+    }
+    return;
+}
+
+int command(token *tk) {
+    command_state command = tk->command;
+
+    switch (command) {
+        case QUIT:
+            // shuts down everything
+            exit(0);
+        case TEMP:
+            // robot.read_temp(robot->thermo);
+            return 1;
+        case DTEMP:
+            // robot.D_temp(robot->thermo);
+            return 1;
+        case CURR:
+            // robot.read_curr(robot->ammeter);
+            return 1;
+        case LEVEL:
+            // robot.read_level(robot->wlevel);
+            return 1;
+        case STANDBY:
+            // robot.standby();
+            return 1;
+        case WOB:
+            // robot.read_wob(robot->wob);
+            return 1;
+        case MOTOR_DRIVE:
+            // drives motor
+            return 1;
+        case MOTOR_STOP:
+            // stops motor
+            return 1;
+        // do things for switch
+        case DRILL_RUN:
+            // runs drill
+            return 1;
+        case DRILL_STOP:
+            // stops drill
+            return 1;
+        case DRILL_CYCLE:
+            // runs drill at duty cycle
+            return 1;
+        case NONE:
+        default:
+            // not a builtin command
+            return 0;
+    }
 }
 
