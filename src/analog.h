@@ -33,6 +33,6 @@ typedef struct level {
 typedef level* level_t;
 
 level_t make_level(int bus_start, int bus_end, int sample_freq);
-int read_level();
+int read_level(level_t wlevel);
 
 #endif
