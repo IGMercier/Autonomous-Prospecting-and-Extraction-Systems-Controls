@@ -41,9 +41,18 @@ int APES::setup() {
     this->HX711.attr("tare")();
     printf("Tare done! Add weight now!\n");
     */
+    this->thermo = make_thermo();
+    this->ammeter = make_amm();
+    this->wlevel = make_level();
+
     wiringPiSPISetup(0, 500000);
     wiringPiSPISetup(1, 500000);
 
+    return 0;
+}
+
+int APES::standby() {
+    // ensure that everything is off
     return 0;
 }
 
@@ -59,6 +68,10 @@ int APES::finish() {
 
     // kills the python interpreter
     py::finalize_interpreter();
+
+    free(this->thermo);
+    free(this->ammeter);
+    free(this->wlevel);
     return 0;
 }
 
@@ -77,24 +90,5 @@ void APES::measWOB() {
     }
 
     return;
-}
-
-int APES::measMCP3008(int bus, int channel) {
-    if ((bus < 0) || (bus > 1)) {
-        return -1;
-    }
-    if (channel > 7) {
-        return -1;
-    }
-
-    unsigned char data[3];
-    data[0] = 0b1;
-    data[1] = (0b1000 + channel) << 4;
-    data[2] = 0b0;
-    wiringPiSPIDataRW(bus, data, 3);
-
-    int datum = ((data[1] & 0b11) << 8) + data[2];
-
-    return datum;
 }
 
