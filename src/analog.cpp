@@ -118,7 +118,7 @@ level_t make_level(int bus_start, int bus_end) {
     return wlevel;
 }
 
-int read_level() {
+int read_level(level_t wlevel) {
     /*@TODO:
       reads from each ADC channel
       assumes 1 == water at that level
@@ -127,7 +127,8 @@ int read_level() {
     */
     int bus;
     int level = 0;
-    for (int channel = 0; channel < 8; channel++) {
+    int channel = wlevel->bus_start;
+    for ( ; channel < wlevel->bus_end; channel++) {
         if (readADC(bus, channel) == 1) {
             level = channel;
         }
