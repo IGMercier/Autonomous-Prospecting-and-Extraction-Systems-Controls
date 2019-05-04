@@ -17,7 +17,7 @@ static volatile int disconnected = 1;
 static int serverSetup(char *port);
 static int clientSetup(int server_fd);
 static void *thread(void *arg);
-void eval(const char *cmdline);
+int eval(const char *cmdline);
 int command(token *tk);
 
 int main(int argc, char** argv) {
@@ -55,7 +55,6 @@ int main(int argc, char** argv) {
     
     while (1) {
 	    if (disconnected) {
-    		//fprintf(stderr, "Disconnected...\n");
             //robot.standby();
             
             // keep trying to connect to client
@@ -86,7 +85,9 @@ static void *thread(void *arg) {
     while((n = Rio_readlineb(&buf, cmdline, RIO_BUFSIZE)) != 0) {
         fprintf(stdout, "Received: %s", cmdline);
         cmdline[strlen(cmdline)-1] = '\0';
-        eval(cmdline);
+        if (eval(cmdline) < 0) {
+            fprintf(client_fd, "ERROR: unknown command!\n");
+        }
         fflush(stdout);
 	
     }
@@ -95,6 +96,7 @@ static void *thread(void *arg) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
     }
     disconnected = 1;
+    fprintf(stderr, "Disconnected...\n");
     return NULL;
 }
 
@@ -139,19 +141,20 @@ static int clientSetup(int server_fd) {
     return 0;
 }
 
-void eval(const char *cmdline) {
+int eval(const char *cmdline) {
     parseline_return parse_result;
     token tk;
 
     parse_result = parseline(cmdline, &tk);
     if (parse_result == PARSELINE_ERROR || parse_result == PARSELINE_EMPTY) {
-        return;
+        return 0;
     }
 
     if (!command(&tk)) {
         // @TODO: report to client that command is not known
+        return -1;
     }
-    return;
+    return 0;
 }
 
 int command(token *tk) {

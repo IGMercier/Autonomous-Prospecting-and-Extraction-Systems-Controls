@@ -18,6 +18,16 @@ typedef enum parseline_return {
 typedef enum command_state {
     NONE,
     STANDBY,
+    TEMP,
+    DTEMP,
+    CURR,
+    LEVEL,
+    WOB,
+    MOTOR_DRIVE,
+    MOTOR_STOP,
+    DRILL_RUN,
+    DRILL_STOP,
+    DRILL_CYCLE,
     QUIT
 } command_state;
 
