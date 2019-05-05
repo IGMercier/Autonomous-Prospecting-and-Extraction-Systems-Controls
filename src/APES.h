@@ -1,5 +1,5 @@
-#ifndef APES_H
-#define APES_H
+#ifndef __APES_H__
+#define __APES_H__
 
 #include "include/pybind11/embed.h"
 #include "analog.h"

@@ -1,5 +1,5 @@
 #include "csapp.h"
-//#include "command_helper.h"
+#include "command_helper.h"
 //#include "APES.h"
 #include <unistd.h>
 #include <stdlib.h>
@@ -14,11 +14,17 @@
 static volatile int disconnected = 1;
 //APES robot;
 
-static int serverSetup(char *port);
-static int clientSetup(int server_fd);
+int serverSetup(char *port);
+int clientSetup(int server_fd);
 static void *thread(void *arg);
 int eval(const char *cmdline);
 int command(token *tk);
+void shutdown(int server_fd, int client_fd);
+
+struct args {
+    int server_fd;
+    int client_fd;
+};
 
 int main(int argc, char** argv) {
     /* @TODO:
@@ -75,7 +81,10 @@ static void *thread(void *arg) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
     }
 
-    int client_fd = (int)(long)arg;
+    struct args param = (struct args)(long)arg;
+    int server_fd = param.server_fd;
+    int client_fd = param.client_fd;
+    
     size_t n;
     rio_t buf;
     Rio_readinitb(&buf, client_fd);
@@ -85,10 +94,14 @@ static void *thread(void *arg) {
     while((n = Rio_readlineb(&buf, cmdline, RIO_BUFSIZE)) != 0) {
         fprintf(stdout, "Received: %s", cmdline);
         cmdline[strlen(cmdline)-1] = '\0';
-        if (eval(cmdline) < 0) {
+
+        int eval_result = eval(cmdline);
+        if (eval_result == 0) {
             fprintf(client_fd, "ERROR: unknown command!\n");
+        } else if (eval_result == -1) {
+            shutdown(server_fd, client_fd);
+            exit(0);
         }
-        fflush(stdout);
 	
     }
 
@@ -96,7 +109,7 @@ static void *thread(void *arg) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
     }
     disconnected = 1;
-    fprintf(stderr, "Disconnected...\n");
+    fprintf(stdout, "Disconnected...\n");
     return NULL;
 }
 
@@ -127,11 +140,17 @@ static int clientSetup(int server_fd) {
         }
 
 	    disconnected = 0;
-        fprintf(stderr, "Connected...\n");
+        fprintf(client_fd, "Connected...\n");
+        fprintf(stdout, "Connected...\n");
     }
 
+    struct args param = {
+        .server_fd = server_fd,
+        .client_fd = client_fd
+    };
+
     // creates new thread that handles client input
-    if (pthread_create(&tid, NULL, thread, (void *)(long)client_fd) < 0) {
+    if (pthread_create(&tid, NULL, thread, (void *)(long)param) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
         if (client_fd < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
@@ -139,6 +158,18 @@ static int clientSetup(int server_fd) {
     }
 
     return 0;
+}
+
+void shutdown(int server_fd, int client_fd) {
+    // robot.finish();
+    fprintf(client_fd, "SHUTTING DOWN!\n");
+    fprintf(stdout, "SHUTTING DOWN!\n");
+    if (close(client_fd) < 0) {
+        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+    }
+    if (close(server_fd) < 0) {
+        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+    }
 }
 
 int eval(const char *cmdline) {
@@ -151,7 +182,6 @@ int eval(const char *cmdline) {
     }
 
     if (!command(&tk)) {
-        // @TODO: report to client that command is not known
         return -1;
     }
     return 0;
@@ -163,7 +193,19 @@ int command(token *tk) {
     switch (command) {
         case QUIT:
             // shuts down everything
-            exit(0);
+            return -1;
+        case AUTO:
+            // runs things automatically
+            /*
+                @TODO:
+                Will this need to create a new thread?
+                We want this to run in the background,
+                but we also want to be able to input more
+                commands...
+                If we spawn a process, APES system will be copied,
+                so we dont want that...
+            */
+            return 1;
         case TEMP:
             // robot.read_temp(robot->thermo);
             return 1;

@@ -2,10 +2,9 @@
     unabashedly taken and modified from tshlab
 */
 
-#ifndef COMMAND_HELPER_H
-#define COMMAND_HELPER_H
+#ifndef __COMMAND_HELPER_H__
+#define __COMMAND_HELPER_H__
 
-#define MAXLINE 1024
 #define MAXARGS  128
 
 typedef enum parseline_return {
@@ -28,6 +27,7 @@ typedef enum command_state {
     DRILL_RUN,
     DRILL_STOP,
     DRILL_CYCLE,
+    AUTO,
     QUIT
 } command_state;
 
@@ -39,6 +39,5 @@ typedef struct token {
 } token;
 
 parseline_return parseline(const char *cmdline, token *tk);
-
 
 #endif
