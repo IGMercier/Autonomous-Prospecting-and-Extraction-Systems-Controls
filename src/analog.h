@@ -10,8 +10,8 @@ typedef struct therm {
 typedef therm* therm_t;
 
 therm_t make_therm(int bus_addr, float max_T);
-float read_temp();
-float D_temp();
+float read_temp(therm_t thermo);
+float D_temp(therm_t thermo);
 
 
 typedef struct amm {
@@ -22,7 +22,7 @@ typedef struct amm {
 typedef amm* amm_t;
 
 amm_t make_amm(int bus_addr, float max_I);
-float read_curr();
+float read_curr(amm_t ammeter);
 
 
 typedef struct level {

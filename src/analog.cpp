@@ -1,6 +1,6 @@
+#include "analog.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "analog.h"
 
 /*
     HELPER FUNCTIONS
