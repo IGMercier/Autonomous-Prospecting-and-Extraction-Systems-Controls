@@ -1,4 +1,5 @@
 #include "APES.h"
+#include <stdio.h>
 #include <unistd.h>
 #include <error.h>
 #include <wiringPiSPI.h>
@@ -90,5 +91,27 @@ void APES::measWOB() {
     }
 
     return;
+}
+
+int APES::writeData(float data, const char *filename) {
+    FILE *file = fopen(filename, "a");
+    if (file != NULL) {
+        fprintf(file, "%f\n", data);
+        return 0;
+    } else {
+        fprintf(stderr, "ERROR: %s", strerror(errno));
+        return -1;
+    }
+}
+
+int APES::writeData(int data, const char *filename) {
+    FILE *file = fopen(filename, "a");
+    if (file != NULL) {
+        fprintf(file, "%d\n", data);
+        return 0;
+    } else {
+        fprintf(stderr, "ERROR: %s", strerror(errno));
+        return -1;
+    }
 }
 

@@ -14,6 +14,8 @@ class APES {
         APES();
         ~APES();
         int setup();
+        int writeData(float data,/* time?, */ const char *filename);
+        int writeData(int data,/* time?, */ const char *filename);
         int standby();
         int finish();
         void measWOB();
