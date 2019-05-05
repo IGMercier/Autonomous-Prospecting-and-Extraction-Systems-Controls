@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
        [X] setup robot
        [X] put robot in standby
        [] when connected:
-         [] accept commands
+         [X] accept commands
 	     [] execute commands
        [X] when disconnected:
          [X] put robot in standby
@@ -41,20 +41,29 @@ int main(int argc, char** argv) {
     /*
     if (robot.setup() < 0) {
         fprintf(stderr, "ERROR: APES system setup failure!\n");
-        fprintf(stderr, " Shutting down!\n");
+        fprintf(stdout, "Shutting down!\n");
         robot.finish();
+        return -1; // @TODO: retry
     }
 
     // put in standby
     robot.standby();
     */
 
+    char *port;
+    if (argc < 2) {
+        port = "16778";
+    } else {
+        port = argv[1];
+    }
+
     int server_fd;
-    char *port = argv[1];
     server_fd = serverSetup(port);
     if (server_fd < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        return -1;
+        fprintf(stdout, "Shutting down!\n");
+        // robot.finish();
+        return -1; // @TODO: retry
     }
 
     clientSetup(server_fd);
@@ -63,7 +72,9 @@ int main(int argc, char** argv) {
 	    if (disconnected) {
             //robot.standby();
             
-            // keep trying to connect to client
+            // keep trying to connect to client.
+            // in this state, the loop should really
+            // only run once
             clientSetup(server_fd);
 	    }
     }
@@ -72,6 +83,7 @@ int main(int argc, char** argv) {
     // control should never reach here
     if (close(server_fd) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
+        fprintf(stdout, "Shutting down!\n");
     }
     return -1;
 }
@@ -97,7 +109,8 @@ static void *thread(void *arg) {
 
         int eval_result = eval(cmdline);
         if (eval_result == 0) {
-            fprintf(client_fd, "ERROR: unknown command!\n");
+            const char *msg = "ERROR: Unknown command!\n";
+            rio_writen(client_fd, msg, strlen(msg));
         } else if (eval_result == -1) {
             shutdown(server_fd, client_fd);
             exit(0);
@@ -124,7 +137,9 @@ static int clientSetup(int server_fd) {
     // client connection
     int client_fd = -1;
     pthread_t tid;
-    while (client_fd < 0) {
+
+    // keeps trying to connect
+    while (1) {
         struct addrinfo server_addr = {
             .ai_addr = NULL,
             .ai_addrlen = 0
@@ -140,8 +155,10 @@ static int clientSetup(int server_fd) {
         }
 
 	    disconnected = 0;
-        fprintf(client_fd, "Connected...\n");
-        fprintf(stdout, "Connected...\n");
+        const char *msg = "Connected...!\n";
+        rio_writen(client_fd, msg, strlen(msg));
+        fprintf(stdout, msg);
+        break;
     }
 
     struct args param = {
@@ -152,9 +169,11 @@ static int clientSetup(int server_fd) {
     // creates new thread that handles client input
     if (pthread_create(&tid, NULL, thread, (void *)(long)param) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        if (client_fd < 0) {
+        if (close(client_fd) < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
         }
+        disconnected = 1;
+        return -1;
     }
 
     return 0;
@@ -162,8 +181,10 @@ static int clientSetup(int server_fd) {
 
 void shutdown(int server_fd, int client_fd) {
     // robot.finish();
-    fprintf(client_fd, "SHUTTING DOWN!\n");
-    fprintf(stdout, "SHUTTING DOWN!\n");
+    const char *msg = "Shutting down!\n";
+    rio_writen(client_fd, msg, strlen(msg));
+
+    fprintf(stdout, msg);
     if (close(client_fd) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
     }
