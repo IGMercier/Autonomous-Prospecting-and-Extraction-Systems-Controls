@@ -70,9 +70,9 @@ int APES::finish() {
     // kills the python interpreter
     py::finalize_interpreter();
 
-    free(this->thermo);
-    free(this->ammeter);
-    free(this->wlevel);
+    freeTherm(this->thermo);
+    freeAmm(this->ammeter);
+    freeLevel(this->wlevel);
     return 0;
 }
 
