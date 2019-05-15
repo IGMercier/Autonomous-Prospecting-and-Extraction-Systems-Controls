@@ -58,6 +58,10 @@ float D_temp(therm_t thermo) {
     return fTemp - thermo->iTemp;
 }
 
+void freeTherm(therm_t thermo) {
+    free(thermo);
+}
+
 
 /*
     AMMETER FUNCTIONS
@@ -83,6 +87,10 @@ float read_curr(amm_t ammeter) {
     // @TODO: how is bus_addr specified???
 
     return (float)readADC(bus, channel);
+}
+
+void freeAmm(amm_t ammeter) {
+    free(ammeter);
 }
 
 
@@ -135,4 +143,8 @@ int read_level(level_t wlevel) {
     }
 
     return level;
+}
+
+void freeLevel(level_t wlevel) {
+    free(wlevel);
 }
