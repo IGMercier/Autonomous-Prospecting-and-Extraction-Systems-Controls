@@ -134,6 +134,9 @@ static int serverSetup(char *port) {
 }
 
 static int clientSetup(int server_fd) {
+    /* @TODO: refactor this to allow only ONE
+        connection
+    */
     // client connection
     int client_fd = -1;
     pthread_t tid;
