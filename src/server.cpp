@@ -1,5 +1,5 @@
 #include "csapp.h"
-#include "command_helper.h"
+#include "commands.h"
 #include "components.h"
 #include "APES.h"
 #include <unistd.h>
@@ -259,6 +259,8 @@ int command(token *tk) {
             force = robot.read_wob();
             printf(stdout, "Force (@time): %f\n", force);
             return 1;
+        case DATA:
+            robot.read_data();
         case MOTOR_DRIVE:
             robot.motor_drive();
             return 1;

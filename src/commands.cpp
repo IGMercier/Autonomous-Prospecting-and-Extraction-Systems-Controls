@@ -1,3 +1,4 @@
+#include "commands.h"
 #include <string>
 
 const char* listCommands() {
@@ -10,6 +11,7 @@ const char* listCommands() {
     msg += "curr - returns current current reading\n";
     msg += "level - returns current level reading\n";
     msg += "wob - returns current force reading\n";
+    msg += "data - returns the data file\n";
     msg += "motor_drive - drive the motor\n";
     msg += "motor_stop - stops the motor\n";
     msg += "drill_run - runs the drill\n";

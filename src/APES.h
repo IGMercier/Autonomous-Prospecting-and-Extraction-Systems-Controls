@@ -22,6 +22,7 @@ class APES {
         int read_level();
         void motor_drive(bool dir, int speed, int time);
         void motor_stop();
+        int readData(const char *filename);
         int writeData(float data,/* time?, */ const char *filename);
         int writeData(int data,/* time?, */ const char *filename);
         int standby();

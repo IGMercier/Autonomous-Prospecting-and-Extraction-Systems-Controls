@@ -99,10 +99,15 @@ int APES::finish() {
     return 0;
 }
 
+int APES::readData(const char *filename) {
+    return -1;
+}
+
 int APES::writeData(float data, const char *filename) {
     FILE *file = fopen(filename, "a");
     if (file != NULL) {
         fprintf(file, "%f\n", data);
+        fclose(file);
         return 0;
     } else {
         fprintf(stderr, "ERROR: %s", strerror(errno));
@@ -114,6 +119,7 @@ int APES::writeData(int data, const char *filename) {
     FILE *file = fopen(filename, "a");
     if (file != NULL) {
         fprintf(file, "%d\n", data);
+        fclose(file);
         return 0;
     } else {
         fprintf(stderr, "ERROR: %s", strerror(errno));
