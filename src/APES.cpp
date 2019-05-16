@@ -21,11 +21,14 @@ int APES::setup() {
     // starts python interpreter
     py::initialize_interpreter();
 
+    int motor_pinA = 1;
+    int motor_pinB = 2;
+
     this.wob = new Wob();
     this.therm = new Therm();
     this.amm = new Amm();
     this.level = new Level();
-    this.motor = new Motor();
+    this.motor = new Motor(motor_pinA, motor_pinB);
     
     wiringPiSPISetup(0, 500000);
     wiringPiSPISetup(1, 500000);
@@ -82,14 +85,16 @@ int APES::finish() {
     // kills the python interpreter
     // and deletes everything, so
     // you better actually want to kill
-    // the robot if you call this func
+    // the system if you call this func
 
-    // super important that any pybind objects are
-    // killed before pybind interpreter finalized!
     if (this.wob != NULL) { delete this.wob; }
     if (this.therm != NULL) { delete this.therm; }
     if (this.amm != NULL) { delete this.amm; }
     if (this.level != NULL) { delete this.level; }
+    if (this.motor != NULL) {delete this.motor; }
+
+    // super important that any pybind objects are
+    // killed before pybind interpreter finalized!
     py::finalize_interpreter();
     return 0;
 }

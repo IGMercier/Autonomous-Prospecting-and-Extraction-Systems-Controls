@@ -20,6 +20,7 @@ APES robot;
 int serverSetup(char *port);
 int clientSetup();
 void connected();
+int sendToClient(char *msg);
 int eval(const char *cmdline);
 int command(token *tk);
 void shutdown();
@@ -98,8 +99,8 @@ void connected() {
 
         int eval_result = eval(cmdline);
         if (eval_result == 0) {
-            const char *msg = "ERROR: Unknown command!\n";
-            rio_writen(client_fd, msg, strlen(msg));
+            string msg = "ERROR: Unknown command!\n";
+            sendToClient(msg.c_str());
         }
 	
     }
@@ -139,9 +140,9 @@ static int clientSetup() {
     }
 
 	disconnected = 0;
-    const char *msg = "Connected...!\n";
-    rio_writen(client_fd, msg, strlen(msg));
-    fprintf(stdout, msg);
+    string msg = "Connected...!\n";
+    sendToClient(msg.c_str());
+    fprintf(stdout, msg.c_str());
 
     //struct args param = {
     //    .server_fd = server_fd,
@@ -162,19 +163,24 @@ static int clientSetup() {
     return 0;
 }
 
+int sendToClient(const char *msg) {
+    return rio_writen(client_fd, msg, strlen(msg));
+}
+
 void shutdown() {
     robot.finish();
 
-    const char *msg = "Shutting down!\n";
-    rio_writen(client_fd, msg, strlen(msg));
+    string msg = "Shutting down!\n";
+    sendToClient(msg.c_str());
+    fprintf(stdout, msg.c_str());
 
-    fprintf(stdout, msg);
     if (close(client_fd) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
     }
     if (close(server_fd) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
     }
+    exit(0);
 }
 
 int eval(const char *cmdline) {
@@ -207,10 +213,12 @@ int command(token *tk) {
             // put in standby
             robot.standby();
             break;
+        case HELP:
+            sendToClient(listCommands());
+            break;
         case QUIT:
             // shuts down everything
             shutdown();
-            exit(0);
         case AUTO:
             // runs things automatically
             /*

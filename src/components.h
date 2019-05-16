@@ -56,8 +56,6 @@ class Wob {
 class Motor {
     private:
         pybind11::object L298N;
-        int pinA;
-        int pinB;
     public:
         Motor(int pinA, int pinB);
         ~Motor();

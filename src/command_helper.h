@@ -16,6 +16,7 @@ typedef enum parseline_return {
 
 typedef enum command_state {
     START,
+    HELP,
     NONE,
     STANDBY,
     TEMP,
@@ -40,5 +41,6 @@ typedef struct token {
 } token;
 
 parseline_return parseline(const char *cmdline, token *tk);
+const char* listCommands();
 
 #endif
