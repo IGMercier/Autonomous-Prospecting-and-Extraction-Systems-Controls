@@ -6,7 +6,7 @@
 
 class APES {
     private:
-        pybind11::object HX711;
+        wob_t HX711;
         therm_t thermo;
         amm_t ammeter;
         level_t wlevel; 

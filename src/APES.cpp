@@ -21,27 +21,7 @@ int APES::setup() {
     // starts python interpreter
     py::initialize_interpreter();
 
-    // imports python modules
-   /* py::object hx711 = py::module::import("libraries/hx711").attr("HX711");
-    if (hx711 == NULL) {
-        fprintf(stderr, "Cannot import module hx711.py!\n");
-	return -1;
-    }
-
-    // instantiates HX711 object
-    this->HX711 = hx711(5, 6);
-    if (this->HX711 == NULL) {
-        fprintf(stderr, "Cannot instantiate object HX711!\n");
-	return -1;
-    }
-
-    // setup of HX711 module
-    this->HX711.attr("set_reading_format")("byte_format"_a="MSB", "bit_format"_a="MSB");
-    this->HX711.attr("set_reference_unit")(1);
-    this->HX711.attr("reset")();
-    this->HX711.attr("tare")();
-    printf("Tare done! Add weight now!\n");
-    */
+    this->loadcell = make_wob();
     this->thermo = make_thermo();
     this->ammeter = make_amm();
     this->wlevel = make_level();
@@ -58,15 +38,6 @@ int APES::standby() {
 }
 
 int APES::finish() {
-
-    if (this->HX711 != NULL) {
-        this->HX711.attr("finish")();
-    
-        // python objects cannot outlive
-        // the interpreter!!! <- super important
-        this->HX711.release();
-    }
-
     // kills the python interpreter
     py::finalize_interpreter();
 
