@@ -252,10 +252,10 @@ int command(token *tk) {
             printf(stdout, "Force (@time): %f\n", force);
             return 1;
         case MOTOR_DRIVE:
-            // drives motor
+            robot.motor_drive();
             return 1;
         case MOTOR_STOP:
-            // stops motor
+            robot.motor_stop();
             return 1;
         // do things for switch
         case DRILL_RUN:
