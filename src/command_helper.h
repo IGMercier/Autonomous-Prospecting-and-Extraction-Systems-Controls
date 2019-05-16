@@ -15,6 +15,7 @@ typedef enum parseline_return {
 } parseline_return;
 
 typedef enum command_state {
+    START,
     NONE,
     STANDBY,
     TEMP,

@@ -196,7 +196,7 @@ int command(token *tk) {
     command_state command = tk->command;
 
     switch (command) {
-        case SETUP:
+        case START:
             // setup robot and retry on fail
             while (robot.setup() < 0) {
                 fprintf(stderr, "ERROR: APES system setup failure!\n");
