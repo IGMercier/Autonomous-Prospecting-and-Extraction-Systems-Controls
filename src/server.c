@@ -141,28 +141,24 @@ static int clientSetup(int server_fd) {
     int client_fd = -1;
     pthread_t tid;
 
-    // keeps trying to connect
-    while (1) {
-        struct addrinfo server_addr = {
-            .ai_addr = NULL,
-            .ai_addrlen = 0
-        };
+    struct addrinfo server_addr = {
+        .ai_addr = NULL,
+        .ai_addrlen = 0
+    };
 
-        // accept() blocks until client connects
-        client_fd = accept(server_fd,
-                           server_addr.ai_addr,
-                           &(server_addr.ai_addrlen));
-        if (client_fd < 0) {
-            fprintf(stderr, "ERROR: %s\n", strerror(errno));
-            continue;
-        }
-
-	    disconnected = 0;
-        const char *msg = "Connected...!\n";
-        rio_writen(client_fd, msg, strlen(msg));
-        fprintf(stdout, msg);
-        break;
+    // accept() blocks until client connects
+    client_fd = accept(server_fd,
+                       server_addr.ai_addr,
+                       &(server_addr.ai_addrlen));
+    if (client_fd < 0) {
+        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+        return -1;
     }
+
+	disconnected = 0;
+    const char *msg = "Connected...!\n";
+    rio_writen(client_fd, msg, strlen(msg));
+    fprintf(stdout, msg);
 
     struct args param = {
         .server_fd = server_fd,
