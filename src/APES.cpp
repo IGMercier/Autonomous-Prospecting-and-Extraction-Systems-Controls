@@ -91,7 +91,7 @@ int APES::finish() {
     if (this.therm != NULL) { delete this.therm; }
     if (this.amm != NULL) { delete this.amm; }
     if (this.level != NULL) { delete this.level; }
-    if (this.motor != NULL) {delete this.motor; }
+    if (this.motor != NULL) { delete this.motor; }
 
     // super important that any pybind objects are
     // killed before pybind interpreter finalized!
@@ -103,7 +103,7 @@ int APES::readData(const char *filename) {
     return -1;
 }
 
-int APES::writeData(float data, const char *filename) {
+int APES::writeDataFloat(float data, const char *filename) {
     FILE *file = fopen(filename, "a");
     if (file != NULL) {
         fprintf(file, "%f\n", data);
@@ -115,7 +115,7 @@ int APES::writeData(float data, const char *filename) {
     }
 }
 
-int APES::writeData(int data, const char *filename) {
+int APES::writeDataInt(int data, const char *filename) {
     FILE *file = fopen(filename, "a");
     if (file != NULL) {
         fprintf(file, "%d\n", data);

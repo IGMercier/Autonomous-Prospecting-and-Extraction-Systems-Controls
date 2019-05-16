@@ -11,7 +11,6 @@ class APES {
         Amm* amm;
         Level* level;
         Motor* motor;
-        int isSetup = 0;
     public:
         APES();
         ~APES();
@@ -23,8 +22,8 @@ class APES {
         void motor_drive(bool dir, int speed, int time);
         void motor_stop();
         int readData(const char *filename);
-        int writeData(float data,/* time?, */ const char *filename);
-        int writeData(int data,/* time?, */ const char *filename);
+        int writeDataFloat(float data,/* time?, */ const char *filename);
+        int writeDataInt(int data,/* time?, */ const char *filename);
         int standby();
         int finish();
 };

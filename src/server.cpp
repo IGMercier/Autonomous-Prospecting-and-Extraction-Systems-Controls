@@ -20,7 +20,7 @@ APES robot;
 int serverSetup(char *port);
 int clientSetup();
 void connected();
-int sendToClient(char *msg);
+int sendToClient(const char *msg);
 int eval(const char *cmdline);
 int command(token *tk);
 void shutdown();
@@ -184,11 +184,9 @@ void shutdown() {
 }
 
 int eval(const char *cmdline) {
-    parseline_return parse_result;
     token tk;
 
-    parse_result = parseline(cmdline, &tk);
-    if (parse_result == PARSELINE_ERROR || parse_result == PARSELINE_EMPTY) {
+    if (parseline(cmdline, &tk) < 0) {
         return 0;
     }
 

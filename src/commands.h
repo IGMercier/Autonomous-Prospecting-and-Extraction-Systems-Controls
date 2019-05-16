@@ -6,13 +6,9 @@
 #define __COMMAND_HELPER_H__
 
 #define MAXARGS  128
+#define MAXLINE  8192
 
-typedef enum parseline_return {
-    PARSELINE_FG,
-    PARSELINE_BG,
-    PARSELINE_EMPTY,
-    PARSELINE_ERROR
-} parseline_return;
+#include "csapp.h"
 
 typedef enum command_state {
     START,
@@ -41,7 +37,7 @@ typedef struct token {
     command_state command;
 } token;
 
-parseline_return parseline(const char *cmdline, token *tk);
+int parseline(const char *cmdline, token *tk);
 const char* listCommands();
 
 #endif
