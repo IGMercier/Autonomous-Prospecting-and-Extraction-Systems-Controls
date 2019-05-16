@@ -1,6 +1,6 @@
 #include "csapp.h"
 #include "command_helper.h"
-//#include "APES.h"
+#include "APES.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -12,7 +12,7 @@
 #include <pthread.h>
 
 static volatile int disconnected = 1;
-//APES robot;
+APES robot;
 
 int serverSetup(char *port);
 int clientSetup(int server_fd);
@@ -37,18 +37,15 @@ int main(int argc, char** argv) {
          [X] put robot in standby
      */
 
-    // setup robot
-    /*
-    if (robot.setup() < 0) {
+    // setup robot and retry on fail
+    while (robot.setup() < 0) {
         fprintf(stderr, "ERROR: APES system setup failure!\n");
-        fprintf(stdout, "Shutting down!\n");
-        robot.finish();
-        return -1; // @TODO: retry
+        fprintf(stdout, "Retrying...\n");
+        // robot.finish();
     }
 
     // put in standby
     robot.standby();
-    */
 
     char *port;
     if (argc < 2) {
@@ -59,18 +56,20 @@ int main(int argc, char** argv) {
 
     int server_fd;
     server_fd = serverSetup(port);
-    if (server_fd < 0) {
+    while (server_fd < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        fprintf(stdout, "Shutting down!\n");
-        // robot.finish();
-        return -1; // @TODO: retry
+        fprintf(stdout, "Retrying...\n");
+        robot.finish();
+        
+        // retry to setup
+        server_fd = serverSetup(port);
     }
 
     clientSetup(server_fd);
     
     while (1) {
 	    if (disconnected) {
-            //robot.standby();
+            robot.standby();
             
             // keep trying to connect to client.
             // in this state, the loop should really
@@ -134,9 +133,6 @@ static int serverSetup(char *port) {
 }
 
 static int clientSetup(int server_fd) {
-    /* @TODO: refactor this to allow only ONE
-        connection
-    */
     // client connection
     int client_fd = -1;
     pthread_t tid;
@@ -179,7 +175,7 @@ static int clientSetup(int server_fd) {
 }
 
 void shutdown(int server_fd, int client_fd) {
-    // robot.finish();
+    robot.finish();
     const char *msg = "Shutting down!\n";
     rio_writen(client_fd, msg, strlen(msg));
 
@@ -227,22 +223,22 @@ int command(token *tk) {
             */
             return 1;
         case TEMP:
-            // robot.read_temp(robot->thermo);
+            robot.read_temp(robot->thermo);
             return 1;
         case DTEMP:
-            // robot.D_temp(robot->thermo);
+            robot.D_temp(robot->thermo);
             return 1;
         case CURR:
-            // robot.read_curr(robot->ammeter);
+            robot.read_curr(robot->ammeter);
             return 1;
         case LEVEL:
-            // robot.read_level(robot->wlevel);
+            robot.read_level(robot->wlevel);
             return 1;
         case STANDBY:
-            // robot.standby();
+            robot.standby();
             return 1;
         case WOB:
-            // robot.read_wob(robot->wob);
+            robot.read_wob(robot->wob);
             return 1;
         case MOTOR_DRIVE:
             // drives motor
