@@ -10,6 +10,7 @@ class APES {
         Therm* therm;
         Amm* amm;
         Level* level;
+        Motor* motor;
         int isSetup = 0;
     public:
         APES();
@@ -19,6 +20,8 @@ class APES {
         float D_temp();
         float read_curr();
         int read_level();
+        void motor_drive(bool dir, int speed, int time);
+        void motor_stop();
         int writeData(float data,/* time?, */ const char *filename);
         int writeData(int data,/* time?, */ const char *filename);
         int standby();

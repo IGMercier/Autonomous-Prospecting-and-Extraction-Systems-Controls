@@ -164,3 +164,53 @@ Wob::~Wob() {
     }
     return;
 }
+
+
+/*
+    MOTOR FUNCTIONS
+*/
+Motor::Motor(int pinA, int pinB) {
+    this.pinA = pinA;
+    this.pinB = pinB;
+
+    // this assumes the pybind interpreter has been initialized
+    // in  APES::setup()!
+
+    //@TODO: implement these for the L298N module!!!
+    py::object l298n = py::module::import("libraries/l298n").attr("L298N");
+    assert(l298n != NULL);
+
+    this.HX711 = hx711(5, 6);
+    this.HX711.attr("set_reading_format")("byte_format" _a="MSB", "bit_format" _a="MSB");
+    this.HX711.attr("set_reference_unit")(1);
+    this.HX711.attr("reset")();
+    this.HX711.attr("tare")();
+}
+
+Motor::~Motor() {
+    // this assumes the pybind interpreter will be
+    // finalized in APES::finish()
+    if (this.L298N != NULL) {
+        // @TODO: implement finish func in the python module
+        this.L298N.attr("finish")();
+        this.L298N.release();
+    }
+    return;
+}
+
+void Motor::motor_drive(bool dir, int speed, int time) {
+    //@TODO: implement the rest of this func
+    if (this.L298N != NULL) {
+        if (dir == 0) {
+            this.L298N.attr("forward")(this.pinA, this.pinB);
+        } else {
+            this.L298N.attr("backward")(this.pinA, this.pinB);
+        }
+    }
+}
+
+void Motor::motor_stop() {
+    if (this.L298N != NULL) {
+        this.L298N.attr("stop")(this.pinA, this.pinB);
+    }
+}

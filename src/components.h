@@ -44,4 +44,16 @@ class Wob {
         float read_wob(wob_t loadcell);
 };
 
+class Motor {
+    private:
+        pybind11::object L298N;
+        int pinA;
+        int pinB;
+    public:
+        Motor(int pinA, int pinB);
+        ~Motor();
+        void motor_drive(bool dir, int speed, int time);
+        void motor_stop();
+};
+
 #endif

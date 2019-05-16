@@ -25,6 +25,7 @@ int APES::setup() {
     this.therm = new Therm();
     this.amm = new Amm();
     this.level = new Level();
+    this.motor = new Motor();
     
     wiringPiSPISetup(0, 500000);
     wiringPiSPISetup(1, 500000);
@@ -59,8 +60,21 @@ int read_level() {
     return -1;
 }
 
+void motor_drive(bool dir, int speed, int time) {
+    if (this.motor != NULL) {
+        this.motor->motor_drive(dir, speed, time);
+    }
+}
+
+void motor_stop() {
+    if (this.motor != NULL) {
+        this.motor->motor_stop();
+    }
+}
+
 int APES::standby() {
     // ensure that everything is off
+    this.motor_stop();
     return 0;
 }
 
