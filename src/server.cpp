@@ -1,5 +1,7 @@
 #include "csapp.h"
 #include "command_helper.h"
+#include "analog.h"
+#include "loadcell.h"
 #include "APES.h"
 #include <unistd.h>
 #include <stdlib.h>
@@ -11,15 +13,17 @@
 #include <assert.h>
 #include <pthread.h>
 
+static int server_fd;
+static int client_fd = -1;
 static volatile int disconnected = 1;
 APES robot;
 
 int serverSetup(char *port);
-int clientSetup(int server_fd);
+int clientSetup();
 static void *thread(void *arg);
 int eval(const char *cmdline);
 int command(token *tk);
-void shutdown(int server_fd, int client_fd);
+void shutdown();
 
 struct args {
     int server_fd;
@@ -54,7 +58,6 @@ int main(int argc, char** argv) {
         port = argv[1];
     }
 
-    int server_fd;
     server_fd = serverSetup(port);
     while (server_fd < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
@@ -65,7 +68,7 @@ int main(int argc, char** argv) {
         server_fd = serverSetup(port);
     }
 
-    clientSetup(server_fd);
+    clientSetup();
     
     while (1) {
 	    if (disconnected) {
@@ -110,9 +113,6 @@ static void *thread(void *arg) {
         if (eval_result == 0) {
             const char *msg = "ERROR: Unknown command!\n";
             rio_writen(client_fd, msg, strlen(msg));
-        } else if (eval_result == -1) {
-            shutdown(server_fd, client_fd);
-            exit(0);
         }
 	
     }
@@ -132,9 +132,9 @@ static int serverSetup(char *port) {
     return server_fd;
 }
 
-static int clientSetup(int server_fd) {
+static int clientSetup() {
     // client connection
-    int client_fd = -1;
+    //int client_fd = -1;
     pthread_t tid;
 
     struct addrinfo server_addr = {
@@ -174,7 +174,7 @@ static int clientSetup(int server_fd) {
     return 0;
 }
 
-void shutdown(int server_fd, int client_fd) {
+void shutdown() {
     robot.finish();
     const char *msg = "Shutting down!\n";
     rio_writen(client_fd, msg, strlen(msg));
@@ -209,7 +209,8 @@ int command(token *tk) {
     switch (command) {
         case QUIT:
             // shuts down everything
-            return -1;
+            shutdown();
+            exit(0);
         case AUTO:
             // runs things automatically
             /*
@@ -223,22 +224,32 @@ int command(token *tk) {
             */
             return 1;
         case TEMP:
-            robot.read_temp(robot->thermo);
+            float temp;
+            temp = read_temp(robot->thermo);
+            printf(stdout, "Temp (@time): %f\n", temp);
             return 1;
         case DTEMP:
-            robot.D_temp(robot->thermo);
+            float dtemp;
+            dtemp = D_temp(robot->thermo);
+            printf(stdout, "Temp since init: %f\n", dtemp);
             return 1;
         case CURR:
-            robot.read_curr(robot->ammeter);
+            float curr;
+            curr = read_curr(robot->ammeter);
+            printf(stdout, "Curr (@time): %f\n", curr);
             return 1;
         case LEVEL:
-            robot.read_level(robot->wlevel);
+            int level;
+            level = read_level(robot->wlevel);
+            printf(stdout, "Level (@time): %d\n", level);
             return 1;
         case STANDBY:
             robot.standby();
             return 1;
         case WOB:
-            robot.read_wob(robot->wob);
+            float force;
+            force = read_wob(robot->wob);
+            printf(stdout, "Force (@time): %f\n", force);
             return 1;
         case MOTOR_DRIVE:
             // drives motor
@@ -258,7 +269,7 @@ int command(token *tk) {
             return 1;
         case NONE:
         default:
-            // not a builtin command
+            // not a built-in command
             return 0;
     }
 }
