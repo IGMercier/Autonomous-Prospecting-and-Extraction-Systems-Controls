@@ -1,5 +1,5 @@
-#ifndef __ANALOG_H__
-#define __ANALOG_H__
+#ifndef __COMPONENTS_H__
+#define __COMPONENTS_H__
 
 typedef struct therm {
     int bus_addr;
