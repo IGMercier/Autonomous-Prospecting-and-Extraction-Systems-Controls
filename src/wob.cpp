@@ -4,7 +4,7 @@
 namespace py = pybind11;
 using namespace py::literals;
 
-wob_t makeWOB() {
+wob_t make_wob() {
     // this assumes the pybind interpreter has been initialized
     // in  APES::setup()!
     wob_t loadcell = calloc(1, sizeof(wob));
@@ -22,7 +22,7 @@ wob_t makeWOB() {
     return loadcell;
 }
 
-float readWOB(wob_t loadcell) {
+float read_wob(wob_t loadcell) {
     py::object value;
     value = loadcell->HX711.attr("get_weight")("times" _a=5);
     loadcell->HX711.attr("power_down")();
@@ -33,7 +33,7 @@ float readWOB(wob_t loadcell) {
     return 1;
 }
 
-void freeWOB(wob_t loadcell) {
+void free_wob(wob_t loadcell) {
     // this assumes the pybind interpreter will be
     // finalized in APES::finish()
     if (loadcell->HX711 != NULL) {

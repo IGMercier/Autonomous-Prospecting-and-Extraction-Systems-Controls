@@ -9,8 +9,8 @@ typedef struct wob {
 
 typedef wob* wob_t;
 
-wob_t makeWOB();
-float readWOB(wob_t loadcell);
-void freeWOB(wob_t loadcell);
+wob_t make_wob();
+float read_wob(wob_t loadcell);
+void free_wob(wob_t loadcell);
 
 #endif

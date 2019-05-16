@@ -20,7 +20,7 @@ int APES::setup() {
     // starts python interpreter
     py::initialize_interpreter();
 
-    this->loadcell = makeWOB();
+    this->loadcell = make_wob();
     this->thermo = make_thermo();
     this->ammeter = make_amm();
     this->wlevel = make_level();
