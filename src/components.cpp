@@ -151,15 +151,17 @@ float Wob::read_wob() {
     this.HX711.attr("power_up")();
 
     //@TODO: look up how to convert pybind value to C++ primitive
+    float force = value.cast<>(std::float);
 
-    return 1;
+    return force;
 }
 
 Wob::~Wob() {
     // this assumes the pybind interpreter will be
     // finalized in APES::finish()
     if (this.HX711 != NULL) {
-        this.HX711.attr("finish")();
+        // @TODO: implement clean func in the python module
+        this.HX711.attr("clean")();
         this.HX711.release();
     }
     return;
@@ -188,7 +190,7 @@ Motor::~Motor() {
     // this assumes the pybind interpreter will be
     // finalized in APES::finish()
     if (this.L298N != NULL) {
-        // @TODO: implement finish func in the python module
+        // @TODO: implement clean func in the python module
         this.L298N.attr("clean")();
         this.L298N.release();
     }

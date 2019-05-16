@@ -12,7 +12,7 @@
 #include <assert.h>
 #include <pthread.h>
 
-static int server_fd;
+static int server_fd = -1;
 static int client_fd = -1;
 static volatile int disconnected = 1;
 APES robot;
@@ -24,11 +24,6 @@ int sendToClient(const char *msg);
 int eval(const char *cmdline);
 int command(token *tk);
 void shutdown();
-
-struct args {
-    int server_fd;
-    int client_fd;
-};
 
 int main(int argc, char** argv) {
     /* @TODO:
@@ -79,21 +74,13 @@ int main(int argc, char** argv) {
 }
 
 void connected() {
-    //if (pthread_detach(pthread_self()) < 0) {
-    //    fprintf(stderr, "ERROR: %s\n", strerror(errno));
-    //}
-
-    //struct args param = (struct args)(long)arg;
-    //int server_fd = param.server_fd;
-    //int client_fd = param.client_fd;
-    
     size_t n;
     rio_t buf;
     Rio_readinitb(&buf, client_fd);
-    char cmdline[RIO_BUFSIZE];
+    char cmdline[MAXLINE];
     
     // read/eval loop
-    while((n = Rio_readlineb(&buf, cmdline, RIO_BUFSIZE)) != 0) {
+    while((n = Rio_readlineb(&buf, cmdline, MAXLINE)) != 0) {
         fprintf(stdout, "Received: %s", cmdline);
         cmdline[strlen(cmdline)-1] = '\0';
 
@@ -120,11 +107,8 @@ static int serverSetup(char *port) {
     return server_fd;
 }
 
+// client connection
 static int clientSetup() {
-    // client connection
-    //int client_fd = -1;
-    pthread_t tid;
-
     struct addrinfo server_addr = {
         .ai_addr = NULL,
         .ai_addrlen = 0
@@ -143,22 +127,6 @@ static int clientSetup() {
     string msg = "Connected...!\n";
     sendToClient(msg.c_str());
     fprintf(stdout, msg.c_str());
-
-    //struct args param = {
-    //    .server_fd = server_fd,
-    //    .client_fd = client_fd
-    //};
-
-    /*
-    // creates new thread that handles client input
-    if (pthread_create(&tid, NULL, thread, (void *)(long)param) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        if (close(client_fd) < 0) {
-            fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        }
-        disconnected = 1;
-        return -1;
-    }*/
 
     return 0;
 }
@@ -197,6 +165,7 @@ int eval(const char *cmdline) {
 }
 
 int command(token *tk) {
+
     command_state command = tk->command;
 
     switch (command) {
@@ -217,6 +186,7 @@ int command(token *tk) {
         case QUIT:
             // shuts down everything
             shutdown();
+            break;
         case AUTO:
             // runs things automatically
             /*
