@@ -2,6 +2,15 @@
 #define __COMPONENTS_H__
 
 #include "include/pybind11/embed.h"
+#include <ctime>
+
+typedef struct dataPt {
+    union data {
+        int dataI;
+        float dataF;
+    };
+    time_t time;
+} dataPt;
 
 class Therm {
     private:
