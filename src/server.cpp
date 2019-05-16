@@ -1,7 +1,6 @@
 #include "csapp.h"
 #include "command_helper.h"
-#include "analog.h"
-#include "loadcell.h"
+#include "components.h"
 #include "APES.h"
 #include <unistd.h>
 #include <stdlib.h>
@@ -20,7 +19,7 @@ APES robot;
 
 int serverSetup(char *port);
 int clientSetup();
-static void *thread(void *arg);
+void connected();
 int eval(const char *cmdline);
 int command(token *tk);
 void shutdown();
@@ -41,15 +40,6 @@ int main(int argc, char** argv) {
          [X] put robot in standby
      */
 
-    // setup robot and retry on fail
-    while (robot.setup() < 0) {
-        fprintf(stderr, "ERROR: APES system setup failure!\n");
-        fprintf(stdout, "Retrying...\n");
-        // robot.finish();
-    }
-
-    // put in standby
-    robot.standby();
 
     char *port;
     if (argc < 2) {
@@ -62,7 +52,6 @@ int main(int argc, char** argv) {
     while (server_fd < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
         fprintf(stdout, "Retrying...\n");
-        robot.finish();
         
         // retry to setup
         server_fd = serverSetup(port);
@@ -71,6 +60,7 @@ int main(int argc, char** argv) {
     clientSetup();
     
     while (1) {
+        connected();
 	    if (disconnected) {
             robot.standby();
             
@@ -83,21 +73,18 @@ int main(int argc, char** argv) {
 
 
     // control should never reach here
-    if (close(server_fd) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        fprintf(stdout, "Shutting down!\n");
-    }
+    shutdown();
     return -1;
 }
 
-static void *thread(void *arg) {
-    if (pthread_detach(pthread_self()) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
-    }
+void connected() {
+    //if (pthread_detach(pthread_self()) < 0) {
+    //    fprintf(stderr, "ERROR: %s\n", strerror(errno));
+    //}
 
-    struct args param = (struct args)(long)arg;
-    int server_fd = param.server_fd;
-    int client_fd = param.client_fd;
+    //struct args param = (struct args)(long)arg;
+    //int server_fd = param.server_fd;
+    //int client_fd = param.client_fd;
     
     size_t n;
     rio_t buf;
@@ -122,7 +109,7 @@ static void *thread(void *arg) {
     }
     disconnected = 1;
     fprintf(stdout, "Disconnected...\n");
-    return NULL;
+    return;
 }
 
 // server functions
@@ -156,11 +143,12 @@ static int clientSetup() {
     rio_writen(client_fd, msg, strlen(msg));
     fprintf(stdout, msg);
 
-    struct args param = {
-        .server_fd = server_fd,
-        .client_fd = client_fd
-    };
+    //struct args param = {
+    //    .server_fd = server_fd,
+    //    .client_fd = client_fd
+    //};
 
+    /*
     // creates new thread that handles client input
     if (pthread_create(&tid, NULL, thread, (void *)(long)param) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
@@ -169,13 +157,14 @@ static int clientSetup() {
         }
         disconnected = 1;
         return -1;
-    }
+    }*/
 
     return 0;
 }
 
 void shutdown() {
     robot.finish();
+
     const char *msg = "Shutting down!\n";
     rio_writen(client_fd, msg, strlen(msg));
 
@@ -207,6 +196,17 @@ int command(token *tk) {
     command_state command = tk->command;
 
     switch (command) {
+        case SETUP:
+            // setup robot and retry on fail
+            while (robot.setup() < 0) {
+                fprintf(stderr, "ERROR: APES system setup failure!\n");
+                fprintf(stdout, "Retrying...\n");
+                robot.finish();
+            }
+
+            // put in standby
+            robot.standby();
+            break;
         case QUIT:
             // shuts down everything
             shutdown();
@@ -225,22 +225,22 @@ int command(token *tk) {
             return 1;
         case TEMP:
             float temp;
-            temp = read_temp(robot->thermo);
+            temp = robot.read_temp();
             printf(stdout, "Temp (@time): %f\n", temp);
             return 1;
         case DTEMP:
             float dtemp;
-            dtemp = D_temp(robot->thermo);
+            dtemp = robot.D_temp();
             printf(stdout, "Temp since init: %f\n", dtemp);
             return 1;
         case CURR:
             float curr;
-            curr = read_curr(robot->ammeter);
+            curr = robot.read_curr();
             printf(stdout, "Curr (@time): %f\n", curr);
             return 1;
         case LEVEL:
             int level;
-            level = read_level(robot->wlevel);
+            level = robot.read_level();
             printf(stdout, "Level (@time): %d\n", level);
             return 1;
         case STANDBY:
@@ -248,7 +248,7 @@ int command(token *tk) {
             return 1;
         case WOB:
             float force;
-            force = read_wob(robot->wob);
+            force = robot.read_wob();
             printf(stdout, "Force (@time): %f\n", force);
             return 1;
         case MOTOR_DRIVE:

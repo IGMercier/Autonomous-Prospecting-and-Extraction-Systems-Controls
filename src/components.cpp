@@ -31,24 +31,19 @@ int readADC(int bus, int channel) {
 /*
     THERMOMETER FUNCTIONS
 */
-therm_t make_therm(int bus_addr, float max_T) {
+Therm::Therm(int bus_addr, float max_T) {
     if ((bus_addr > 7) || (bus_addr < 0)) {
         fprintf(stderr, "ERROR: thermometer bus address takes values 0-7!\n");
         fprintf(stderr, "ERROR: thermometer instatiation failed!\n");
         return;
     }
 
-    therm_t thermo = calloc(1, sizeof(therm));
-
-    thermo->bus_addr = bus_addr;
-    thermo->max_T = max_T;
-
-    thermo->iTemp = read_temp(thermo);
-    
-    return thermo;
+    this.bus_addr = bus_addr;
+    this.max_T = max_T;
+    this.iTemp = read_temp(thermo);
 }
 
-float read_temp(therm_t thermo) {
+float Therm::read_temp() {
     int bus, channel;
 
     // @TODO: how is bus_addr specified???
@@ -56,35 +51,27 @@ float read_temp(therm_t thermo) {
     return (float)readADC(bus, channel);
 }
 
-float D_temp(therm_t thermo) {
-    float fTemp = read_temp(thermo->bus_addr);
-    return fTemp - thermo->iTemp;
-}
-
-void free_therm(therm_t thermo) {
-    free(thermo);
+float Therm::D_temp(therm_t thermo) {
+    float fTemp = read_temp(this.bus_addr);
+    return fTemp - this.iTemp;
 }
 
 
 /*
     AMMETER FUNCTIONS
 */
-amm_t make_amm(int bus_addr, float max_I) {
+Amm::Amm(int bus_addr, float max_I) {
     if ((bus_addr > 7) || (bus_addr < 0)) {
         fprintf(stderr, "ERROR: ammeter bus address takes values 0-7!\n");
         fprintf(stderr, "ERROR: ammeter instatiation failed!\n");
         return;
     }
 
-    amm_t ammeter = calloc(1, sizeof(amm));
-    
-    ammeter->bus_addr = bus_addr;
-    ammeter->max_I = max_I;
-
-    return ammeter;
+    this.bus_addr = bus_addr;
+    this.max_I = max_I;
 }
 
-float read_curr(amm_t ammeter) {
+float Amm::read_curr() {
     int bus, channel;
 
     // @TODO: how is bus_addr specified???
@@ -92,15 +79,11 @@ float read_curr(amm_t ammeter) {
     return (float)readADC(bus, channel);
 }
 
-void free_amm(amm_t ammeter) {
-    free(ammeter);
-}
-
 
 /*
     WATER LEVEL FUNCTIONS
 */
-level_t make_level(int bus_start, int bus_end) {
+Level::Level(int bus_start, int bus_end) {
     if ((bus_start > 7) || (bus_start < 0)) {
         fprintf(stderr, "ERROR: level bus_start address takes values 0-7!\n");
         fprintf(stderr, "ERROR: level instatiation failed!\n");
@@ -121,15 +104,11 @@ level_t make_level(int bus_start, int bus_end) {
     }
 
 
-    level_t wlevel = calloc(1, sizeof(level));
-
-    wlevel->bus_start = bus_start;
-    wlevel->bus_end = bus_end;
-
-    return wlevel;
+    this.bus_start = bus_start;
+    this.bus_end = bus_end;
 }
 
-int read_level(level_t wlevel) {
+int Level::read_level() {
     /*@TODO:
       reads from each ADC channel
       assumes 1 == water at that level
@@ -138,8 +117,8 @@ int read_level(level_t wlevel) {
     */
     int bus;
     int level = 0;
-    int channel = wlevel->bus_start;
-    for ( ; channel < wlevel->bus_end; channel++) {
+    int channel = this.bus_start;
+    for ( ; channel < this.bus_end; channel++) {
         if (readADC(bus, channel) == 1) {
             level = channel;
         }
@@ -148,49 +127,40 @@ int read_level(level_t wlevel) {
     return level;
 }
 
-void free_level(level_t wlevel) {
-    free(wlevel);
-}
-
 
 /*
     WOB FUNCTIONS
 */
-wob_t make_wob() {
+Wob::Wob() {
     // this assumes the pybind interpreter has been initialized
     // in  APES::setup()!
-    wob_t loadcell = calloc(1, sizeof(wob));
-    assert(loadcell != NULL);
-
     py::object hx711 = py::module::import("libraries/hx711").attr("HX711");
     assert(hx711 != NULL);
 
-    loadcell->HX711 = hx711(5, 6);
-    loadcell->HX711.attr("set_reading_format")("byte_format" _a="MSB", "bit_format" _a="MSB");
-    loadcell->HX711.attr("set_reference_unit")(1);
-    loadcell->HX711.attr("reset")();
-    loadcell->HX711.attr("tare")();
-
-    return loadcell;
+    this.HX711 = hx711(5, 6);
+    this.HX711.attr("set_reading_format")("byte_format" _a="MSB", "bit_format" _a="MSB");
+    this.HX711.attr("set_reference_unit")(1);
+    this.HX711.attr("reset")();
+    this.HX711.attr("tare")();
 }
 
-float read_wob(wob_t loadcell) {
+float Wob::read_wob() {
     py::object value;
-    value = loadcell->HX711.attr("get_weight")("times" _a=5);
-    loadcell->HX711.attr("power_down")();
-    loadcell->HX711.attr("power_up")();
+    value = this.HX711.attr("get_weight")("times" _a=5);
+    this.HX711.attr("power_down")();
+    this.HX711.attr("power_up")();
 
     //@TODO: look up how to convert pybind value to C++ primitive
 
     return 1;
 }
 
-void free_wob(wob_t loadcell) {
+Wob::~Wob() {
     // this assumes the pybind interpreter will be
     // finalized in APES::finish()
-    if (loadcell->HX711 != NULL) {
-        loadcell->HX711.attr("finish")();
-        loadcell->HX711.release();
+    if (this.HX711 != NULL) {
+        this.HX711.attr("finish")();
+        this.HX711.release();
     }
     return;
 }
