@@ -1,6 +1,8 @@
 #include "commands.h"
 #include <string>
 
+using std::string;
+
 int parseline(const char *cmdline, token *tk) {
     const char delims[] = " \t\r\n";
     char *buf;
@@ -11,61 +13,62 @@ int parseline(const char *cmdline, token *tk) {
         return -1;
     }
 
-    strncopy(token->text, cmdline, MAXLINE_TSH);
+    strncpy(tk->text, cmdline, MAXLINE);
 
-    buf = token->text;
-    endbuf = token->text + strlen(token->text);
+    buf = tk->text;
+    endbuf = tk->text + strlen(tk->text);
 
-    token->argc = 0;
+    tk->argc = 0;
 
     while (buf < endbuf) {
-        buf += strspn(buf, delims);
+        buf += strspn(buf, delims); // skips by num of delimiters
         if (buf >= endbuf) { break; }
 
         next = buf + strcspn(buf, delims);
 
-        *next = '\0';
+        *next = '\0'; // make buf into valid c string
 
-        token->argv[token->argc] = buf;
-        token->argc = token->argc + 1;
+        tk->argv[tk->argc] = buf;
+        tk->argc = tk->argc + 1;
 
-        if (token->argc >= MAXARGS - 1) { break; }
+        if (tk->argc >= MAXARGS - 1) { break; }
 
         buf = next + 1;
     }
-    token->argv[token->argc] = NULL;
-    if (token->argc == 0) { return -1; }
 
-    if ((strcmp(token->argv[0], "quit")) == 0) {
-        token->command_state = QUIT;
-    } else if ((strcmp(token->argv[0], "start")) == 0) {
-        token->command_state = START;
-    } else if ((strcmp(token->argv[0], "standby")) == 0) {
-        token->command_state = STANDBY;
-    } else if ((strcmp(token->argv[0], "temp")) == 0) {
-        token->command_state = TEMP;
-    } if ((strcmp(token->argv[0], "dtemp")) == 0) {
-        token->command_state = DTEMP;
-    } else if ((strcmp(token->argv[0], "curr")) == 0) {
-        token->command_state = CURR;
-    } else if ((strcmp(token->argv[0], "level")) == 0) {
-        token->command_state = LEVEL;
-    } else if ((strcmp(token->argv[0], "wob")) == 0) {
-        token->command_state = QUIT;
-    } else if ((strcmp(token->argv[0], "motor_drive")) == 0) {
-        token->command_state = MOTOR_DRIVE;
-    } else if ((strcmp(token->argv[0], "motor_stop")) == 0) {
-        token->command_state = MOTOR_STOP;
-    } else if ((strcmp(token->argv[0], "drill_run")) == 0) {
-        token->command_state = DRILL_RUN;
-    } else if ((strcmp(token->argv[0], "drill_stop")) == 0) {
-        token->command_state = DRILL_STOP;
-    } else if ((strcmp(token->argv[0], "drill_cycle")) == 0) {
-        token->command_state = DRILL_CYCLE;
-    } else if ((strcmp(token->argv[0], "auto")) == 0) {
-        token->command_state = AUTO;
+    tk->argv[tk->argc] = NULL;
+    if (tk->argc == 0) { return -1; }
+
+    if ((strcmp(tk->argv[0], "quit")) == 0) {
+        tk->command = QUIT;
+    } else if ((strcmp(tk->argv[0], "start")) == 0) {
+        tk->command = START;
+    } else if ((strcmp(tk->argv[0], "standby")) == 0) {
+        tk->command = STANDBY;
+    } else if ((strcmp(tk->argv[0], "temp")) == 0) {
+        tk->command = TEMP;
+    } if ((strcmp(tk->argv[0], "dtemp")) == 0) {
+        tk->command = DTEMP;
+    } else if ((strcmp(tk->argv[0], "curr")) == 0) {
+        tk->command = CURR;
+    } else if ((strcmp(tk->argv[0], "level")) == 0) {
+        tk->command = LEVEL;
+    } else if ((strcmp(tk->argv[0], "wob")) == 0) {
+        tk->command = QUIT;
+    } else if ((strcmp(tk->argv[0], "motor_drive")) == 0) {
+        tk->command = MOTOR_DRIVE;
+    } else if ((strcmp(tk->argv[0], "motor_stop")) == 0) {
+        tk->command = MOTOR_STOP;
+    } else if ((strcmp(tk->argv[0], "drill_run")) == 0) {
+        tk->command = DRILL_RUN;
+    } else if ((strcmp(tk->argv[0], "drill_stop")) == 0) {
+        tk->command = DRILL_STOP;
+    } else if ((strcmp(tk->argv[0], "drill_cycle")) == 0) {
+        tk->command = DRILL_CYCLE;
+    } else if ((strcmp(tk->argv[0], "auto")) == 0) {
+        tk->command = AUTO;
     } else {
-        token->command_state = NONE;
+        tk->command = NONE;
     }
 
     return 0;

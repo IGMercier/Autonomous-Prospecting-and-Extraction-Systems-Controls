@@ -1,29 +1,39 @@
-#include "csapp.h"
 #include "commands.h"
-#include "components.h"
-#include "APES.h"
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <signal.h>
-#include <sys/socket.h>
-#include <assert.h>
-#include <pthread.h>
+//#include "components.h"
+//#include "APES.h"
+//#include <unistd.h>
+//#include <stdlib.h>
+//#include <stdio.h>
+//#include <string.h>
+//#include <string>
+//#include <cstring>
+//#include <errno.h>
+//#include <signal.h>
+//#include <sys/socket.h>
+//#include <assert.h>
+//#include <pthread.h>
+
+/*
+    Setup Server
+    Wait for input
+    Evaluate input and add to job list, wait for more input
+    separately execute each job in job list
+*/
+
+using std::string;
 
 static int server_fd = -1;
 static int client_fd = -1;
 static volatile int disconnected = 1;
-APES robot;
+//APES robot;
 
-int serverSetup(char *port);
-int clientSetup();
-void connected();
-int sendToClient(const char *msg);
-int eval(const char *cmdline);
-int command(token *tk);
-void shutdown();
+static int serverSetup(char *port);
+static int clientSetup();
+static void readFromClient();
+static int sendToClient(const char *msg);
+static int eval(const char *cmdline);
+static int command(token *tk);
+static void shutdown();
 
 int main(int argc, char** argv) {
     /* @TODO:
@@ -56,14 +66,14 @@ int main(int argc, char** argv) {
     clientSetup();
     
     while (1) {
-        connected();
+        readFromClient();
 	    if (disconnected) {
-            robot.standby();
+            // robot.standby();
             
             // keep trying to connect to client.
             // in this state, the loop should really
             // only run once
-            clientSetup(server_fd);
+            clientSetup();
 	    }
     }
 
@@ -73,42 +83,58 @@ int main(int argc, char** argv) {
     return -1;
 }
 
-void connected() {
-    size_t n;
-    rio_t buf;
-    Rio_readinitb(&buf, client_fd);
-    char cmdline[MAXLINE];
+/*
+    SERVER/CLIENT FUNCTIONS
+*/
+void serverSetup(char *port) {
+    // server setup
+    struct addrinfo hints, *listp, *p;
+    int optval;
     
-    // read/eval loop
-    while((n = Rio_readlineb(&buf, cmdline, MAXLINE)) != 0) {
-        fprintf(stdout, "Received: %s", cmdline);
-        cmdline[strlen(cmdline)-1] = '\0';
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    //hints.ai_flags = AI_PASSIVE;
+    hints.ai_protocol = 0;
+    hints.ai_canonname = NULL;
+    hints.air_addr = NULL;
+    hints.air_next = NULL;
 
-        int eval_result = eval(cmdline);
-        if (eval_result == 0) {
-            string msg = "ERROR: Unknown command!\n";
-            sendToClient(msg.c_str());
+    int rc;
+    if ((rc = getaddrinfo(NULL, port, &hints, &listp)) != 0) {
+        // not reached
+        return;
+    }
+
+    for (p = listp; p != NULL; p = p->ai_next) {
+        server_fd = socket(p->ai_family,
+                           p->ai_socktype,
+                           p->ai_protocol);
+        if (server_fd < 0) { continue; }
+
+        //setsockopt(server_fd, SOL_SOCKET,
+        //           SO_REUSEADDR, (const void *) &optval,
+        //           sizeof(int));
+
+        if (bind(server_fd, p->ai_addr, p->ai_addrlen) == 0) {
+            break; // found a socket
         }
-	
+
+        close(server_fd);
+    }
+    freeaddrinfo(listp);
+    if (!p) {
+        return;
     }
 
-    if (close(client_fd) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+    if (listen(server_fd, LISTENQ) < 0) {
+        close(server_fd);
+        return;
     }
-    disconnected = 1;
-    fprintf(stdout, "Disconnected...\n");
     return;
 }
 
-// server functions
-static int serverSetup(char *port) {
-    // server setup
-    int server_fd = open_listenfd(port);
-    return server_fd;
-}
-
-// client connection
-static int clientSetup() {
+int clientSetup() {
     struct addrinfo server_addr = {
         .ai_addr = NULL,
         .ai_addrlen = 0
@@ -131,12 +157,41 @@ static int clientSetup() {
     return 0;
 }
 
+/*
+    EVALUATION FUNCTIONS
+*/
+void readFromClient() {
+    size_t n;
+    char cmdline[MAXLINE];
+    
+    // read/eval loop
+    while ((n = read(client_fd, cmdline, MAXLINE)) != 0) {
+        fprintf(stdout, "Received: %s", cmdline);
+        cmdline[strlen(cmdline)-1] = '\0';
+
+        int eval_result = eval(cmdline);
+        if (eval_result == 0) {
+            string msg = "ERROR: Unknown command!\n";
+            sendToClient(msg.c_str());
+        }
+	
+    }
+
+    if (close(client_fd) < 0) {
+        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+    }
+    disconnected = 1;
+    fprintf(stdout, "Disconnected...\n");
+    return;
+}
+
 int sendToClient(const char *msg) {
-    return rio_writen(client_fd, msg, strlen(msg));
+    write(client_fd, msg, strlen(msg));
+    return 0;
 }
 
 void shutdown() {
-    robot.finish();
+    //robot.finish();
 
     string msg = "Shutting down!\n";
     sendToClient(msg.c_str());
@@ -168,25 +223,29 @@ int command(token *tk) {
 
     command_state command = tk->command;
 
+    string msg;
+
     switch (command) {
         case START:
             // setup robot and retry on fail
-            while (robot.setup() < 0) {
-                fprintf(stderr, "ERROR: APES system setup failure!\n");
-                fprintf(stdout, "Retrying...\n");
-                robot.finish();
-            }
+            //while (robot.setup() < 0) {
+            //    fprintf(stderr, "ERROR: APES system setup failure!\n");
+            //    fprintf(stdout, "Retrying...\n");
+            //    robot.finish();
+            //}
 
             // put in standby
-            robot.standby();
-            break;
+            //robot.standby();
+            msg = "ROBOT STARTED\n";
+            sendToClient(msg.c_str());
+            return 1;
         case HELP:
             sendToClient(listCommands());
-            break;
+            return 1;
         case QUIT:
             // shuts down everything
             shutdown();
-            break;
+            return 1;
         case AUTO:
             // runs things automatically
             /*
@@ -200,40 +259,58 @@ int command(token *tk) {
             */
             return 1;
         case TEMP:
+            /*
             float temp;
             temp = robot.read_temp();
             printf(stdout, "Temp (@time): %f\n", temp);
+            */
+            msg = "TEMP MODE\n";
+            sendToClient(msg.c_str());
             return 1;
         case DTEMP:
+            /*
             float dtemp;
             dtemp = robot.D_temp();
             printf(stdout, "Temp since init: %f\n", dtemp);
+            */
+            msg = "DTEMP MODE\n";
+            sendToClient(msg.c_str());
             return 1;
         case CURR:
+            /*
             float curr;
             curr = robot.read_curr();
             printf(stdout, "Curr (@time): %f\n", curr);
+            */
+            msg = "CURR MODE\n";
+            sendToClient(msg.c_str());
             return 1;
         case LEVEL:
+            /*
             int level;
             level = robot.read_level();
             printf(stdout, "Level (@time): %d\n", level);
+            */
+            msg = "LEVEL MODE\n";
+            sendToClient(msg.c_str());
             return 1;
         case STANDBY:
-            robot.standby();
+            //robot.standby();
             return 1;
         case WOB:
+            /*
             float force;
             force = robot.read_wob();
             printf(stdout, "Force (@time): %f\n", force);
+            */
             return 1;
         case DATA:
-            robot.read_data();
+            //robot.read_data();
         case MOTOR_DRIVE:
-            robot.motor_drive();
+            //robot.motor_drive();
             return 1;
         case MOTOR_STOP:
-            robot.motor_stop();
+            //robot.motor_stop();
             return 1;
         // do things for switch
         case DRILL_RUN:
