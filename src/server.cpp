@@ -1,16 +1,18 @@
 #include "commands.h"
 //#include "components.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string>
+#include <cstring>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <errno.h>
+#include <assert.h>
 //#include "APES.h"
-//#include <unistd.h>
-//#include <stdlib.h>
-//#include <stdio.h>
 //#include <string.h>
-//#include <string>
 //#include <cstring>
-//#include <errno.h>
-//#include <signal.h>
-//#include <sys/socket.h>
-//#include <assert.h>
 //#include <pthread.h>
 
 /*
@@ -27,13 +29,15 @@ static int client_fd = -1;
 static volatile int disconnected = 1;
 //APES robot;
 
-static int serverSetup(char *port);
+static int serverSetup(int port);
 static int clientSetup();
-static void readFromClient();
+static int readFromClient();
 static int sendToClient(const char *msg);
-static int eval(const char *cmdline);
+static int eval(const char *cmdline, token *tk);
 static int command(token *tk);
 static void shutdown();
+
+typedef struct sockaddr SA;
 
 int main(int argc, char** argv) {
     /* @TODO:
@@ -45,25 +49,25 @@ int main(int argc, char** argv) {
        [X] when disconnected:
          [X] put robot in standby
      */
-
-
-    char *port;
+    int port;
     if (argc < 2) {
-        port = "16778";
+        port = atoi("16778");
     } else {
-        port = argv[1];
+        port = atoi(argv[1]);
     }
 
-    server_fd = serverSetup(port);
-    while (server_fd < 0) {
+    fprintf(stdout, "Attempting serverSetup! ");
+    while ((server_fd = serverSetup(port)) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
         fprintf(stdout, "Retrying...\n");
         
         // retry to setup
-        server_fd = serverSetup(port);
     }
+    fprintf(stdout, "Finished serverSetup!\n");
+    fprintf(stdout, "Attempting clientSetup! ");
 
-    clientSetup();
+    while (clientSetup() < 0) { fprintf(stderr, "Retrying client setup!\n"); }
+    fprintf(stdout, "Finished clientSetup!\n");
     
     while (1) {
         readFromClient();
@@ -86,73 +90,57 @@ int main(int argc, char** argv) {
 /*
     SERVER/CLIENT FUNCTIONS
 */
-void serverSetup(char *port) {
-    // server setup
-    struct addrinfo hints, *listp, *p;
-    int optval;
-    
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    //hints.ai_flags = AI_PASSIVE;
-    hints.ai_protocol = 0;
-    hints.ai_canonname = NULL;
-    hints.air_addr = NULL;
-    hints.air_next = NULL;
+static int serverSetup(int port) {
+    int optval = 1;
+    struct sockaddr_in serveraddr;
+    int sfd;
 
-    int rc;
-    if ((rc = getaddrinfo(NULL, port, &hints, &listp)) != 0) {
-        // not reached
-        return;
+    if ((sfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        return -1;
     }
 
-    for (p = listp; p != NULL; p = p->ai_next) {
-        server_fd = socket(p->ai_family,
-                           p->ai_socktype,
-                           p->ai_protocol);
-        if (server_fd < 0) { continue; }
-
-        //setsockopt(server_fd, SOL_SOCKET,
-        //           SO_REUSEADDR, (const void *) &optval,
-        //           sizeof(int));
-
-        if (bind(server_fd, p->ai_addr, p->ai_addrlen) == 0) {
-            break; // found a socket
-        }
-
-        close(server_fd);
-    }
-    freeaddrinfo(listp);
-    if (!p) {
-        return;
+    if (setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR,
+                   (const void*)&optval, sizeof(int)) < 0) {
+        return -1;
     }
 
-    if (listen(server_fd, LISTENQ) < 0) {
-        close(server_fd);
-        return;
+    bzero((char *)&serveraddr, sizeof(serveraddr));
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    serveraddr.sin_port = htons((unsigned short)port);
+
+    if (bind(sfd, (SA*)&serveraddr, sizeof(serveraddr)) < 0) {
+        return -1;
     }
-    return;
+
+    if (listen(sfd, 1024) < 0) {
+        return -1;
+    }
+
+    return sfd;
+
 }
 
-int clientSetup() {
-    struct addrinfo server_addr = {
-        .ai_addr = NULL,
-        .ai_addrlen = 0
-    };
+static int clientSetup() {
+    struct sockaddr_in clientaddr;
+    int clientlen;
+
+    clientlen = sizeof(clientaddr);
 
     // accept() blocks until client connects
     client_fd = accept(server_fd,
-                       server_addr.ai_addr,
-                       &(server_addr.ai_addrlen));
+                       (SA*)&clientaddr.sin_addr.s_addr,
+                       sizeof(clientaddr.sin_addr.s_addr),
+                       AF_INET);
     if (client_fd < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
         return -1;
     }
 
 	disconnected = 0;
-    string msg = "Connected...!\n";
-    sendToClient(msg.c_str());
-    fprintf(stdout, msg.c_str());
+    //string msg = "Connected...!\n";
+    //sendToClient(msg.c_str());
+    //fprintf(stdout, msg.c_str());
 
     return 0;
 }
@@ -160,20 +148,25 @@ int clientSetup() {
 /*
     EVALUATION FUNCTIONS
 */
-void readFromClient() {
+static int readFromClient() {
     size_t n;
     char cmdline[MAXLINE];
     
     // read/eval loop
     while ((n = read(client_fd, cmdline, MAXLINE)) != 0) {
-        fprintf(stdout, "Received: %s", cmdline);
         cmdline[strlen(cmdline)-1] = '\0';
+        fprintf(stdout, "Received: %s\n", cmdline);
 
-        int eval_result = eval(cmdline);
+        token tk;
+        int eval_result = eval(cmdline, &tk);
+
         if (eval_result == 0) {
-            string msg = "ERROR: Unknown command!\n";
-            sendToClient(msg.c_str());
+            fprintf(stdout, "Unknown Command\n\n");
+            //string msg = "ERROR: Unknown command!\n";
+            //sendToClient(msg.c_str());
         }
+
+        memset(cmdline, 0, MAXLINE);
 	
     }
 
@@ -182,20 +175,22 @@ void readFromClient() {
     }
     disconnected = 1;
     fprintf(stdout, "Disconnected...\n");
-    return;
+    return 0;
 }
 
-int sendToClient(const char *msg) {
+static int sendToClient(const char *msg) {
     write(client_fd, msg, strlen(msg));
     return 0;
 }
 
-void shutdown() {
+static void shutdown() {
     //robot.finish();
 
-    string msg = "Shutting down!\n";
-    sendToClient(msg.c_str());
-    fprintf(stdout, msg.c_str());
+    //string msg = "Shutting down!\n";
+    //sendToClient(msg.c_str());
+    //fprintf(stdout, msg.c_str());
+
+    fprintf(stdout, "SHUTTING DOWN\n");
 
     if (close(client_fd) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
@@ -206,22 +201,19 @@ void shutdown() {
     exit(0);
 }
 
-int eval(const char *cmdline) {
-    token tk;
+static int eval(const char *cmdline, token *tk) {
+    assert(cmdline != NULL);
+    assert(tk != NULL);
 
-    if (parseline(cmdline, &tk) < 0) {
-        return 0;
-    }
+    parseline(cmdline, tk);
 
-    if (!command(&tk)) {
-        return -1;
-    }
-    return 0;
+    return command(tk);
 }
 
-int command(token *tk) {
+static int command(token *tk) {
 
     command_state command = tk->command;
+    fprintf(stdout, "%s\n", tk->text);
 
     string msg;
 
@@ -236,11 +228,11 @@ int command(token *tk) {
 
             // put in standby
             //robot.standby();
-            msg = "ROBOT STARTED\n";
-            sendToClient(msg.c_str());
+            //msg = "ROBOT STARTED\n";
+            //sendToClient(msg.c_str());
             return 1;
         case HELP:
-            sendToClient(listCommands());
+            //sendToClient(listCommands());
             return 1;
         case QUIT:
             // shuts down everything
@@ -264,8 +256,8 @@ int command(token *tk) {
             temp = robot.read_temp();
             printf(stdout, "Temp (@time): %f\n", temp);
             */
-            msg = "TEMP MODE\n";
-            sendToClient(msg.c_str());
+            //msg = "TEMP MODE\n";
+            //sendToClient(msg.c_str());
             return 1;
         case DTEMP:
             /*
@@ -273,8 +265,8 @@ int command(token *tk) {
             dtemp = robot.D_temp();
             printf(stdout, "Temp since init: %f\n", dtemp);
             */
-            msg = "DTEMP MODE\n";
-            sendToClient(msg.c_str());
+            //msg = "DTEMP MODE\n";
+            //sendToClient(msg.c_str());
             return 1;
         case CURR:
             /*
@@ -282,8 +274,8 @@ int command(token *tk) {
             curr = robot.read_curr();
             printf(stdout, "Curr (@time): %f\n", curr);
             */
-            msg = "CURR MODE\n";
-            sendToClient(msg.c_str());
+            //msg = "CURR MODE\n";
+            //sendToClient(msg.c_str());
             return 1;
         case LEVEL:
             /*
@@ -291,8 +283,8 @@ int command(token *tk) {
             level = robot.read_level();
             printf(stdout, "Level (@time): %d\n", level);
             */
-            msg = "LEVEL MODE\n";
-            sendToClient(msg.c_str());
+            //msg = "LEVEL MODE\n";
+            //sendToClient(msg.c_str());
             return 1;
         case STANDBY:
             //robot.standby();
@@ -321,6 +313,8 @@ int command(token *tk) {
             return 1;
         case DRILL_CYCLE:
             // runs drill at duty cycle
+            return 1;
+        case NOP:
             return 1;
         case NONE:
         default:

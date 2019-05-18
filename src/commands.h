@@ -8,7 +8,7 @@
 #define MAXARGS  128
 #define MAXLINE  8192
 
-#include "csapp.h"
+#include <string.h>
 
 typedef enum command_state {
     START,
@@ -27,6 +27,7 @@ typedef enum command_state {
     DRILL_STOP,
     DRILL_CYCLE,
     AUTO,
+    NOP,
     QUIT
 } command_state;
 

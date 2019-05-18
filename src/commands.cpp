@@ -54,7 +54,7 @@ int parseline(const char *cmdline, token *tk) {
     } else if ((strcmp(tk->argv[0], "level")) == 0) {
         tk->command = LEVEL;
     } else if ((strcmp(tk->argv[0], "wob")) == 0) {
-        tk->command = QUIT;
+        tk->command = WOB;
     } else if ((strcmp(tk->argv[0], "motor_drive")) == 0) {
         tk->command = MOTOR_DRIVE;
     } else if ((strcmp(tk->argv[0], "motor_stop")) == 0) {
@@ -67,6 +67,10 @@ int parseline(const char *cmdline, token *tk) {
         tk->command = DRILL_CYCLE;
     } else if ((strcmp(tk->argv[0], "auto")) == 0) {
         tk->command = AUTO;
+    } else if ((strcmp(tk->argv[0], "nop")) == 0) {
+        tk->command = NOP;
+    } else if ((strcmp(tk->argv[0], "\n")) == 0) {
+        tk->command = NOP;
     } else {
         tk->command = NONE;
     }
