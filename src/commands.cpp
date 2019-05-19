@@ -1,6 +1,4 @@
 #include "commands.h"
-#include <string>
-
 using std::string;
 
 int parseline(const char *cmdline, token *tk) {
@@ -67,32 +65,33 @@ int parseline(const char *cmdline, token *tk) {
         tk->command = DRILL_CYCLE;
     } else if ((strcmp(tk->argv[0], "auto")) == 0) {
         tk->command = AUTO;
-    } else if ((strcmp(tk->argv[0], "disconnected")) == 0) {
-        tk->command = DISCONNECTED;
+    } else if ((strcmp(tk->argv[0], "help")) == 0) {
+        tk->command = HELP;
     } else {
         tk->command = NONE;
     }
 
     return 0;
 }
-
-const char* listCommands() {
-    string msg = "Help - Commands:\n";
-    msg += "help - prints this message\n";
-    msg += "start - initializes system\n";
-    msg += "standby - stops all components, system in standby\n";
-    msg += "temp - returns current temperature reading\n";
-    msg += "dtemp - returns temperature difference from startup\n";
-    msg += "curr - returns current current reading\n";
-    msg += "level - returns current level reading\n";
-    msg += "wob - returns current force reading\n";
-    msg += "data - returns the data file\n";
-    msg += "motor_drive - drive the motor\n";
-    msg += "motor_stop - stops the motor\n";
-    msg += "drill_run - runs the drill\n";
-    msg += "drill_stop - stops the drill\n";
-    msg += "drill_cycle - changes drill pwm\n";
-    msg += "auto - puts system in auto mode\n";
-    msg += "quit - shutdown the entire system, including server\n";
-    return msg.c_str();
-}
+/*
+string *listCommands() {
+    string helpLine[17];
+    helpLine[0] = "Help - Commands:\n";
+    helpLine[1] = "help - prints this message\n";
+    helpLine[2] = "start - initializes system\n";
+    helpLine[3] = "standby - stops all components, system in standby\n";
+    helpLine[4] = "temp - returns current temperature reading\n";
+    helpLine[5] = "dtemp - returns temperature difference from startup\n";
+    helpLine[6] = "curr - returns current current reading\n";
+    helpLine[7] = "level - returns current level reading\n";
+    helpLine[8] = "wob - returns current force reading\n";
+    helpLine[9] = "data - returns the data file\n";
+    helpLine[10] = "motor_drive - drive the motor\n";
+    helpLine[11] = "motor_stop - stops the motor\n";
+    helpLine[12] = "drill_run - runs the drill\n";
+    helpLine[13] = "drill_stop - stops the drill\n";
+    helpLine[14] = "drill_cycle - changes drill pwm\n";
+    helpLine[15] = "auto - puts system in auto mode\n";
+    helpLine[16] = "quit - shutdown the entire system, including server\n";
+    return helpLine;
+}*/

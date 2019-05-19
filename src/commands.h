@@ -8,7 +8,8 @@
 #define MAXARGS  128
 #define MAXLINE  8192
 
-#include <string.h>
+#include <string>
+#include <cstring>
 
 typedef enum command_state {
     START,
@@ -27,7 +28,6 @@ typedef enum command_state {
     DRILL_STOP,
     DRILL_CYCLE,
     AUTO,
-    DISCONNECTED,
     QUIT
 } command_state;
 
@@ -39,6 +39,6 @@ typedef struct token {
 } token;
 
 int parseline(const char *cmdline, token *tk);
-const char* listCommands();
+//std::string* listCommands();
 
 #endif

@@ -1,13 +1,15 @@
 #include "commands.h"
 //#include "components.h"
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <string>
 #include <cstring>
+#include <csignal>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <netinet/tcp.h>
 #include <errno.h>
 #include <assert.h>
 #include <pthread.h>
@@ -32,10 +34,13 @@ int serverSetup(int port);
 void  clientSetup();
 static int readFromClient(int client_fd, char *cmdline);
 static int sendToClient(int client_fd, const char *msg);
-static int evaluate(const char *cmdline, token *tk);
-static int command(token *tk);
+static int evaluate(int *client_fd, const char *cmdline, token *tk);
+static int command(int *client_fd, token *tk);
 static void shutdown(int client_fd);
 static void *thread(void *arg);
+
+static void sigint_handler(int sig);
+static void sigpipe_handler(int sig);
 
 
 #define RIO_BUFSIZE 8192
@@ -60,9 +65,13 @@ int main(int argc, char** argv) {
        [] when connected:
          [X] accept commands
 	     [] execute commands
-       [X] when disconnected:
-         [X] put robot in standby
+       [] when disconnected:
+         [] put robot in standby
      */
+
+    signal(SIGINT, sigint_handler); 
+    signal(SIGPIPE, sigpipe_handler); 
+
     int port;
     if (argc < 2) {
         port = atoi("16778");
@@ -81,7 +90,6 @@ int main(int argc, char** argv) {
     assert(server_fd >= 0);
 
     fprintf(stdout, "Finished serverSetup!\n");
-    fflush(stdout);
 
     fprintf(stdout, "Attempting clientSetup!\n");
     clientSetup();
@@ -95,7 +103,7 @@ int main(int argc, char** argv) {
     SERVER/CLIENT FUNCTIONS
 */
 int serverSetup(int port) {
-    int optval = 1;
+    int flags = 1;
     struct sockaddr_in serveraddr;
     int sfd;
 
@@ -104,7 +112,26 @@ int serverSetup(int port) {
     }
 
     if (setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR,
-                   (const void*)&optval, sizeof(int)) < 0) {
+                   (const void*)&flags, sizeof(int)) < 0) {
+        close(sfd);
+        return -1;
+    }
+
+    flags = 5;
+    if (setsockopt(sfd, SOL_TCP, TCP_KEEPIDLE,
+                   (const void*)&flags, sizeof(int)) < 0) {
+        close(sfd);
+        return -1;
+    }
+    flags = 2;
+    if (setsockopt(sfd, SOL_TCP, TCP_KEEPCNT,
+                   (const void*)&flags, sizeof(int)) < 0) {
+        close(sfd);
+        return -1;
+    }
+    flags = 5;
+    if (setsockopt(sfd, SOL_TCP, TCP_KEEPINTVL,
+                   (const void*)&flags, sizeof(int)) < 0) {
         close(sfd);
         return -1;
     }
@@ -130,8 +157,8 @@ int serverSetup(int port) {
 }
 
 void clientSetup() {
-
     pthread_t tid;
+    int flags = 1;
     while (1) {
         int client_fd = -1;
 
@@ -146,42 +173,50 @@ void clientSetup() {
         if (client_fd < 0) {
             continue;
         }
+        
+        flags = 1;
+        if (setsockopt(client_fd, SOL_SOCKET, SO_KEEPALIVE,
+                       (const void*)&flags, sizeof(int)) < 0) {
+            close(client_fd);
+            continue;
+        }
 
         if (pthread_create(&tid, NULL, thread, (void *)(long)client_fd) < 0) {
             close(client_fd);
             continue;
         }
 
-        //string msg = "Connected...!\n";
-        //sendToClient(msg.c_str());
-        //fprintf(stdout, msg.c_str());
     }
 
     return;
 }
 
 static void *thread(void *arg) {
+    assert(arg != NULL);
+
     pthread_detach(pthread_self());
-
-    fprintf(stdout, "Connected!\n");
-
+    
     disconnected = 0;
 
     int client_fd = (int)(long)arg;
+    string msg = "Connected...!\n";
+    sendToClient(client_fd, msg.c_str());
+    fprintf(stdout, msg.c_str());
 
     while (!disconnected) {
         char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
         token tk;
 
         readFromClient(client_fd, cmdline);
-        evaluate(cmdline, &tk);
+        evaluate(&client_fd, cmdline, &tk);
 
         free(cmdline);
 
     }
+
     //robot.standby();
     close(client_fd);
-    fprintf(stdout, "Disconnected!\n");
+    fprintf(stdout, "Disconnected...!\n");
     return NULL;
 
 }
@@ -195,28 +230,28 @@ static int readFromClient(int client_fd, char* cmdline) {
 
     rio_t buf;
     rio_readinitb(&buf, client_fd);
-
     rio_readlineb(&buf, cmdline, MAXLINE);
     
-    //cmdline[strlen(cmdline)-1] = '\0';
-    fprintf(stdout, "%s", cmdline);
+    cmdline[strlen(cmdline)-1] = '\0';
 
     return 0;
 }
 
 static int sendToClient(int client_fd, const char *msg) {
-    write(client_fd, msg, strlen(msg));
+    assert(client_fd >= 0);
+    assert(msg != NULL);
+
+    rio_writen(client_fd, (void *)msg, strlen(msg));
     return 0;
 }
 
 static void shutdown(int client_fd) {
+    assert(client_fd >= 0);
     //robot.finish();
 
-    //string msg = "Shutting down!\n";
-    //sendToClient(msg.c_str());
-    //fprintf(stdout, msg.c_str());
-
-    fprintf(stdout, "SHUTTING DOWN\n");
+    string msg = "Shutting down!\n";
+    sendToClient(client_fd, msg.c_str());
+    fprintf(stdout, msg.c_str());
 
     if (close(client_fd) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
@@ -227,19 +262,20 @@ static void shutdown(int client_fd) {
     exit(0);
 }
 
-static int evaluate(const char *cmdline, token *tk) {
+static int evaluate(int *client_fd, const char *cmdline, token *tk) {
     assert(cmdline != NULL);
     assert(tk != NULL);
 
     parseline(cmdline, tk);
 
-    return command(tk);
+    return command(client_fd, tk);
 }
 
-static int command(token *tk) {
+static int command(int *client_fd, token *tk) {
+    assert(tk != NULL);
 
     command_state command = tk->command;
-    //string msg;
+    string msg;
 
     switch (command) {
         case START:
@@ -252,18 +288,20 @@ static int command(token *tk) {
 
             // put in standby
             //robot.standby();
-            //msg = "ROBOT STARTED\n";
-            //sendToClient(msg.c_str());
-            fprintf(stdout, "COMMAND IS START!\n");
+            msg = "ROBOT STARTED\n";
+            sendToClient(*client_fd, msg.c_str());
+            //fprintf(stdout, "COMMAND IS START!\n");
             return 1;
         case HELP:
-            //sendToClient(listCommands());
-            fprintf(stdout, "COMMAND IS HELP!\n");
+            //string helpLines[] = listCommands();
+            //int size = *(&helpLines + 1) - helpLines;
+            //for (int i = 0; i < size; i++) {
+            //    sendToClient(*client_fd, helpLines[i].c_str());
+            //}
             return 1;
         case QUIT:
             // shuts down everything
-            fprintf(stdout, "COMMAND IS QUIT!\n");
-            //shutdown();
+            shutdown(*client_fd);
             return 1;
         case AUTO:
             // runs things automatically
@@ -276,17 +314,17 @@ static int command(token *tk) {
                 If we spawn a process, APES system will be copied,
                 so we dont want that...
             */
-            return 1;
             fprintf(stdout, "COMMAND IS AUTO!\n");
+            return 1;
         case TEMP:
             /*
             float temp;
             temp = robot.read_temp();
             printf(stdout, "Temp (@time): %f\n", temp);
             */
-            //msg = "TEMP MODE\n";
+            msg = "TEMP MODE\n";
             fprintf(stdout, "COMMAND IS TEMP!\n");
-            //sendToClient(msg.c_str());
+            sendToClient(*client_fd, msg.c_str());
             return 1;
         case DTEMP:
             /*
@@ -294,9 +332,9 @@ static int command(token *tk) {
             dtemp = robot.D_temp();
             printf(stdout, "Temp since init: %f\n", dtemp);
             */
-            //msg = "DTEMP MODE\n";
+            msg = "DTEMP MODE\n";
             fprintf(stdout, "COMMAND IS DTEMP!\n");
-            //sendToClient(msg.c_str());
+            sendToClient(*client_fd, msg.c_str());
             return 1;
         case CURR:
             /*
@@ -304,9 +342,9 @@ static int command(token *tk) {
             curr = robot.read_curr();
             printf(stdout, "Curr (@time): %f\n", curr);
             */
-            //msg = "CURR MODE\n";
+            msg = "CURR MODE\n";
             fprintf(stdout, "COMMAND IS CURR!\n");
-            //sendToClient(msg.c_str());
+            sendToClient(*client_fd, msg.c_str());
             return 1;
         case LEVEL:
             /*
@@ -314,13 +352,14 @@ static int command(token *tk) {
             level = robot.read_level();
             printf(stdout, "Level (@time): %d\n", level);
             */
-            //msg = "LEVEL MODE\n";
-            //sendToClient(msg.c_str());
+            msg = "LEVEL MODE\n";
+            sendToClient(*client_fd, msg.c_str());
             fprintf(stdout, "COMMAND IS LEVEL!\n");
             return 1;
         case STANDBY:
             //robot.standby();
-            fprintf(stdout, "COMMAND IS STANDBY!\n");
+            msg = "ROBOT IN STANDBY\n";
+            sendToClient(*client_fd, msg.c_str());
             return 1;
         case WOB:
             /*
@@ -355,16 +394,28 @@ static int command(token *tk) {
             // runs drill at duty cycle
             fprintf(stdout, "COMMAND IS DRILL_CYCLE!\n");
             return 1;
-        case DISCONNECTED:
-            fprintf(stdout, "COMMAND IS DISCONNECTED!\n");
-            disconnected = 1;
-            return 1;
         case NONE:
         default:
-            fprintf(stdout, "COMMAND IS UNKNOWN!\n");
+            //string text = tk->text;
+            msg = "Error: Unknown command!\n";// + text;
+            sendToClient(*client_fd, msg.c_str());
             // not a built-in command
             return 0;
     }
+}
+
+/*
+    SIGNAL HANDLERS
+*/
+static void sigint_handler(int sig) {
+    //@TODO: implement
+    exit(0);
+}
+
+static void sigpipe_handler(int sig) {
+    fprintf(stdout, "CLIENT HAS DISCONNECTED INVOLUNTARILY!\n");
+    disconnected = 1;
+    return;
 }
 
 
@@ -372,7 +423,6 @@ static int command(token *tk) {
     NEWTORK-SAFE FILE READ/WRITE
     from Computer Systems by Bryant & O'Hallaron
 */
-
 ssize_t rio_readn(int fd, void *usrbuf, size_t n) {
     size_t nleft = n;
     ssize_t nread;
@@ -420,6 +470,7 @@ static ssize_t rio_read(rio_t *rp, char *usrbuf, size_t n) {
 
     while (rp->rio_cnt <= 0) {      /* Refill if buf is empty */
         rp->rio_cnt = read(rp->rio_fd, rp->rio_buf, sizeof(rp->rio_buf));
+        fprintf(stdout, "\t\t\t%s\n", strerror(errno));
         if (rp->rio_cnt < 0) {
             if (errno != EINTR) {
                 return -1;          /* errno set by read() */
