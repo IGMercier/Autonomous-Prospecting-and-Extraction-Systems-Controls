@@ -30,9 +30,9 @@ static volatile int disconnected = 1;
 
 int serverSetup(int port);
 void  clientSetup();
-static int readFromClient(int client_fd);
+static int readFromClient(int client_fd, char *cmdline);
 static int sendToClient(int client_fd, const char *msg);
-static int eval(const char *cmdline, token *tk);
+static int evaluate(const char *cmdline, token *tk);
 static int command(token *tk);
 static void shutdown(int client_fd);
 static void *thread(void *arg);
@@ -169,12 +169,19 @@ static void *thread(void *arg) {
 
     int client_fd = (int)(long)arg;
 
-    while (1) {
-        readFromClient(client_fd);
+    while (!disconnected) {
+        char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
+        token tk;
+
+        readFromClient(client_fd, cmdline);
+        evaluate(cmdline, &tk);
+
+        free(cmdline);
 
     }
+    //robot.standby();
+    close(client_fd);
     fprintf(stdout, "Disconnected!\n");
-    disconnected = 1;
     return NULL;
 
 }
@@ -182,14 +189,13 @@ static void *thread(void *arg) {
 /*
     EVALUATION FUNCTIONS
 */
-static int readFromClient(int client_fd) {
+static int readFromClient(int client_fd, char* cmdline) {
     assert(client_fd >= 0);
+    assert(cmdline != NULL);
 
     rio_t buf;
     rio_readinitb(&buf, client_fd);
 
-    char cmdline[MAXLINE];
-    memset(cmdline, 0, MAXLINE);
     rio_readlineb(&buf, cmdline, MAXLINE);
     
     //cmdline[strlen(cmdline)-1] = '\0';
@@ -221,7 +227,7 @@ static void shutdown(int client_fd) {
     exit(0);
 }
 
-static int eval(const char *cmdline, token *tk) {
+static int evaluate(const char *cmdline, token *tk) {
     assert(cmdline != NULL);
     assert(tk != NULL);
 
@@ -233,9 +239,7 @@ static int eval(const char *cmdline, token *tk) {
 static int command(token *tk) {
 
     command_state command = tk->command;
-    fprintf(stdout, "%s\n", tk->text);
-
-    string msg;
+    //string msg;
 
     switch (command) {
         case START:
@@ -250,12 +254,15 @@ static int command(token *tk) {
             //robot.standby();
             //msg = "ROBOT STARTED\n";
             //sendToClient(msg.c_str());
+            fprintf(stdout, "COMMAND IS START!\n");
             return 1;
         case HELP:
             //sendToClient(listCommands());
+            fprintf(stdout, "COMMAND IS HELP!\n");
             return 1;
         case QUIT:
             // shuts down everything
+            fprintf(stdout, "COMMAND IS QUIT!\n");
             //shutdown();
             return 1;
         case AUTO:
@@ -270,6 +277,7 @@ static int command(token *tk) {
                 so we dont want that...
             */
             return 1;
+            fprintf(stdout, "COMMAND IS AUTO!\n");
         case TEMP:
             /*
             float temp;
@@ -277,6 +285,7 @@ static int command(token *tk) {
             printf(stdout, "Temp (@time): %f\n", temp);
             */
             //msg = "TEMP MODE\n";
+            fprintf(stdout, "COMMAND IS TEMP!\n");
             //sendToClient(msg.c_str());
             return 1;
         case DTEMP:
@@ -286,6 +295,7 @@ static int command(token *tk) {
             printf(stdout, "Temp since init: %f\n", dtemp);
             */
             //msg = "DTEMP MODE\n";
+            fprintf(stdout, "COMMAND IS DTEMP!\n");
             //sendToClient(msg.c_str());
             return 1;
         case CURR:
@@ -295,6 +305,7 @@ static int command(token *tk) {
             printf(stdout, "Curr (@time): %f\n", curr);
             */
             //msg = "CURR MODE\n";
+            fprintf(stdout, "COMMAND IS CURR!\n");
             //sendToClient(msg.c_str());
             return 1;
         case LEVEL:
@@ -305,9 +316,11 @@ static int command(token *tk) {
             */
             //msg = "LEVEL MODE\n";
             //sendToClient(msg.c_str());
+            fprintf(stdout, "COMMAND IS LEVEL!\n");
             return 1;
         case STANDBY:
             //robot.standby();
+            fprintf(stdout, "COMMAND IS STANDBY!\n");
             return 1;
         case WOB:
             /*
@@ -315,29 +328,40 @@ static int command(token *tk) {
             force = robot.read_wob();
             printf(stdout, "Force (@time): %f\n", force);
             */
+            fprintf(stdout, "COMMAND IS WOB!\n");
             return 1;
         case DATA:
             //robot.read_data();
+            fprintf(stdout, "COMMAND IS DATA!\n");
+            return 1;
         case MOTOR_DRIVE:
+            fprintf(stdout, "COMMAND IS MOTOR_DRIVE!\n");
             //robot.motor_drive();
             return 1;
         case MOTOR_STOP:
+            fprintf(stdout, "COMMAND IS MOTOR_STOP!\n");
             //robot.motor_stop();
             return 1;
         // do things for switch
         case DRILL_RUN:
             // runs drill
+            fprintf(stdout, "COMMAND IS DRILL_RUN!\n");
             return 1;
         case DRILL_STOP:
             // stops drill
+            fprintf(stdout, "COMMAND IS DRILL_STOP!\n");
             return 1;
         case DRILL_CYCLE:
             // runs drill at duty cycle
+            fprintf(stdout, "COMMAND IS DRILL_CYCLE!\n");
             return 1;
-        case NOP:
+        case DISCONNECTED:
+            fprintf(stdout, "COMMAND IS DISCONNECTED!\n");
+            disconnected = 1;
             return 1;
         case NONE:
         default:
+            fprintf(stdout, "COMMAND IS UNKNOWN!\n");
             // not a built-in command
             return 0;
     }

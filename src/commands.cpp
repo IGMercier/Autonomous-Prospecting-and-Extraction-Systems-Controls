@@ -47,7 +47,7 @@ int parseline(const char *cmdline, token *tk) {
         tk->command = STANDBY;
     } else if ((strcmp(tk->argv[0], "temp")) == 0) {
         tk->command = TEMP;
-    } if ((strcmp(tk->argv[0], "dtemp")) == 0) {
+    } else if ((strcmp(tk->argv[0], "dtemp")) == 0) {
         tk->command = DTEMP;
     } else if ((strcmp(tk->argv[0], "curr")) == 0) {
         tk->command = CURR;
@@ -67,10 +67,8 @@ int parseline(const char *cmdline, token *tk) {
         tk->command = DRILL_CYCLE;
     } else if ((strcmp(tk->argv[0], "auto")) == 0) {
         tk->command = AUTO;
-    } else if ((strcmp(tk->argv[0], "nop")) == 0) {
-        tk->command = NOP;
-    } else if ((strcmp(tk->argv[0], "\n")) == 0) {
-        tk->command = NOP;
+    } else if ((strcmp(tk->argv[0], "disconnected")) == 0) {
+        tk->command = DISCONNECTED;
     } else {
         tk->command = NONE;
     }

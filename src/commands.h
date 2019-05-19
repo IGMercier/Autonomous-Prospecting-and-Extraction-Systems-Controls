@@ -27,7 +27,7 @@ typedef enum command_state {
     DRILL_STOP,
     DRILL_CYCLE,
     AUTO,
-    NOP,
+    DISCONNECTED,
     QUIT
 } command_state;
 
