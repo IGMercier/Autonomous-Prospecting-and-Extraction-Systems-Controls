@@ -10,10 +10,10 @@
 #include <netdb.h>
 #include <errno.h>
 #include <assert.h>
+#include <pthread.h>
 //#include "APES.h"
 //#include <string.h>
 //#include <cstring>
-//#include <pthread.h>
 
 /*
     Setup Server
@@ -24,20 +24,34 @@
 
 using std::string;
 
-static int server_fd = -1;
-static int client_fd = -1;
+static int server_fd;
 static volatile int disconnected = 1;
 //APES robot;
 
-static int serverSetup(int port);
-static int clientSetup();
-static int readFromClient();
-static int sendToClient(const char *msg);
+int serverSetup(int port);
+void  clientSetup();
+static int readFromClient(int client_fd);
+static int sendToClient(int client_fd, const char *msg);
 static int eval(const char *cmdline, token *tk);
 static int command(token *tk);
-static void shutdown();
+static void shutdown(int client_fd);
+static void *thread(void *arg);
 
-typedef struct sockaddr SA;
+
+#define RIO_BUFSIZE 8192
+typedef struct {
+    int rio_fd;                /* Descriptor for this internal buf */
+    ssize_t rio_cnt;           /* Unread bytes in internal buf */
+    char *rio_bufptr;          /* Next unread byte in internal buf */
+    char rio_buf[RIO_BUFSIZE]; /* Internal buffer */
+} rio_t;
+
+static ssize_t rio_read(rio_t *rp, char *usrbuf, size_t n);
+ssize_t rio_readn(int fd, void *usrbuf, size_t n);
+ssize_t rio_writen(int fd, void *usrbuf, size_t n);
+void rio_readinitb(rio_t *rp, int fd);
+ssize_t	rio_readnb(rio_t *rp, void *usrbuf, size_t n);
+ssize_t	rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen);
 
 int main(int argc, char** argv) {
     /* @TODO:
@@ -56,6 +70,7 @@ int main(int argc, char** argv) {
         port = atoi(argv[1]);
     }
 
+    server_fd = -1;
     fprintf(stdout, "Attempting serverSetup! ");
     while ((server_fd = serverSetup(port)) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
@@ -63,34 +78,23 @@ int main(int argc, char** argv) {
         
         // retry to setup
     }
+    assert(server_fd >= 0);
+
     fprintf(stdout, "Finished serverSetup!\n");
-    fprintf(stdout, "Attempting clientSetup! ");
+    fflush(stdout);
 
-    while (clientSetup() < 0) { fprintf(stderr, "Retrying client setup!\n"); }
-    fprintf(stdout, "Finished clientSetup!\n");
-    
-    while (1) {
-        readFromClient();
-	    if (disconnected) {
-            // robot.standby();
-            
-            // keep trying to connect to client.
-            // in this state, the loop should really
-            // only run once
-            clientSetup();
-	    }
-    }
-
+    fprintf(stdout, "Attempting clientSetup!\n");
+    clientSetup();
 
     // control should never reach here
-    shutdown();
+    shutdown(-1);
     return -1;
 }
 
 /*
     SERVER/CLIENT FUNCTIONS
 */
-static int serverSetup(int port) {
+int serverSetup(int port) {
     int optval = 1;
     struct sockaddr_in serveraddr;
     int sfd;
@@ -101,19 +105,23 @@ static int serverSetup(int port) {
 
     if (setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR,
                    (const void*)&optval, sizeof(int)) < 0) {
+        close(sfd);
         return -1;
     }
 
-    bzero((char *)&serveraddr, sizeof(serveraddr));
+    memset(&serveraddr, 0, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
     serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
     serveraddr.sin_port = htons((unsigned short)port);
 
-    if (bind(sfd, (SA*)&serveraddr, sizeof(serveraddr)) < 0) {
+    if (bind(sfd, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) < 0) {
+        close(sfd);
         return -1;
     }
 
-    if (listen(sfd, 1024) < 0) {
+    // allows only 1 connection before it starts rejecting connections
+    if (listen(sfd, 1) < 0) {
+        close(sfd);
         return -1;
     }
 
@@ -121,69 +129,81 @@ static int serverSetup(int port) {
 
 }
 
-static int clientSetup() {
-    struct sockaddr_in clientaddr;
-    int clientlen;
+void clientSetup() {
 
-    clientlen = sizeof(clientaddr);
+    pthread_t tid;
+    while (1) {
+        int client_fd = -1;
 
-    // accept() blocks until client connects
-    client_fd = accept(server_fd,
-                       (SA*)&clientaddr.sin_addr.s_addr,
-                       sizeof(clientaddr.sin_addr.s_addr),
-                       AF_INET);
-    if (client_fd < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        return -1;
+        struct sockaddr_in clientaddr;
+        socklen_t client_addr_size;
+
+        client_addr_size = sizeof(struct sockaddr_in);
+        // accept() blocks until client connects
+        client_fd = accept(server_fd,
+                        (struct sockaddr *)&clientaddr.sin_addr.s_addr,
+                         &client_addr_size);
+        if (client_fd < 0) {
+            continue;
+        }
+
+        if (pthread_create(&tid, NULL, thread, (void *)(long)client_fd) < 0) {
+            close(client_fd);
+            continue;
+        }
+
+        //string msg = "Connected...!\n";
+        //sendToClient(msg.c_str());
+        //fprintf(stdout, msg.c_str());
     }
 
-	disconnected = 0;
-    //string msg = "Connected...!\n";
-    //sendToClient(msg.c_str());
-    //fprintf(stdout, msg.c_str());
+    return;
+}
 
-    return 0;
+static void *thread(void *arg) {
+    pthread_detach(pthread_self());
+
+    fprintf(stdout, "Connected!\n");
+
+    disconnected = 0;
+
+    int client_fd = (int)(long)arg;
+
+    while (1) {
+        readFromClient(client_fd);
+
+    }
+    fprintf(stdout, "Disconnected!\n");
+    disconnected = 1;
+    return NULL;
+
 }
 
 /*
     EVALUATION FUNCTIONS
 */
-static int readFromClient() {
-    size_t n;
+static int readFromClient(int client_fd) {
+    assert(client_fd >= 0);
+
+    rio_t buf;
+    rio_readinitb(&buf, client_fd);
+
     char cmdline[MAXLINE];
+    memset(cmdline, 0, MAXLINE);
+    rio_readlineb(&buf, cmdline, MAXLINE);
     
-    // read/eval loop
-    while ((n = read(client_fd, cmdline, MAXLINE)) != 0) {
-        cmdline[strlen(cmdline)-1] = '\0';
-        fprintf(stdout, "Received: %s\n", cmdline);
+    //cmdline[strlen(cmdline)-1] = '\0';
+    fprintf(stdout, "%s", cmdline);
 
-        token tk;
-        int eval_result = eval(cmdline, &tk);
-
-        if (eval_result == 0) {
-            fprintf(stdout, "Unknown Command\n\n");
-            //string msg = "ERROR: Unknown command!\n";
-            //sendToClient(msg.c_str());
-        }
-
-        memset(cmdline, 0, MAXLINE);
-	
-    }
-
-    if (close(client_fd) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
-    }
-    disconnected = 1;
-    fprintf(stdout, "Disconnected...\n");
     return 0;
 }
 
-static int sendToClient(const char *msg) {
+static int sendToClient(int client_fd, const char *msg) {
     write(client_fd, msg, strlen(msg));
     return 0;
 }
 
-static void shutdown() {
+static void shutdown(int client_fd) {
     //robot.finish();
 
     //string msg = "Shutting down!\n";
@@ -236,7 +256,7 @@ static int command(token *tk) {
             return 1;
         case QUIT:
             // shuts down everything
-            shutdown();
+            //shutdown();
             return 1;
         case AUTO:
             // runs things automatically
@@ -323,3 +343,128 @@ static int command(token *tk) {
     }
 }
 
+
+/*
+    NEWTORK-SAFE FILE READ/WRITE
+    from Computer Systems by Bryant & O'Hallaron
+*/
+
+ssize_t rio_readn(int fd, void *usrbuf, size_t n) {
+    size_t nleft = n;
+    ssize_t nread;
+    char *bufp = (char *)usrbuf;
+
+    while (nleft > 0) {
+        if ((nread = read(fd, bufp, nleft)) < 0) {
+            if (errno != EINTR) {
+                return -1;  /* errno set by read() */
+            }
+
+            /* Interrupted by sig handler return, call read() again */
+            nread = 0;
+        } else if (nread == 0) {
+            break;                  /* EOF */
+        }
+        nleft -= nread;
+        bufp += nread;
+    }
+    return n - nleft;             /* Return >= 0 */
+}
+
+ssize_t rio_writen(int fd, void *usrbuf, size_t n) {
+    size_t nleft = n;
+    ssize_t nwritten;
+    char *bufp = (char *)usrbuf;
+
+    while (nleft > 0) {
+        if ((nwritten = write(fd, bufp, nleft)) <= 0) {
+            if (errno != EINTR) {
+                return -1;       /* errno set by write() */
+            }
+
+            /* Interrupted by sig handler return, call write() again */
+            nwritten = 0;
+        }
+        nleft -= nwritten;
+        bufp += nwritten;
+    }
+    return n;
+}
+
+static ssize_t rio_read(rio_t *rp, char *usrbuf, size_t n) {
+    int cnt;
+
+    while (rp->rio_cnt <= 0) {      /* Refill if buf is empty */
+        rp->rio_cnt = read(rp->rio_fd, rp->rio_buf, sizeof(rp->rio_buf));
+        if (rp->rio_cnt < 0) {
+            if (errno != EINTR) {
+                return -1;          /* errno set by read() */
+            }
+
+            /* Interrupted by sig handler return, nothing to do */
+        } else if (rp->rio_cnt == 0) {
+            return 0;               /* EOF */
+        } else {
+            rp->rio_bufptr = rp->rio_buf;   /* Reset buffer ptr */
+        }
+    }
+
+    /* Copy min(n, rp->rio_cnt) bytes from internal buf to user buf */
+    cnt = n;
+    if ((size_t) rp->rio_cnt < n) {
+        cnt = rp->rio_cnt;
+    }
+    memcpy(usrbuf, rp->rio_bufptr, cnt);
+    rp->rio_bufptr += cnt;
+    rp->rio_cnt -= cnt;
+    return cnt;
+}
+
+void rio_readinitb(rio_t *rp, int fd) {
+    rp->rio_fd = fd;
+    rp->rio_cnt = 0;
+    rp->rio_bufptr = rp->rio_buf;
+}
+
+ssize_t rio_readnb(rio_t *rp, void *usrbuf, size_t n) {
+    size_t nleft = n;
+    ssize_t nread;
+    char *bufp = (char *)usrbuf;
+
+    while (nleft > 0) {
+        if ((nread = rio_read(rp, bufp, nleft)) < 0) {
+            return -1;          /* errno set by read() */
+        } else if (nread == 0) {
+            break;              /* EOF */
+        }
+        nleft -= nread;
+        bufp += nread;
+    }
+    return (n - nleft);         /* return >= 0 */
+}
+
+ssize_t rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen) {
+    size_t n;
+    int rc;
+    char c, *bufp = (char *)usrbuf;
+
+    for (n = 1; n < maxlen; n++) {
+        if ((rc = rio_read(rp, &c, 1)) == 1) {
+            *bufp++ = c;
+            if (c == '\n') {
+                n++;
+                break;
+            }
+        } else if (rc == 0) {
+            if (n == 1) {
+                return 0; /* EOF, no data read */
+            } else {
+                break;    /* EOF, some data was read */
+            }
+        } else {
+            return -1;    /* Error */
+        }
+    }
+    *bufp = 0;
+    return n-1;
+}
