@@ -1,5 +1,3 @@
-#include <cstdio>
-#include <string>
 #include <unistd.h>
 #include <error.h>
 #include <wiringPiSPI.h>
@@ -88,13 +86,12 @@ void motor_stop() {
     }
 }
 
-int APES::standby() {
+void APES::standby() {
     // ensure that everything is off
     this.motor_stop();
-    return 0;
 }
 
-int APES::finish() {
+void APES::finish() {
     fclose(this.file);
 
     // kills the python interpreter
@@ -110,40 +107,49 @@ int APES::finish() {
     // super important that any pybind objects are
     // killed before pybind interpreter finalized!
     py::finalize_interpreter();
-    return 0;
 }
 
-int APES::readData(const char *filename) {
-    return -1;
+void APES::readData(const char *filename) {
+    return;
 }
 
-int APES::writeData(dataPt *data) {
+void APES::saveData(dataPt *data) {
     assert(data != NULL);
-
     if (this.dataArray.size() >= MAXDATA) {
+        writeDataVector();
+    } else {
+        this.datVector.push_back(data);
+    }
+
+}
+
+void APES::writeDataVector() {
+    for (int i = 0; i < this.dataVector.size(); i++) {
+        dataPt *data = this.dataVector.at(i);
+
         switch(data->origin) {
             case THERM:
                 fprintf(this.file, "%s, %f, %f\n",
-                        "therm", data->time, data->data);
+                        "therm", data->time, data->dataF);
                 break;
             case AMM:
                 fprintf(this.file, "%s, %f, %f\n",
-                        "amm", data->time, data->data);
+                        "amm", data->time, data->dataF);
                 break;
             case LEVEL:
                 fprintf(this.file, "%s, %f, %f\n",
-                        "level", data->time, data->data);
+                        "level", data->time, data->dataI);
                 break;
             case WOB:
                 fprintf(this.file, "%s, %f, %f\n",
-                        "wob", data->time, data->data);
+                        "wob", data->time, data->dataF);
                 break;
             default:
                 fprintf(this.file, "%s, %f, %f\n",
-                        "none", data->time, data->data);
+                        "none", data->time, data->dataF);
                 break;
         }
-    } else {
-        this.dataArray.push_back(data);
     }
+
+    this.dataVector.clear();
 }

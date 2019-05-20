@@ -14,8 +14,6 @@
 #include <pthread.h>
 #include "APES.h"
 
-using std::string;
-
 static int server_fd;
 static volatile int disconnected = 1;
 static volatile int shutdownSIG = 0;
@@ -175,7 +173,7 @@ void clientSetup() {
             continue;
         }
 
-        string msg = "Connected...!\n";
+        std::string msg = "Connected...!\n";
         sendToClient(client_fd, msg.c_str());
         fprintf(stdout, msg.c_str());
 
@@ -247,7 +245,7 @@ static void shutdown(int client_fd) {
     assert(client_fd >= 0);
     //robot.finish();
 
-    string msg = "Shutting down!\n";
+    std::string msg = "Shutting down!\n";
     sendToClient(client_fd, msg.c_str());
     fprintf(stdout, msg.c_str());
 
@@ -264,7 +262,7 @@ static int command(int *client_fd, token *tk) {
     assert(tk != NULL);
 
     command_state command = tk->command;
-    string msg;
+    std::string msg;
 
     switch (command) {
         case START:
@@ -393,7 +391,7 @@ static int command(int *client_fd, token *tk) {
 }
 
 static void listCommands(int client_fd) {
-    string msg;
+    std::string msg;
 
     msg = "Help - Commands:\n";
     sendToClient(client_fd, msg.c_str());

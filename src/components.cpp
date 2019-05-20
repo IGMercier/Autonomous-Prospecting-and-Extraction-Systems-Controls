@@ -180,7 +180,7 @@ Motor::Motor(int pinA, int pinB) {
     // this assumes the pybind interpreter has been initialized
     // in  APES::setup()!
 
-    py::object l298n = py::module::import("libraries/l298n").attr("L298N");
+    py::object l298n = py::module::import("libraries/l298npy/l298n").attr("L298N");
     assert(l298n != NULL);
 
     this.L298N = l298n(pinA, pinB);

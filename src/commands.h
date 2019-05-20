@@ -8,9 +8,6 @@
 #define MAXARGS  128
 #define MAXLINE  8192
 
-#include <string>
-#include <cstring>
-
 typedef enum command_state {
     START,
     HELP,
@@ -39,6 +36,5 @@ typedef struct token {
 } token;
 
 int parseline(const char *cmdline, token *tk);
-//std::string* listCommands();
 
 #endif
