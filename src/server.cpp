@@ -17,7 +17,7 @@
 static int server_fd;
 static volatile int disconnected = 1;
 static volatile int shutdownSIG = 0;
-//APES robot;
+APES robot;
 
 int serverSetup(int port);
 void  clientSetup();
@@ -210,7 +210,7 @@ static void *thread(void *arg) {
 
     }
 
-    //robot.standby();
+    robot.standby();
     close(client_fd);
     fprintf(stdout, "Disconnected...!\n");
     return NULL;
@@ -243,7 +243,7 @@ static int sendToClient(int client_fd, const char *msg) {
 
 static void shutdown(int client_fd) {
     assert(client_fd >= 0);
-    //robot.finish();
+    robot.finish();
 
     std::string msg = "Shutting down!\n";
     sendToClient(client_fd, msg.c_str());
@@ -267,17 +267,16 @@ static int command(int *client_fd, token *tk) {
     switch (command) {
         case START:
             // setup robot and retry on fail
-            //while (robot.setup() < 0) {
-            //    fprintf(stderr, "ERROR: APES system setup failure!\n");
-            //    fprintf(stdout, "Retrying...\n");
-            //    robot.finish();
-            //}
+            while (robot.setup() < 0) {
+                fprintf(stderr, "ERROR: APES system setup failure!\n");
+                fprintf(stdout, "Retrying...\n");
+                robot.finish();
+            }
 
             // put in standby
-            //robot.standby();
+            robot.standby();
             msg = "System started!\n";
             sendToClient(*client_fd, msg.c_str());
-            //fprintf(stdout, "COMMAND IS START!\n");
             return 1;
         case HELP:
             //string helpLines[] = listCommands();
