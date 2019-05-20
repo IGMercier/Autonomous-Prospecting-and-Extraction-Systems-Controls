@@ -34,7 +34,7 @@ class L298N:
         GPIO.output(self.pinB, GPIO.HIGH)
         return
 
-    def changeDuty(dc):
+    def changeDuty(dc=10):
         self.p.ChangeDutyCycle(dc)
         return
 

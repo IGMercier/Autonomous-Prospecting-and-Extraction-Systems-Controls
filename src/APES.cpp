@@ -1,8 +1,9 @@
-#include "APES.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <error.h>
 #include <wiringPiSPI.h>
+#include "APES.h"
+#include "libraries/pybind11/include/pybind11/embed.h"
 
 namespace py = pybind11;
 using namespace py::literals;
