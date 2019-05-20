@@ -2,12 +2,13 @@ CC = g++
 TARGET = apes
 CFLAGS = -g -Wall
 FILES = server.cpp commands.cpp components.cpp APES.cpp
-LIBS = -lpython3.5 -lwiringPi -lpthread -I/usr/include/python3.5m
+LIBS = -lwiringPi -lpthread
+INCL = -I/usr/include/python3.5m -I/libraries/pybind11/include/
 
 all: $(TARGET)
 
 $(TARGET): $(FILES)
-	$(CC) -o $(TARGET) $(FILES) $(LIBS) -fvisibility=hidden
+	$(CC) -o $(TARGET) $(FILES) $(LIBS) `python3-config --cflags` $(INCL) `python3-config --ldflags`  -fvisibility=hidden
 
 clean:
 	$(RM) $(TARGET)

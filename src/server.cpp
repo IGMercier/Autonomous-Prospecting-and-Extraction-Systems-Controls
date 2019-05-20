@@ -181,7 +181,7 @@ void clientSetup() {
 
         std::string msg = "Connected...!\n";
         sendToClient(client_fd, msg.c_str());
-        fprintf(stdout, msg.c_str());
+        fprintf(stdout, "%s", msg.c_str());
 
         if (pthread_create(&tid, NULL, thread, (void *)(long)client_fd) < 0) {
             close(client_fd);
@@ -253,7 +253,7 @@ static void shutdown(int client_fd) {
 
     std::string msg = "Shutting down!\n";
     sendToClient(client_fd, msg.c_str());
-    fprintf(stdout, msg.c_str());
+    fprintf(stdout, "%s", msg.c_str());
 
     if (close(client_fd) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));

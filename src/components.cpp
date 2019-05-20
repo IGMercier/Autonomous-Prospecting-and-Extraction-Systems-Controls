@@ -2,11 +2,10 @@
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
+#include <wiringPiSPI.h>
 
 namespace py = pybind11;
 using namespace py::literals;
-
-using std::chrono;
 
 /*
     HELPER FUNCTIONS
@@ -41,9 +40,9 @@ Therm::Therm(int bus_addr, float max_T) {
         return;
     }
 
-    this.bus_addr = bus_addr;
-    this.max_T = max_T;
-    this.iTemp = read_temp(thermo);
+    this->bus_addr = bus_addr;
+    this->max_T = max_T;
+    this->iTemp = read_temp();
 }
 
 float Therm::read_temp() {
@@ -54,9 +53,13 @@ float Therm::read_temp() {
     return (float)readADC(bus, channel);
 }
 
-float Therm::D_temp(therm_t thermo) {
-    float fTemp = read_temp(this.bus_addr);
-    return fTemp - this.iTemp;
+float Therm::D_temp() {
+    float fTemp = read_temp();
+    return fTemp - this->iTemp;
+}
+
+Therm::~Therm() {
+
 }
 
 
@@ -70,8 +73,8 @@ Amm::Amm(int bus_addr, float max_I) {
         return;
     }
 
-    this.bus_addr = bus_addr;
-    this.max_I = max_I;
+    this->bus_addr = bus_addr;
+    this->max_I = max_I;
 }
 
 float Amm::read_curr() {
@@ -80,6 +83,10 @@ float Amm::read_curr() {
     // @TODO: how is bus_addr specified???
 
     return (float)readADC(bus, channel);
+}
+
+Amm::~Amm() {
+
 }
 
 
@@ -107,8 +114,8 @@ WLevel::WLevel(int bus_start, int bus_end) {
     }
 
 
-    this.bus_start = bus_start;
-    this.bus_end = bus_end;
+    this->bus_start = bus_start;
+    this->bus_end = bus_end;
 }
 
 int WLevel::read_wlevel() {
@@ -122,8 +129,8 @@ int WLevel::read_wlevel() {
     // @TODO: how is bus specified???
     int bus;
     int level = 0;
-    int channel = this.bus_start;
-    for ( ; channel < this.bus_end; channel++) {
+    int channel = this->bus_start;
+    for ( ; channel < this->bus_end; channel++) {
         if (readADC(bus, channel) == 1) {
             //@TODO: should this be == 0 since
             // the reading might aren't a binary {0, 1}?
@@ -132,6 +139,10 @@ int WLevel::read_wlevel() {
     }
 
     return level;
+}
+
+WLevel::~WLevel() {
+
 }
 
 
@@ -144,18 +155,18 @@ Wob::Wob() {
     py::object hx711 = py::module::import("libraries/hx711py/hx711").attr("HX711");
     assert(hx711 != NULL);
 
-    this.HX711 = hx711(5, 6);
-    this.HX711.attr("set_reading_format")("byte_format" _a="MSB", "bit_format" _a="MSB");
-    this.HX711.attr("set_reference_unit")(1);
-    this.HX711.attr("reset")();
-    this.HX711.attr("tare")();
+    this->HX711 = hx711(5, 6);
+    this->HX711.attr("set_reading_format")("byte_format"_a="MSB", "bit_format"_a="MSB");
+    this->HX711.attr("set_reference_unit")(1);
+    this->HX711.attr("reset")();
+    this->HX711.attr("tare")();
 }
 
 float Wob::read_wob() {
     py::object value;
-    value = this.HX711.attr("get_weight")("times" _a=5);
-    this.HX711.attr("power_down")();
-    this.HX711.attr("power_up")();
+    value = this->HX711.attr("get_weight")("times"_a=5);
+    this->HX711.attr("power_down")();
+    this->HX711.attr("power_up")();
 
     float force = value.cast<float>();
 
@@ -165,10 +176,10 @@ float Wob::read_wob() {
 Wob::~Wob() {
     // this assumes the pybind interpreter will be
     // finalized in APES::finish()
-    if (this.HX711 != NULL) {
+    if (this->HX711 != NULL) {
         // @TODO: implement clean func in the python module
-        this.HX711.attr("clean")();
-        this.HX711.release();
+        this->HX711.attr("clean")();
+        this->HX711.release();
     }
 }
 
@@ -183,42 +194,42 @@ Motor::Motor(int pinA, int pinB) {
     py::object l298n = py::module::import("libraries/l298npy/l298n").attr("L298N");
     assert(l298n != NULL);
 
-    this.L298N = l298n(pinA, pinB);
+    this->L298N = l298n(pinA, pinB);
 }
 
 Motor::~Motor() {
     // this assumes the pybind interpreter will be
     // finalized in APES::finish()
-    if (this.L298N != NULL) {
-        this.L298N.attr("clean")();
-        this.L298N.release();
+    if (this->L298N != NULL) {
+        this->L298N.attr("clean")();
+        this->L298N.release();
     }
 }
 
 void Motor::motor_drive(bool dir, int speed, int time) {
     // time in milliseconds
     //@TODO: really need to test this!
-    if (this.L298N != NULL) {
+    if (this->L298N != NULL) {
         //@TODO: calculate an actual duty cycle from speed
-        this.L298N.attr("changeDutyCycle")("dc" _a=speed);
+        this->L298N.attr("changeDutyCycle")("dc"_a=speed);
 
-        auto start = high_resolution_clock::now();
-        chrono::milliseconds elapsed{0}; 
+        auto start = std::chrono::high_resolution_clock::now();
+        std::chrono::milliseconds elapsed{0}; 
         while (elapsed.count() < time){
             if (dir == 0) {
-                this.L298N.attr("forward")();
+                this->L298N.attr("forward")();
             } else {
-                this.L298N.attr("backward")();
+                this->L298N.attr("backward")();
             }
 
-            auto stop = high_resolution_clock::now();
-            elapsed = duration_cast<milliseconds>(stop - start);
+            auto stop = std::chrono::high_resolution_clock::now();
+            elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
         }
     }
 }
 
 void Motor::motor_stop() {
-    if (this.L298N != NULL) {
-        this.L298N.attr("stop")();
+    if (this->L298N != NULL) {
+        this->L298N.attr("stop")();
     }
 }
