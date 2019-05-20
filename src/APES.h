@@ -17,7 +17,7 @@ class APES {
         Wob* wob;
         Therm* therm;
         Amm* amm;
-        Level* level;
+        WLevel* wlevel;
         Motor* motor;
     public:
         APES();
@@ -26,7 +26,7 @@ class APES {
         float read_temp();
         float D_temp();
         float read_curr();
-        int read_level();
+        int read_wlevel();
         void motor_drive(bool dir, int speed, int time);
         void motor_stop();
         void readData(const char *filename);

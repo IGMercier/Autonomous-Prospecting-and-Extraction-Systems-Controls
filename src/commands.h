@@ -17,7 +17,7 @@ typedef enum command_state {
     TEMP,
     DTEMP,
     CURR,
-    LEVEL,
+    WLEVEL,
     WOB,
     MOTOR_DRIVE,
     MOTOR_STOP,

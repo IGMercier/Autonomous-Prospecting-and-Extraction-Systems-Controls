@@ -86,7 +86,7 @@ float Amm::read_curr() {
 /*
     WATER LEVEL FUNCTIONS
 */
-Level::Level(int bus_start, int bus_end) {
+WLevel::WLevel(int bus_start, int bus_end) {
     if ((bus_start > 7) || (bus_start < 0)) {
         fprintf(stderr, "ERROR: level bus_start address takes values 0-7!\n");
         fprintf(stderr, "ERROR: level instatiation failed!\n");
@@ -111,7 +111,7 @@ Level::Level(int bus_start, int bus_end) {
     this.bus_end = bus_end;
 }
 
-int Level::read_level() {
+int WLevel::read_wlevel() {
     /*
       reads from each ADC channel
       assumes 1 == water at that level

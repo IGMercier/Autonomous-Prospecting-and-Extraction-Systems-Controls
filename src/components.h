@@ -5,10 +5,10 @@
 #include <ctime>
 
 typedef enum {
-    THERM,
-    AMM,
-    LEVEL,
-    WOB
+    THERM_DATA,
+    AMM_DATA,
+    WLEVEL_DATA,
+    WOB_DATA
 } sensor;
 
 typedef struct dataPt {
@@ -28,8 +28,8 @@ class Therm {
     public:
         Therm(int bus_addr, float max_T);
         ~Therm();
-        float read_temp(therm_t thermo);
-        float D_temp(therm_t thermo);
+        float read_temp();
+        float D_temp();
 };
 
 class Amm {
@@ -39,17 +39,17 @@ class Amm {
     public:
         Amm(int bus_addr, float max_I);
         ~Amm();
-        float read_curr(amm_t ammeter);
+        float read_curr();
 };
 
-class Level {
+class WLevel {
     private:
         int bus_start;
         int bus_end;
     public:
-        Level(int bus_start, int bus_end, int sample_freq);
-        ~Level();
-        int read_level(level_t wlevel);
+        WLevel(int bus_start, int bus_end, int sample_freq);
+        ~WLevel();
+        int read_wlevel();
 };
 
 class Wob {
@@ -58,7 +58,7 @@ class Wob {
     public:
         Wob();
         ~Wob();
-        float read_wob(wob_t loadcell);
+        float read_wob();
 };
 
 class Motor {

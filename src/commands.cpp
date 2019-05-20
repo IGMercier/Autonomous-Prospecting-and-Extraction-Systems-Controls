@@ -50,7 +50,7 @@ int parseline(const char *cmdline, token *tk) {
     } else if ((strcmp(tk->argv[0], "curr")) == 0) {
         tk->command = CURR;
     } else if ((strcmp(tk->argv[0], "level")) == 0) {
-        tk->command = LEVEL;
+        tk->command = WLEVEL;
     } else if ((strcmp(tk->argv[0], "wob")) == 0) {
         tk->command = WOB;
     } else if ((strcmp(tk->argv[0], "motor_drive")) == 0) {

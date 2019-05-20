@@ -1,3 +1,5 @@
+// g++ -o serverTest server.cpp commands.cpp -lpthread
+
 #include "commands.h"
 #include <cstdlib>
 #include <cstdio>
@@ -12,12 +14,12 @@
 #include <errno.h>
 #include <assert.h>
 #include <pthread.h>
-#include "APES.h"
+//#include "APES.h"
 
 static int server_fd;
 static volatile int disconnected = 1;
 static volatile int shutdownSIG = 0;
-APES robot;
+//APES robot;
 
 int serverSetup(int port);
 void  clientSetup();
@@ -197,7 +199,7 @@ static void *thread(void *arg) {
     int client_fd = (int)(long)arg;
 
     while (!disconnected) {
-        if (shutdownRPI3) { shutdown(client_fd); }
+        if (shutdownSIG) { shutdown(client_fd); }
 
         char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
         token tk;
@@ -210,7 +212,7 @@ static void *thread(void *arg) {
 
     }
 
-    robot.standby();
+    //robot.standby();
     close(client_fd);
     fprintf(stdout, "Disconnected...!\n");
     return NULL;
@@ -243,7 +245,7 @@ static int sendToClient(int client_fd, const char *msg) {
 
 static void shutdown(int client_fd) {
     assert(client_fd >= 0);
-    robot.finish();
+    //robot.finish();
 
     std::string msg = "Shutting down!\n";
     sendToClient(client_fd, msg.c_str());
@@ -267,14 +269,15 @@ static int command(int *client_fd, token *tk) {
     switch (command) {
         case START:
             // setup robot and retry on fail
-            while (robot.setup() < 0) {
+            /*while (robot.setup("data.csv") < 0) {
                 fprintf(stderr, "ERROR: APES system setup failure!\n");
                 fprintf(stdout, "Retrying...\n");
                 robot.finish();
             }
+            */
 
             // put in standby
-            robot.standby();
+            //robot.standby();
             msg = "System started!\n";
             sendToClient(*client_fd, msg.c_str());
             return 1;
@@ -330,7 +333,7 @@ static int command(int *client_fd, token *tk) {
             msg = "Curr (@time): \n";
             sendToClient(*client_fd, msg.c_str());
             return 1;
-        case LEVEL:
+        case WLEVEL:
             /*
             int level;
             level = robot.read_level();
@@ -441,7 +444,7 @@ static void sigint_handler(int sig) {
     sigset_t mask, prev;
     sigprocmask(SIG_BLOCK, &mask, &prev);
 
-    shutdownSig = 1;
+    shutdownSIG = 1;
 
     sigprocmask(SIG_SETMASK, &prev, NULL);
     errno = old_errno;

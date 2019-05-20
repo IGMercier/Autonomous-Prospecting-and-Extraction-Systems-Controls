@@ -38,7 +38,7 @@ int APES::setup(char *filename) {
     this.wob = new Wob();
     this.therm = new Therm();
     this.amm = new Amm();
-    this.level = new Level();
+    this.wlevel = new WLevel();
     this.motor = new Motor(motor_pinA, motor_pinB);
     
     wiringPiSPISetup(0, 500000);
@@ -67,9 +67,9 @@ float read_curr() {
     return -1;
 }
 
-int read_level() {
-    if (this.level != NULL) {
-        return this.level->read_level();
+int read_wlevel() {
+    if (this.wlevel != NULL) {
+        return this.wlevel->read_wlevel();
     }
     return -1;
 }
@@ -101,7 +101,7 @@ void APES::finish() {
     if (this.wob != NULL) { delete this.wob; }
     if (this.therm != NULL) { delete this.therm; }
     if (this.amm != NULL) { delete this.amm; }
-    if (this.level != NULL) { delete this.level; }
+    if (this.wlevel != NULL) { delete this.wlevel; }
     if (this.motor != NULL) { delete this.motor; }
 
     // super important that any pybind objects are
@@ -128,19 +128,19 @@ void APES::writeDataVector() {
         dataPt *data = this.dataVector.at(i);
 
         switch(data->origin) {
-            case THERM:
+            case THERM_DATA:
                 fprintf(this.file, "%s, %f, %f\n",
                         "therm", data->time, data->dataF);
                 break;
-            case AMM:
+            case AMM_DATA:
                 fprintf(this.file, "%s, %f, %f\n",
                         "amm", data->time, data->dataF);
                 break;
-            case LEVEL:
+            case WLEVEL_DATA:
                 fprintf(this.file, "%s, %f, %f\n",
                         "level", data->time, data->dataI);
                 break;
-            case WOB:
+            case WOB_DATA:
                 fprintf(this.file, "%s, %f, %f\n",
                         "wob", data->time, data->dataF);
                 break;
