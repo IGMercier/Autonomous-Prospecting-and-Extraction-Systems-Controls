@@ -1,5 +1,8 @@
-// g++ -o server server.cpp commands.cpp -lpthread
-// ./server <port number>
+/*
+    To test out server only, comment out robot functions and run:
+    g++ -o server server.cpp commands.cpp -lpthread
+    ./server <port number>
+*/
 
 #include "commands.h"
 #include <cstdlib>
@@ -15,12 +18,12 @@
 #include <errno.h>
 #include <assert.h>
 #include <pthread.h>
-//#include "APES.h"
+#include "APES.h"
 
 static int server_fd;
 static volatile int disconnected = 1;
 static volatile int shutdownSIG = 0;
-//APES robot;
+APES robot;
 
 int serverSetup(int port);
 void  clientSetup();
@@ -213,7 +216,7 @@ static void *thread(void *arg) {
 
     }
 
-    //robot.standby();
+    robot.standby();
     close(client_fd);
     fprintf(stdout, "Disconnected...!\n");
     return NULL;
@@ -246,7 +249,7 @@ static int sendToClient(int client_fd, const char *msg) {
 
 static void shutdown(int client_fd) {
     assert(client_fd >= 0);
-    //robot.finish();
+    robot.finish();
 
     std::string msg = "Shutting down!\n";
     sendToClient(client_fd, msg.c_str());
@@ -278,7 +281,7 @@ static int command(int *client_fd, token *tk) {
             */
 
             // put in standby
-            //robot.standby();
+            robot.standby();
             msg = "System started!\n";
             sendToClient(*client_fd, msg.c_str());
             return 1;
@@ -344,7 +347,7 @@ static int command(int *client_fd, token *tk) {
             sendToClient(*client_fd, msg.c_str());
             return 1;
         case STANDBY:
-            //robot.standby();
+            robot.standby();
             msg = "System in standby!\n";
             sendToClient(*client_fd, msg.c_str());
             return 1;
