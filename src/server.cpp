@@ -14,8 +14,6 @@
 #include <assert.h>
 #include <pthread.h>
 //#include "APES.h"
-//#include <string.h>
-//#include <cstring>
 
 /*
     Setup Server
@@ -34,8 +32,8 @@ int serverSetup(int port);
 void  clientSetup();
 static int readFromClient(int client_fd, char *cmdline);
 static int sendToClient(int client_fd, const char *msg);
-static int evaluate(int *client_fd, const char *cmdline, token *tk);
 static int command(int *client_fd, token *tk);
+static void listCommands(int client_fd);
 static void shutdown(int client_fd);
 static void *thread(void *arg);
 
@@ -65,8 +63,8 @@ int main(int argc, char** argv) {
        [] when connected:
          [X] accept commands
 	     [] execute commands
-       [] when disconnected:
-         [] put robot in standby
+       [X] when disconnected:
+         [X] put robot in standby
      */
 
     signal(SIGINT, sigint_handler); 
@@ -80,7 +78,7 @@ int main(int argc, char** argv) {
     }
 
     server_fd = -1;
-    fprintf(stdout, "Attempting serverSetup! ");
+    fprintf(stdout, "Server starting up...!\n");
     while ((server_fd = serverSetup(port)) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
         fprintf(stdout, "Retrying...\n");
@@ -88,10 +86,6 @@ int main(int argc, char** argv) {
         // retry to setup
     }
     assert(server_fd >= 0);
-
-    fprintf(stdout, "Finished serverSetup!\n");
-
-    fprintf(stdout, "Attempting clientSetup!\n");
     clientSetup();
 
     // control should never reach here
@@ -103,6 +97,8 @@ int main(int argc, char** argv) {
     SERVER/CLIENT FUNCTIONS
 */
 int serverSetup(int port) {
+    assert(port > 0);
+
     int flags = 1;
     struct sockaddr_in serveraddr;
     int sfd;
@@ -181,6 +177,10 @@ void clientSetup() {
             continue;
         }
 
+        string msg = "Connected...!\n";
+        sendToClient(client_fd, msg.c_str());
+        fprintf(stdout, msg.c_str());
+
         if (pthread_create(&tid, NULL, thread, (void *)(long)client_fd) < 0) {
             close(client_fd);
             continue;
@@ -199,16 +199,14 @@ static void *thread(void *arg) {
     disconnected = 0;
 
     int client_fd = (int)(long)arg;
-    string msg = "Connected...!\n";
-    sendToClient(client_fd, msg.c_str());
-    fprintf(stdout, msg.c_str());
 
     while (!disconnected) {
         char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
         token tk;
 
         readFromClient(client_fd, cmdline);
-        evaluate(&client_fd, cmdline, &tk);
+        parseline(cmdline, &tk);
+        command(&client_fd, &tk);
 
         free(cmdline);
 
@@ -262,15 +260,6 @@ static void shutdown(int client_fd) {
     exit(0);
 }
 
-static int evaluate(int *client_fd, const char *cmdline, token *tk) {
-    assert(cmdline != NULL);
-    assert(tk != NULL);
-
-    parseline(cmdline, tk);
-
-    return command(client_fd, tk);
-}
-
 static int command(int *client_fd, token *tk) {
     assert(tk != NULL);
 
@@ -288,7 +277,7 @@ static int command(int *client_fd, token *tk) {
 
             // put in standby
             //robot.standby();
-            msg = "ROBOT STARTED\n";
+            msg = "System started!\n";
             sendToClient(*client_fd, msg.c_str());
             //fprintf(stdout, "COMMAND IS START!\n");
             return 1;
@@ -298,6 +287,7 @@ static int command(int *client_fd, token *tk) {
             //for (int i = 0; i < size; i++) {
             //    sendToClient(*client_fd, helpLines[i].c_str());
             //}
+            listCommands(*client_fd);
             return 1;
         case QUIT:
             // shuts down everything
@@ -314,7 +304,8 @@ static int command(int *client_fd, token *tk) {
                 If we spawn a process, APES system will be copied,
                 so we dont want that...
             */
-            fprintf(stdout, "COMMAND IS AUTO!\n");
+            msg = "System in auto mode!\n";
+            sendToClient(*client_fd, msg.c_str());
             return 1;
         case TEMP:
             /*
@@ -322,18 +313,15 @@ static int command(int *client_fd, token *tk) {
             temp = robot.read_temp();
             printf(stdout, "Temp (@time): %f\n", temp);
             */
-            msg = "TEMP MODE\n";
-            fprintf(stdout, "COMMAND IS TEMP!\n");
+            msg = "Temp (@time): \n";
             sendToClient(*client_fd, msg.c_str());
             return 1;
         case DTEMP:
             /*
             float dtemp;
             dtemp = robot.D_temp();
-            printf(stdout, "Temp since init: %f\n", dtemp);
             */
-            msg = "DTEMP MODE\n";
-            fprintf(stdout, "COMMAND IS DTEMP!\n");
+            msg = "Temp since init: \n";
             sendToClient(*client_fd, msg.c_str());
             return 1;
         case CURR:
@@ -342,8 +330,7 @@ static int command(int *client_fd, token *tk) {
             curr = robot.read_curr();
             printf(stdout, "Curr (@time): %f\n", curr);
             */
-            msg = "CURR MODE\n";
-            fprintf(stdout, "COMMAND IS CURR!\n");
+            msg = "Curr (@time): \n";
             sendToClient(*client_fd, msg.c_str());
             return 1;
         case LEVEL:
@@ -352,13 +339,12 @@ static int command(int *client_fd, token *tk) {
             level = robot.read_level();
             printf(stdout, "Level (@time): %d\n", level);
             */
-            msg = "LEVEL MODE\n";
+            msg = "Level (@time): \n";
             sendToClient(*client_fd, msg.c_str());
-            fprintf(stdout, "COMMAND IS LEVEL!\n");
             return 1;
         case STANDBY:
             //robot.standby();
-            msg = "ROBOT IN STANDBY\n";
+            msg = "System in standby!\n";
             sendToClient(*client_fd, msg.c_str());
             return 1;
         case WOB:
@@ -367,11 +353,13 @@ static int command(int *client_fd, token *tk) {
             force = robot.read_wob();
             printf(stdout, "Force (@time): %f\n", force);
             */
-            fprintf(stdout, "COMMAND IS WOB!\n");
+            msg = "Force (@time): \n";
+            sendToClient(*client_fd, msg.c_str());
             return 1;
         case DATA:
             //robot.read_data();
-            fprintf(stdout, "COMMAND IS DATA!\n");
+            msg = "Data dump...\n";
+            sendToClient(*client_fd, msg.c_str());
             return 1;
         case MOTOR_DRIVE:
             fprintf(stdout, "COMMAND IS MOTOR_DRIVE!\n");
@@ -404,6 +392,49 @@ static int command(int *client_fd, token *tk) {
     }
 }
 
+static void listCommands(int client_fd) {
+    string msg;
+
+    msg = "Help - Commands:\n";
+    sendToClient(client_fd, msg.c_str());
+    /*
+    msg = "help - prints this message\n";
+    sendToClient(client_fd, msg.c_str());
+    msg = "start - initializes system\n";
+    sendToClient(client_fd, msg.c_str());
+    msg = "standby - stops all components, system in standby\n";
+    sendToClient(client_fd, msg.c_str());
+    msg = "temp - returns current temperature reading\n";
+    sendToClient(client_fd, msg.c_str());
+    msg = "dtemp - returns temperature difference from startup\n";
+    sendToClient(client_fd, msg.c_str());
+    msg = "curr - returns current current reading\n";
+    sendToClient(client_fd, msg.c_str());
+    msg = "level - returns current level reading\n";
+    sendToClient(client_fd, msg.c_str());
+    msg = "wob - returns current force reading\n";
+    sendToClient(client_fd, msg.c_str());
+    msg = "data - returns the data file\n";
+    sendToClient(client_fd, msg.c_str());
+    msg = "motor_drive - drive the motor\n";
+    sendToClient(client_fd, msg.c_str());
+    msg = "motor_stop - stops the motor\n";
+    sendToClient(client_fd, msg.c_str());
+    msg = "drill_run - runs the drill\n";
+    sendToClient(client_fd, msg.c_str());
+    msg = "drill_stop - stops the drill\n";
+    sendToClient(client_fd, msg.c_str());
+    msg = "drill_cycle - changes drill pwm\n";
+    sendToClient(client_fd, msg.c_str());
+    msg = "auto - puts system in auto mode\n";
+    sendToClient(client_fd, msg.c_str());
+    msg = "quit - shutdown the entire system, including server\n";
+    sendToClient(client_fd, msg.c_str());
+    */
+
+    return;
+}
+
 /*
     SIGNAL HANDLERS
 */
@@ -413,7 +444,6 @@ static void sigint_handler(int sig) {
 }
 
 static void sigpipe_handler(int sig) {
-    fprintf(stdout, "CLIENT HAS DISCONNECTED INVOLUNTARILY!\n");
     disconnected = 1;
     return;
 }
