@@ -1,5 +1,4 @@
 #include "commands.h"
-//#include "components.h"
 #include <cstdlib>
 #include <cstdio>
 #include <string>
@@ -13,19 +12,13 @@
 #include <errno.h>
 #include <assert.h>
 #include <pthread.h>
-//#include "APES.h"
-
-/*
-    Setup Server
-    Wait for input
-    Evaluate input and add to job list, wait for more input
-    separately execute each job in job list
-*/
+#include "APES.h"
 
 using std::string;
 
 static int server_fd;
 static volatile int disconnected = 1;
+static volatile int shutdownSIG = 0;
 //APES robot;
 
 int serverSetup(int port);
@@ -58,13 +51,14 @@ ssize_t	rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen);
 
 int main(int argc, char** argv) {
     /* @TODO:
-       [X] setup robot
-       [X] put robot in standby
+       [] setup robot
+       [] put robot in standby
        [] when connected:
-         [X] accept commands
-	     [] execute commands
+         [X] read commands from client
+         [] add commands to job list
+	     [] execute commands from job list
        [X] when disconnected:
-         [X] put robot in standby
+         [] put robot in standby
      */
 
     signal(SIGINT, sigint_handler); 
@@ -85,6 +79,7 @@ int main(int argc, char** argv) {
         
         // retry to setup
     }
+
     assert(server_fd >= 0);
     clientSetup();
 
@@ -107,6 +102,9 @@ int serverSetup(int port) {
         return -1;
     }
 
+    // these if-statements setup the handshake to keep
+    // alive the connection to client
+    // if client does not respond, SIGPIPE is issued
     if (setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR,
                    (const void*)&flags, sizeof(int)) < 0) {
         close(sfd);
@@ -201,6 +199,8 @@ static void *thread(void *arg) {
     int client_fd = (int)(long)arg;
 
     while (!disconnected) {
+        if (shutdownRPI3) { shutdown(client_fd); }
+
         char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
         token tk;
 
@@ -439,18 +439,34 @@ static void listCommands(int client_fd) {
     SIGNAL HANDLERS
 */
 static void sigint_handler(int sig) {
-    //@TODO: implement
-    exit(0);
+    int old_errno = errno;
+
+    sigset_t mask, prev;
+    sigprocmask(SIG_BLOCK, &mask, &prev);
+
+    shutdownSig = 1;
+
+    sigprocmask(SIG_SETMASK, &prev, NULL);
+    errno = old_errno;
+    return;
 }
 
 static void sigpipe_handler(int sig) {
+    int old_errno = errno;
+
+    sigset_t mask, prev;
+    sigprocmask(SIG_BLOCK, &mask, &prev);
+
     disconnected = 1;
+
+    sigprocmask(SIG_SETMASK, &prev, NULL);
+    errno = old_errno;
     return;
 }
 
 
 /*
-    NEWTORK-SAFE FILE READ/WRITE
+    NEWTORK-SAFE FILE READ/WRITE (BUFFERED)
     from Computer Systems by Bryant & O'Hallaron
 */
 ssize_t rio_readn(int fd, void *usrbuf, size_t n) {

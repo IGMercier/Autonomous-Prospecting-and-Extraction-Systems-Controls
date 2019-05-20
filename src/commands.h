@@ -1,9 +1,9 @@
 /*
-    unabashedly taken and modified from tshlab
+    unabashedly heavily modified from tshlab
 */
 
-#ifndef __COMMAND_HELPER_H__
-#define __COMMAND_HELPER_H__
+#ifndef __COMMANDS_H__
+#define __COMMANDS_H__
 
 #define MAXARGS  128
 #define MAXLINE  8192
