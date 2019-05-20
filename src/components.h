@@ -13,10 +13,11 @@ typedef enum {
 
 typedef struct dataPt {
     sensor origin;
-    union data {
+    union {
         int dataI;
         float dataF;
-    };
+    } dataField;
+
     time_t time;
 } dataPt;
 
@@ -47,7 +48,7 @@ class WLevel {
         int bus_start;
         int bus_end;
     public:
-        WLevel(int bus_start, int bus_end, int sample_freq);
+        WLevel(int bus_start, int bus_end/*, int sample_freq*/);
         ~WLevel();
         int read_wlevel();
 };
