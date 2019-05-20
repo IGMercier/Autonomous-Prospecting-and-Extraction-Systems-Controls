@@ -1,4 +1,5 @@
-#include <stdio.h>
+#include <cstdio>
+#include <string>
 #include <unistd.h>
 #include <error.h>
 #include <wiringPiSPI.h>
@@ -17,7 +18,18 @@ APES::~APES() {
 }
 
 /* object methods */
-int APES::setup() {
+int APES::setup(char *filename) {
+
+    if (filename != NULL) {
+        this.filename = filename;
+    } else {
+        this.filename = "data.csv";
+    }
+    this.file = fopen(this.filename, "w");
+    fprintf(this.file, "time, sensor, value\n");
+
+    // @TODO: do i need this as a pointer??
+    //this.dataArray = new std::vector<dataPt *>;
     
     // starts python interpreter
     py::initialize_interpreter();
@@ -83,11 +95,12 @@ int APES::standby() {
 }
 
 int APES::finish() {
+    fclose(this.file);
+
     // kills the python interpreter
     // and deletes everything, so
     // you better actually want to kill
     // the system if you call this func
-
     if (this.wob != NULL) { delete this.wob; }
     if (this.therm != NULL) { delete this.therm; }
     if (this.amm != NULL) { delete this.amm; }
@@ -104,27 +117,33 @@ int APES::readData(const char *filename) {
     return -1;
 }
 
-int APES::writeDataFloat(float data, const char *filename) {
-    FILE *file = fopen(filename, "a");
-    if (file != NULL) {
-        fprintf(file, "%f\n", data);
-        fclose(file);
-        return 0;
+int APES::writeData(dataPt *data) {
+    assert(data != NULL);
+
+    if (this.dataArray.size() >= MAXDATA) {
+        switch(data->origin) {
+            case THERM:
+                fprintf(this.file, "%s, %f, %f\n",
+                        "therm", data->time, data->data);
+                break;
+            case AMM:
+                fprintf(this.file, "%s, %f, %f\n",
+                        "amm", data->time, data->data);
+                break;
+            case LEVEL:
+                fprintf(this.file, "%s, %f, %f\n",
+                        "level", data->time, data->data);
+                break;
+            case WOB:
+                fprintf(this.file, "%s, %f, %f\n",
+                        "wob", data->time, data->data);
+                break;
+            default:
+                fprintf(this.file, "%s, %f, %f\n",
+                        "none", data->time, data->data);
+                break;
+        }
     } else {
-        fprintf(stderr, "ERROR: %s", strerror(errno));
-        return -1;
+        this.dataArray.push_back(data);
     }
 }
-
-int APES::writeDataInt(int data, const char *filename) {
-    FILE *file = fopen(filename, "a");
-    if (file != NULL) {
-        fprintf(file, "%d\n", data);
-        fclose(file);
-        return 0;
-    } else {
-        fprintf(stderr, "ERROR: %s", strerror(errno));
-        return -1;
-    }
-}
-

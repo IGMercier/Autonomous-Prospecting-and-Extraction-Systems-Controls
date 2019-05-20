@@ -4,7 +4,15 @@
 #include "libraies/pybind11/include/pybind11/embed.h"
 #include <ctime>
 
+typedef enum {
+    THERM,
+    AMM,
+    LEVEL,
+    WOB
+} sensor;
+
 typedef struct dataPt {
+    sensor origin;
     union data {
         int dataI;
         float dataF;
