@@ -112,17 +112,21 @@ Level::Level(int bus_start, int bus_end) {
 }
 
 int Level::read_level() {
-    /*@TODO:
+    /*
       reads from each ADC channel
       assumes 1 == water at that level
       assumes channel 0 is the lowest level
         and channel 7 is the highest level
     */
+
+    // @TODO: how is bus specified???
     int bus;
     int level = 0;
     int channel = this.bus_start;
     for ( ; channel < this.bus_end; channel++) {
         if (readADC(bus, channel) == 1) {
+            //@TODO: should this be == 0 since
+            // the reading might aren't a binary {0, 1}?
             level = channel;
         }
     }
@@ -153,8 +157,7 @@ float Wob::read_wob() {
     this.HX711.attr("power_down")();
     this.HX711.attr("power_up")();
 
-    //@TODO: look up how to convert pybind value to C++ primitive
-    float force = value.cast<>(std::float);
+    float force = value.cast<float>();
 
     return force;
 }
@@ -196,6 +199,9 @@ void Motor::motor_drive(bool dir, int speed, int time) {
     // time in milliseconds
     //@TODO: really need to test this!
     if (this.L298N != NULL) {
+        //@TODO: calculate an actual duty cycle from speed
+        this.L298N.attr("changeDutyCycle")("dc" _a=speed);
+
         auto start = high_resolution_clock::now();
         chrono::milliseconds elapsed{0}; 
         while (elapsed.count() < time){

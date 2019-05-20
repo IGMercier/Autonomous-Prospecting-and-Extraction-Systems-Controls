@@ -1,0 +1,6 @@
+[submodule "src/libraries/pybind11"]
+	path = src/libraries/pybind11
+	url = https://github.com/JBas/pybind11.git
+[submodule "src/libraries/hx711py"]
+	path = src/libraries/hx711py
+	url = https://github.com/JBas/hx711py.git
