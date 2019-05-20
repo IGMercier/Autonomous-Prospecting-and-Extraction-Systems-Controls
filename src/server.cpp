@@ -1,4 +1,5 @@
-// g++ -o serverTest server.cpp commands.cpp -lpthread
+// g++ -o server server.cpp commands.cpp -lpthread
+// ./server <port number>
 
 #include "commands.h"
 #include <cstdlib>
@@ -439,6 +440,7 @@ static void listCommands(int client_fd) {
     SIGNAL HANDLERS
 */
 static void sigint_handler(int sig) {
+    //@TODO: need to fix this
     int old_errno = errno;
 
     sigset_t mask, prev;
@@ -448,6 +450,8 @@ static void sigint_handler(int sig) {
 
     sigprocmask(SIG_SETMASK, &prev, NULL);
     errno = old_errno;
+
+    exit(0);
     return;
 }
 
