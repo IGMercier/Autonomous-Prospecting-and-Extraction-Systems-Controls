@@ -1,3 +1,6 @@
 [submodule "src/libraries/pybind11"]
 	path = src/libraries/pybind11
 	url = https://github.com/pybind/pybind11
+[submodule "src/libraries/hx711py"]
+	path = src/libraries/hx711py
+	url = https://github.com/tatobari/hx711py.git
