@@ -1,8 +1,8 @@
 #include "server.h"
 #include "commands.h"
-#include "../APES.h"
+//#include "../APES.h"
 
-static APES robot;
+//static APES robot;
 static volatile int disconnected = 1;
 static volatile int shutdownSIG = 0;
 
@@ -12,7 +12,8 @@ static void sigpipe_handler(int sig);
 Server::Server() {
     signal(SIGINT, signint_handler);
     signal(SIGPIPE, sigpipe_handler);
-    robot = APES();
+    setCommands();
+    //robot = APES();
 }
 
 void* Server::thread(void *arg) {
@@ -32,7 +33,7 @@ void* Server::thread(void *arg) {
 
         free(cmdline);
     }
-    robot.standby();
+    //robot.standby();
     close(this->cfd);
     return NULL;
 
@@ -54,17 +55,12 @@ int Server::command(token *tk) {
             */
 
             // put in standby
-            robot.standby();
+            //robot.standby();
             msg = "System started!\n";
             sendToClient(msg.c_str());
             return 1;
         case HELP:
-            //string helpLines[] = listCommands();
-            //int size = *(&helpLines + 1) - helpLines;
-            //for (int i = 0; i < size; i++) {
-            //    sendToClient(*client_fd, helpLines[i].c_str());
-            //}
-            //listCommands(*client_fd);
+            listCommands();
             return 1;
         case QUIT:
             // shuts down everything
@@ -120,7 +116,7 @@ int Server::command(token *tk) {
             sendToClient(msg.c_str());
             return 1;
         case STANDBY:
-            robot.standby();
+            //robot.standby();
             msg = "System in standby!\n";
             sendToClient(msg.c_str());
             return 1;
@@ -169,8 +165,35 @@ int Server::command(token *tk) {
     }
 }
 
+void Server::setCommands() {
+    this->commandList.push_back("Help -- Commands:\n");
+    this->commandList.push_back("help := prints this message\n");
+    this->commandList.push_back("start := initializes system\n");
+    this->commandList.push_back("standby := puts system in standby\n");
+    this->commandList.push_back("temp := returns current temperature\n");
+    this->commandList.push_back("dtemp := returns temperature differnce from initialization\n");
+    this->commandList.push_back("curr := returns current amperage\n");
+    this->commandList.push_back("wlevel := returns current water level\n");
+    this->commandList.push_back("data := reads out data file\n");
+    this->commandList.push_back("motor_drive := runs the motor\n");
+    this->commandList.push_back("motor_stop := stops the motor\n");
+    this->commandList.push_back("drill_run := runs the drill\n");
+    this->commandList.push_back("drill_stop := stops the drill\n");
+    this->commandList.push_back("drill_cycle := changes drill duty cycle\n");
+    this->commandList.push_back("auto := sensors read automatically\n");
+    this->commandList.push_back("quit := shuts down system, including server\n");
+    return;
+}
+
+void Server::listCommands() {
+    for (unsigned int i = 0; i < this->commandList.size(); i++) {
+        sendToClient((this->commandList.at(i)).c_str());
+    }
+    return;
+}
+
 void Server::shutdown() {
-    robot.finish();
+    //robot.finish();
 
     std::string msg = "Shutting down!\n";
     sendToClient(msg.c_str());
@@ -182,5 +205,9 @@ void Server::shutdown() {
     if (close(this->cfd) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
     }
+    
     exit(0);
+}
+
+void Server::~Server() {
 }
