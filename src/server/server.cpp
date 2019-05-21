@@ -1,6 +1,12 @@
 #include "server.h"
-#include "commands.h"
 //#include "../APES.h"
+#include <cstdlib>
+#include <cstdio>
+#include <csignal>
+#include <unistd.h>
+#include <cstring>
+#include <assert.h>
+#include <errno.h>
 
 //static APES robot;
 static volatile int disconnected = 1;
@@ -10,31 +16,61 @@ static void sigint_handler(int sig);
 static void sigpipe_handler(int sig);
 
 Server::Server() {
-    signal(SIGINT, signint_handler);
+    signal(SIGINT, sigint_handler);
     signal(SIGPIPE, sigpipe_handler);
     setCommands();
     //robot = APES();
 }
 
+void Server::clientSetup() {
+    fprintf(stdout, "in clinet setuo\n");
+    assert(this->sfd >= 0);
+    pthread_t tid;
+    int flags;
+
+    while (1) {
+        flags = 1;
+        int val = createClient(tid, flags);
+        if (val == -1) {
+            this->cfd = -1;
+            continue;
+        } else if (val == -2) {
+            close(this->cfd);
+            this->cfd = -1;
+            continue;
+        }
+        if (pthread_create(&tid, NULL, thread, (void *)(long)this) < 0) {
+            close(this->cfd);
+            this->cfd = -1;
+            continue;
+        }
+    }
+}
+
 void* Server::thread(void *arg) {
+    fprintf(stdout, "CHILD CLASS THREAD\n");
+    assert(arg != NULL);
+
     pthread_detach(pthread_self());
+    Server *server = (Server *)(long)arg;
 
     disconnected = 0;
 
     while (!disconnected) {
-        if (shutdownSIG) { shutdown(); }
+        if (shutdownSIG) { server->shutdown(); }
 
         char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
         token tk;
 
-        readFromClient(cmdline);
+        server->readFromClient(cmdline);
         parseline(cmdline, &tk);
-        command(&tk);
+        server->command(&tk);
 
         free(cmdline);
     }
     //robot.standby();
-    close(this->cfd);
+    close(server->cfd);
+    server->cfd = -1;
     return NULL;
 
 }
@@ -66,7 +102,7 @@ int Server::command(token *tk) {
             // shuts down everything
             shutdown();
             return 1;
-        case AUTO:
+        case AUTO_ON:
             // runs things automatically
             /*
                 @TODO:
@@ -78,6 +114,10 @@ int Server::command(token *tk) {
                 so we dont want that...
             */
             msg = "System in auto mode!\n";
+            sendToClient(msg.c_str());
+            return 1;
+        case AUTO_OFF:
+            msg = "Auto mode disabled!\n";
             sendToClient(msg.c_str());
             return 1;
         case TEMP:
@@ -197,7 +237,7 @@ void Server::shutdown() {
     sendToClient(msg.c_str());
     //robot.finish();
 
-    std::string msg = "Server shutting down!\n";
+    msg = "Server shutting down!\n";
     sendToClient(msg.c_str());
     fprintf(stdout, "%s", msg.c_str());
 
@@ -211,5 +251,13 @@ void Server::shutdown() {
     exit(0);
 }
 
-void Server::~Server() {
+Server::~Server() {
+}
+
+static void sigint_handler(int sig) {
+    exit(0);
+}
+
+static void sigpipe_handler(int sig) {
+    exit(0);
 }

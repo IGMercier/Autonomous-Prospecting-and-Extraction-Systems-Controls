@@ -1,8 +1,13 @@
 #include <cstdlib> // C standard library header
+#include <cstdio>
+#include <sys/types.h>
 #include <sys/socket.h> // socket header
-#include <pthread.h>
+#include <netdb.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
 #include <string>
-#include <assert>
+#include <cstring>
+#include <assert.h>
 
 #include "serverBase.h"
 #include "rio.h"
@@ -13,6 +18,9 @@ ServerBase::ServerBase() {
 }
 
 void ServerBase::serverSetup(int port) {
+    fprintf(stdout, "Starting Server!\n");
+
+
     assert(port > 0);
 
     int flags;
@@ -79,54 +87,69 @@ void ServerBase::serverSetup(int port) {
 
 void ServerBase::clientSetup() {
     assert(this->sfd >= 0);
-
     pthread_t tid;
-    int flags = 1;
+    int flags;
 
     while (1) {
-        assert(this->cfd < 0);
-
-        struct sockaddr_in caddr;
-        socklen_t caddr_size;
-
-        caddr_size = sizeof(struct sockaddr_in);
-
-        // acept() blocks until client connects
-        if ((this->cfd = accept(this->sfd,
-                                (struct sockaddr *)&caddr.sin_addr.s_addr,
-                                &caddr_size)) < 0) {
+        flags = 1;
+        int val = createClient(tid, flags);
+        if (val == -1) {
             this->cfd = -1;
             continue;
-        }
-
-        flags = 1;
-        if (setsockopt(this->cfd, SOL_SOCKET, SO_KEEPALIVE,
-                       (const void *)$flags, sizeof(int)) < 0) {
+        } else if (val == -2) {
             close(this->cfd);
             this->cfd = -1;
             continue;
         }
-
-        char *c_ip = inet_ntoa(caddr.sin_addr);
-        std::string ip(c_ip);
-        std::string msg = "Server: Connected to " + ip + "\n";
-        sendToClient(msg.c_str());
-
-        if (pthread_create(&tid, NULL, thread, NULL) < 0) {
+        if (pthread_create(&tid, NULL, thread, (void *)(long)this) < 0) {
             close(this->cfd);
             this->cfd = -1;
             continue;
         }
     }
+}
 
-    return;
+int ServerBase::createClient(pthread_t tid, int flags) {
+    struct sockaddr_in caddr;
+    socklen_t caddr_size;
+
+    caddr_size = sizeof(struct sockaddr_in);
+
+    // acept() blocks until client connects
+    if ((this->cfd = accept(this->sfd,
+                            (struct sockaddr *)&caddr.sin_addr.s_addr,
+                             &caddr_size)) < 0) {
+        this->cfd = -1;
+        return -1;
+    }
+
+    flags = 1;
+    if (setsockopt(this->cfd, SOL_SOCKET, SO_KEEPALIVE,
+                   (const void *)&flags, sizeof(int)) < 0) {
+        close(this->cfd);
+        this->cfd = -1;
+        return -2;
+    }
+    fprintf(stdout, "in create client\n");
+
+    return 0;
 }
 
 void* ServerBase::thread(void *arg) {
-    pthread_detach(pthread_self());
+    fprintf(stdout, "BASE CLASS THREAD\n");
+    assert(arg != NULL);
 
-    close(this->cfd);
-    this->cfd = -1;
+    pthread_detach(pthread_self());
+    
+   // char *c_ip = inet_ntoa(caddr.sin_addr);
+   // std::string ip(c_ip);
+   //std::string msg = "Server: Connected\n";// + ip + "\n";
+   //sendToClient(msg.c_str());
+
+    ServerBase *server = (ServerBase *)(long)arg;
+
+    close(server->cfd);
+    server->cfd = -1;
     return NULL;
 }
 
@@ -134,8 +157,8 @@ void ServerBase::readFromClient(char *cmdline) {
     assert(cmdline != NULL);
 
     rio_t buf;
-    rio_initb(&buf, this->cfd);
-    rio_readlineb(&buf, cmdline, MAXLINE);
+    rio_readinitb(&buf, this->cfd);
+    rio_readlineb(&buf, cmdline, RIO_BUFSIZE);
 
     cmdline[strlen(cmdline)-1] = '\0';
 
@@ -159,6 +182,7 @@ void ServerBase::shutdown() {
     return;
 }
 
-ServerBase::~serverBase() {
+ServerBase::~ServerBase() {
 
 }
+

@@ -4,6 +4,8 @@
     NEWTORK-SAFE FILE READ/WRITE (BUFFERED)
     from Computer Systems by Bryant & O'Hallaron
 */
+static ssize_t rio_read(rio_t *rp, char *usrbuf, size_t n);
+
 ssize_t rio_readn(int fd, void *usrbuf, size_t n) {
     size_t nleft = n;
     ssize_t nread;
@@ -51,7 +53,6 @@ static ssize_t rio_read(rio_t *rp, char *usrbuf, size_t n) {
 
     while (rp->rio_cnt <= 0) {      /* Refill if buf is empty */
         rp->rio_cnt = read(rp->rio_fd, rp->rio_buf, sizeof(rp->rio_buf));
-        fprintf(stdout, "\t\t\t%s\n", strerror(errno));
         if (rp->rio_cnt < 0) {
             if (errno != EINTR) {
                 return -1;          /* errno set by read() */

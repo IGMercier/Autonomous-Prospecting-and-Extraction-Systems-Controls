@@ -80,29 +80,3 @@ int parseline(const char *cmdline, token *tk) {
 
     return 0;
 }
-
-/*
-    NEWTORK-SAFE FILE READ/WRITE (BUFFERED)
-    from Computer Systems by Bryant & O'Hallaron
-*/
-ssize_t rio_readn(int fd, void *usrbuf, size_t n) {
-    size_t nleft = n;
-    ssize_t nread;
-    char *bufp = (char *)usrbuf;
-
-    while (nleft > 0) {
-        if ((nread = read(fd, bufp, nleft)) < 0) {
-            if (errno != EINTR) {
-                return -1;  /* errno set by read() */
-            }
-
-            /* Interrupted by sig handler return, call read() again */
-            nread = 0;
-        } else if (nread == 0) {
-            break;                  /* EOF */
-        }
-        nleft -= nread;
-        bufp += nread;
-    }
-    return n - nleft;             /* Return >= 0 */
-}

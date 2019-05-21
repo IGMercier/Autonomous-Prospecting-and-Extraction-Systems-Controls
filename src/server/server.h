@@ -1,21 +1,23 @@
-#ifndef _SERVER_H
-#define _SERVER_H
+#ifndef _SERVER_H_
+#define _SERVER_H_
 
 #include "serverBase.h"
+#include "commands.h"
 #include <string>
 #include <vector>
 
-class Server::public ServerBase {
+class Server : public ServerBase {
     private:
         std::vector<std::string> commandList;
     public:
         Server();
-        void *thread(void *arg);
+        void clientSetup();
+        static void *thread(void *arg);
         int command(token *tk);
         void setCommands();
         void listCommands();
         void shutdown();
         ~Server();
-}
+};
 
 #endif

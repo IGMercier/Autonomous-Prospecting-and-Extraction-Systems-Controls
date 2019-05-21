@@ -1,6 +1,12 @@
 #ifndef _RIO_H
 #define _RIO_H_
 
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <unistd.h>
+#include <errno.h>
+
 #define RIO_BUFSIZE 8192
 typedef struct {
     int rio_fd;                /* Descriptor for this internal buf */
@@ -9,7 +15,6 @@ typedef struct {
     char rio_buf[RIO_BUFSIZE]; /* Internal buffer */
 } rio_t;
 
-static ssize_t rio_read(rio_t *rp, char *usrbuf, size_t n);
 ssize_t rio_readn(int fd, void *usrbuf, size_t n);
 ssize_t rio_writen(int fd, void *usrbuf, size_t n);
 void rio_readinitb(rio_t *rp, int fd);

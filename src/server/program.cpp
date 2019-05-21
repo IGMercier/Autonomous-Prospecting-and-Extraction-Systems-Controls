@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <cstdio>
 #include "server.h"
 
 int main(int argc, char **argv) {

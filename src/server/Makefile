@@ -7,7 +7,7 @@ LIBS = -lpthread
 all: $(TARGET)
 
 $(TARGET): $(FILES)
-    $(CC) -o $(TARGET) $(CFLAGS) $(FILES)
+	$(CC) -o $(TARGET) $(CFLAGS) $(FILES) $(LIBS)
 
 clean:
-    $(RM) $(TARGET)
+	$(RM) $(TARGET)
