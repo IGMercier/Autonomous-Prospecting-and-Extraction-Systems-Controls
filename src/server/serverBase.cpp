@@ -1,4 +1,5 @@
 #include "serverBase.h"
+#include "rio.h"
 #include <assert>
 
 ServerBase::ServerBase() {

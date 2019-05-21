@@ -1,6 +1,6 @@
 
-#ifndef __COMMANDS_H__
-#define __COMMANDS_H__
+#ifndef _HELPER_H_
+#define _HELPER_H_
 
 /*
     COMMAND & PARSING DEFINITIONS AND HELPER FUNCTIONS

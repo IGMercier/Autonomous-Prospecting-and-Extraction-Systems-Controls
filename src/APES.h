@@ -1,5 +1,5 @@
-#ifndef __APES_H__
-#define __APES_H__
+#ifndef _APES_H_
+#define _APES_H_
 
 //#include "libraries/pybind11/include/pybind11/embed.h" <- I might not need this here!
 

@@ -1,4 +1,5 @@
 #include "server.h"
+#include "../helper.h"
 #include "../APES.h"
 
 static APES robot;
