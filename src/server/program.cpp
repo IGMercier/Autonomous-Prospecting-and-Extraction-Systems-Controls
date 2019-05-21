@@ -12,9 +12,12 @@ int main(int argc, char **argv) {
     }
 
     Server server = Server();
-    server.createServer(port);
-    server.clientSetup();
+    while (server.sfd < 0) {
+        server.createServer(port);
+    }
+    server.run();
 
+    // control flow should never reach
     server.shutdown();
 
     return -1;

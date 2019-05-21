@@ -22,7 +22,7 @@ Server::Server() {
     //robot = APES();
 }
 
-void Server::clientSetup() {
+void Server::run() {
     assert(this->sfd >= 0);
     pthread_t tid;
 
@@ -258,9 +258,9 @@ Server::~Server() {
 }
 
 static void sigint_handler(int sig) {
-    exit(0);
+    shutdownSIG = 1;
 }
 
 static void sigpipe_handler(int sig) {
-    exit(0);
+    disconnected = 1;
 }

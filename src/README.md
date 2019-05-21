@@ -7,11 +7,13 @@ This folder contains all the software stuffs
     * Comment out all network configs in /etc/wpa_supplicant/wpa_supplicant.conf
 
 * To run server only:
+    * Go into the server directory
     * Comment out all references to robot in server.cpp
-    * run: ```g++ -o server server.cpp commands.cpp -lpthread```
-    * run: ```./server <port number>```
+    * Run: ```make```
+    * Run: ```./server <port number>```
 
 * To run full system:
-    * run: ```make```
-    * run: ```./apes <port number>```
+    * Go into the src directory
+    * Run: ```make```
+    * Run: ```./apes <host number> <port number>```
     

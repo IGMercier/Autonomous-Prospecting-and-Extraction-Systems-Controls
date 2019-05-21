@@ -25,6 +25,7 @@ void ServerBase::createServer(int port) {
     struct sockaddr_in saddr;
     
     if ((this->sfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        this->sfd = -1;
         return;
     }
 
@@ -39,7 +40,7 @@ void ServerBase::createServer(int port) {
         return;
     }
 
-    flags = 10; // heartbeat frequency
+    flags = 5; // heartbeat frequency
     if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPIDLE,
                    (const void*)&flags, sizeof(int)) < 0) {
         close(this->sfd);
@@ -53,7 +54,7 @@ void ServerBase::createServer(int port) {
         this->sfd = -1;
         return;
     }
-    flags = 2; // heatbeat freq when client isn't responding
+    flags = 5; // heatbeat freq when client isn't responding
     if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPINTVL,
                    (const void*)&flags, sizeof(int)) < 0) {
         close(this->sfd);

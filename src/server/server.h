@@ -11,7 +11,7 @@ class Server : public ServerBase {
         std::vector<std::string> commandList;
     public:
         Server();
-        void clientSetup();
+        void run();
         static void *thread(void *arg);
         int command(token *tk);
         void setCommands();
