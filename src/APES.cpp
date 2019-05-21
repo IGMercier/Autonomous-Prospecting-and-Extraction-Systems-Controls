@@ -1,11 +1,20 @@
+#include <assert>
 #include <unistd.h>
 #include <error.h>
+#include <pthread.h>
 #include <wiringPiSPI.h>
 #include "APES.h"
 #include "libraries/pybind11/include/pybind11/embed.h"
 
 namespace py = pybind11;
 using namespace py::literals;
+
+static void *wob_thread(void *arg);
+static void *therm_thread(void *arg);
+static void *amm_thread(void *arg);
+static void *wlevel_thread(void *arg);
+
+static pthread_mutex_t dataVector_lock;
 
 APES::APES() {
     this->filename = NULL;
@@ -31,6 +40,9 @@ int APES::setup(char *filename) {
     }
     this->file = fopen(this->filename, "w");
     fprintf(this->file, "time, sensor, value\n");
+
+    // @TODO: error handling
+    pthread_mutex_init(&dataVector_lock, NULL);
 
     // @TODO: do i need this as a pointer??
     //this.dataArray = new std::vector<dataPt *>;
@@ -89,6 +101,19 @@ void APES::motor_stop() {
     }
 }
 
+void APES::automatic() {
+    pthread_t wob_tid;
+    pthread_t therm_tid;
+    pthread_t amm_tid;
+    pthread_t wlevel_tid;
+
+    // @TODO: error handling
+    pthread_create(&wob_tid, NULL, wob_thread, (void *)(long)(this));
+    pthread_create(&therm_tid, NULL, therm_thread, (void *)(long)(this));
+    pthread_create(&amm_tid, NULL, amm_thread, (void *)(long)(this));
+    pthread_create(&wlevel_tid, NULL, wlevel_thread, (void *)(long)(this));
+}
+
 void APES::standby() {
     // ensure that everything is off
     motor_stop();
@@ -114,6 +139,8 @@ void APES::finish() {
     // super important that any pybind objects are
     // killed before pybind interpreter finalized!
     py::finalize_interpreter();
+
+    pthread_mutex_destroy(&dataVector_lock);
 }
 
 void APES::readData(const char *filename) {
@@ -159,4 +186,31 @@ void APES::writeDataVector() {
     }
 
     this->dataVector.clear();
+}
+
+static void *wob_thread(void *arg) {
+}
+
+static void *therm_thread(void *arg) {
+    assert(arg != NULL);
+    pthread_detach(pthread_self());
+
+    APES robot = (APES)(long)arg;
+
+    while (1) {
+        // @TODO: test this
+        float temp = robot->read_temp();
+
+        pthread_mutex_lock(&dataVector_lock);
+        robot->saveData();
+        pthread_mutex_unlock(&dataVector_lock);
+    }
+
+    return NULL
+}
+
+static void *amm_thread(void *arg) {
+}
+
+static void *wlevel_thread(void *arg) {
 }
