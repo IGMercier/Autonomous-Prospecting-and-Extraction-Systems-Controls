@@ -1,6 +1,7 @@
 #include "commands.h"
 #include <cstring>
 
+// modified from tshlab
 int parseline(const char *cmdline, token *tk) {
     const char delims[] = " \t\r\n";
     char *buf;
@@ -64,7 +65,13 @@ int parseline(const char *cmdline, token *tk) {
     } else if ((strcmp(tk->argv[0], "drill_cycle")) == 0) {
         tk->command = DRILL_CYCLE;
     } else if ((strcmp(tk->argv[0], "auto")) == 0) {
-        tk->command = AUTO;
+        if ((strcmp(tk->argv[1], "on")) == 0) {
+            tk->command = AUTO_ON;
+        } else if ((strcmp(tk->argv[1], "off")) == 0) {
+            tk->command = AUTO_OFF;
+        } else {
+            tk->command = NONE;
+        }
     } else if ((strcmp(tk->argv[0], "help")) == 0) {
         tk->command = HELP;
     } else {

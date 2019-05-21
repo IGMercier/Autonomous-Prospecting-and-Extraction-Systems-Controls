@@ -1,10 +1,10 @@
+
+#ifndef _COMMANDS_H_
+#define _COMMANDS_H_
+
 /*
-    unabashedly heavily modified from tshlab
+    COMMAND & PARSING DEFINITIONS AND HELPER FUNCTIONS
 */
-
-#ifndef __COMMANDS_H__
-#define __COMMANDS_H__
-
 #define MAXARGS  128
 #define MAXLINE  8192
 
@@ -24,7 +24,8 @@ typedef enum command_state {
     DRILL_RUN,
     DRILL_STOP,
     DRILL_CYCLE,
-    AUTO,
+    AUTO_ON,
+    AUTO_OFF,
     QUIT
 } command_state;
 

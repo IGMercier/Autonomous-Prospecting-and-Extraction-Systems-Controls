@@ -42,7 +42,8 @@ Therm::Therm(int bus_addr, float max_T) {
 
     this->bus_addr = bus_addr;
     this->max_T = max_T;
-    this->iTemp = read_temp();
+    this->iTemp = 0; //read_temp();
+    fprintf(stdout, "Initialized Therm!\n");
 }
 
 float Therm::read_temp() {
@@ -75,6 +76,7 @@ Amm::Amm(int bus_addr, float max_I) {
 
     this->bus_addr = bus_addr;
     this->max_I = max_I;
+    fprintf(stdout, "Initialized Amm!\n");
 }
 
 float Amm::read_curr() {
@@ -116,6 +118,7 @@ WLevel::WLevel(int bus_start, int bus_end) {
 
     this->bus_start = bus_start;
     this->bus_end = bus_end;
+    fprintf(stdout, "Initialized WLevel!\n");
 }
 
 int WLevel::read_wlevel() {
@@ -149,17 +152,18 @@ WLevel::~WLevel() {
 /*
     WOB FUNCTIONS
 */
-Wob::Wob() {
+Wob::Wob(int pinA, int pinB) {
     // this assumes the pybind interpreter has been initialized
     // in  APES::setup()!
-    py::object hx711 = py::module::import("libraries/hx711py/hx711").attr("HX711");
+    py::object hx711 = py::module::import("libraries.hx711py.hx711").attr("HX711");
     assert(hx711 != NULL);
 
-    this->HX711 = hx711(5, 6);
-    this->HX711.attr("set_reading_format")("byte_format"_a="MSB", "bit_format"_a="MSB");
-    this->HX711.attr("set_reference_unit")(1);
-    this->HX711.attr("reset")();
-    this->HX711.attr("tare")();
+    this->HX711 = hx711(pinA, pinB);
+    //this->HX711.attr("set_reading_format")("byte_format"_a="MSB", "bit_format"_a="MSB");
+    //this->HX711.attr("set_reference_unit")(1);
+    //this->HX711.attr("reset")();
+    //this->HX711.attr("tare")();
+    fprintf(stdout, "Initialized Wob!\n");
 }
 
 float Wob::read_wob() {
@@ -190,11 +194,11 @@ Wob::~Wob() {
 Motor::Motor(int pinA, int pinB) {
     // this assumes the pybind interpreter has been initialized
     // in  APES::setup()!
-
-    py::object l298n = py::module::import("libraries/l298npy/l298n").attr("L298N");
+    py::object l298n = py::module::import("libraries.l298npy.l298n").attr("L298N");
     assert(l298n != NULL);
 
     this->L298N = l298n(pinA, pinB);
+    fprintf(stdout, "Initialized Motor!\n");
 }
 
 Motor::~Motor() {

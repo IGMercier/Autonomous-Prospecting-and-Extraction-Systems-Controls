@@ -1,5 +1,5 @@
-#ifndef __COMPONENTS_H__
-#define __COMPONENTS_H__
+#ifndef _COMPONENTS_H_
+#define _COMPONENTS_H_
 
 #include "libraries/pybind11/include/pybind11/embed.h"
 #include <ctime>
@@ -57,7 +57,7 @@ class Wob {
     private:
         pybind11::object HX711;
     public:
-        Wob();
+        Wob(int pinA, int pinB);
         ~Wob();
         float read_wob();
 };
