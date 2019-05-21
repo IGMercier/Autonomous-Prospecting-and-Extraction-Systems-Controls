@@ -1,6 +1,11 @@
+#include <cstdlib> // C standard library header
+#include <sys/socket.h> // socket header
+#include <pthread.h>
+#include <string>
+#include <assert>
+
 #include "serverBase.h"
 #include "rio.h"
-#include <assert>
 
 ServerBase::ServerBase() {
     this->sfd = -1;
@@ -10,7 +15,7 @@ ServerBase::ServerBase() {
 void ServerBase::serverSetup(int port) {
     assert(port > 0);
 
-    int flags = 1;
+    int flags;
     struct sockaddr_in saddr;
     
     if ((this->sfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -20,6 +25,7 @@ void ServerBase::serverSetup(int port) {
     // these if-statements setup the handshake to keep
     // alive the connection to client
     // if client does not respond, SIGPIPE is issued
+    flags = 1; // enables address reuse
     if (setsockopt(this->sfd, SOL_SOCKET, SO_REUSEADDR,
                    (const void*)&flags, sizeof(int)) < 0) {
         close(this->sfd);
@@ -27,21 +33,21 @@ void ServerBase::serverSetup(int port) {
         return;
     }
 
-    flags = 5;
+    flags = 10; // heartbeat frequency
     if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPIDLE,
                    (const void*)&flags, sizeof(int)) < 0) {
         close(this->sfd);
         this->sfd = -1;
         return;
     }
-    flags = 2;
+    flags = 2; // defines number of missed heartbeats as dropped client
     if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPCNT,
                    (const void*)&flags, sizeof(int)) < 0) {
         close(this->sfd);
         this->sfd = -1;
         return;
     }
-    flags = 5;
+    flags = 2; // heatbeat freq when client isn't responding
     if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPINTVL,
                    (const void*)&flags, sizeof(int)) < 0) {
         close(this->sfd);
