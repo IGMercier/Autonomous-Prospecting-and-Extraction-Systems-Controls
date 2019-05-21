@@ -17,10 +17,8 @@ ServerBase::ServerBase() {
     this->cfd = -1;
 }
 
-void ServerBase::serverSetup(int port) {
+void ServerBase::createServer(int port) {
     fprintf(stdout, "Starting Server!\n");
-
-
     assert(port > 0);
 
     int flags;
@@ -88,11 +86,10 @@ void ServerBase::serverSetup(int port) {
 void ServerBase::clientSetup() {
     assert(this->sfd >= 0);
     pthread_t tid;
-    int flags;
 
     while (1) {
-        flags = 1;
-        int val = createClient(tid, flags);
+        int val = createClient();
+        fprintf(stdout, "BASE CLASS PASSED CREATE_CLIENT\n");
         if (val == -1) {
             this->cfd = -1;
             continue;
@@ -109,7 +106,8 @@ void ServerBase::clientSetup() {
     }
 }
 
-int ServerBase::createClient(pthread_t tid, int flags) {
+int ServerBase::createClient() {
+    int flags = 1;
     struct sockaddr_in caddr;
     socklen_t caddr_size;
 
@@ -119,19 +117,13 @@ int ServerBase::createClient(pthread_t tid, int flags) {
     if ((this->cfd = accept(this->sfd,
                             (struct sockaddr *)&caddr.sin_addr.s_addr,
                              &caddr_size)) < 0) {
-        this->cfd = -1;
         return -1;
     }
 
-    flags = 1;
     if (setsockopt(this->cfd, SOL_SOCKET, SO_KEEPALIVE,
                    (const void *)&flags, sizeof(int)) < 0) {
-        close(this->cfd);
-        this->cfd = -1;
         return -2;
     }
-    fprintf(stdout, "in create client\n");
-
     return 0;
 }
 

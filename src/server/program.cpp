@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
     }
 
     Server server = Server();
-    server.serverSetup(port);
+    server.createServer(port);
     server.clientSetup();
 
     server.shutdown();

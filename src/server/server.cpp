@@ -23,14 +23,11 @@ Server::Server() {
 }
 
 void Server::clientSetup() {
-    fprintf(stdout, "in clinet setuo\n");
     assert(this->sfd >= 0);
     pthread_t tid;
-    int flags;
 
     while (1) {
-        flags = 1;
-        int val = createClient(tid, flags);
+        int val = createClient();
         if (val == -1) {
             this->cfd = -1;
             continue;
@@ -48,13 +45,15 @@ void Server::clientSetup() {
 }
 
 void* Server::thread(void *arg) {
-    fprintf(stdout, "CHILD CLASS THREAD\n");
     assert(arg != NULL);
 
     pthread_detach(pthread_self());
     Server *server = (Server *)(long)arg;
 
     disconnected = 0;
+
+    std::string msg = "Connected!\n";
+    server->sendToClient(msg.c_str());
 
     while (!disconnected) {
         if (shutdownSIG) { server->shutdown(); }
@@ -63,6 +62,9 @@ void* Server::thread(void *arg) {
         token tk;
 
         server->readFromClient(cmdline);
+
+        fprintf(stdout, "Received: %s\n", cmdline);
+
         parseline(cmdline, &tk);
         server->command(&tk);
 
@@ -235,6 +237,7 @@ void Server::listCommands() {
 void Server::shutdown() {
     std::string msg = "System shutting down!\n";
     sendToClient(msg.c_str());
+    fprintf(stdout, "%s", msg.c_str());
     //robot.finish();
 
     msg = "Server shutting down!\n";
@@ -244,7 +247,7 @@ void Server::shutdown() {
     if (close(this->cfd) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
     }
-    if (close(this->cfd) < 0) {
+    if (close(this->sfd) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
     }
     
