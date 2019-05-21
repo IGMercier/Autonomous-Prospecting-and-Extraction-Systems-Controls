@@ -1,7 +1,7 @@
 CC = g++
 TARGET = apes
 CFLAGS = -g -Wall
-FILES = server.cpp commands.cpp components.cpp APES.cpp
+FILES = server.cpp helper.cpp components.cpp APES.cpp
 LIBS = -lwiringPi -lpthread
 INCL = -I/usr/include/python3.5m -I/libraries/pybind11/include/
 
