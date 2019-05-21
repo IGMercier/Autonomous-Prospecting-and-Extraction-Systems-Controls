@@ -107,7 +107,9 @@ void ServerBase::clientSetup() {
             continue;
         }
 
-        std::string msg = "Connected...!\n";
+        char *c_ip = inet_ntoa(caddr.sin_addr);
+        std::string ip(c_ip);
+        std::string msg = "Server: Connected to " + ip + "\n";
         sendToClient(msg.c_str());
 
         if (pthread_create(&tid, NULL, thread, NULL) < 0) {

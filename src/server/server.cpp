@@ -131,7 +131,7 @@ int Server::command(token *tk) {
             return 1;
         case DATA:
             //robot.read_data();
-            msg = "Data dump...\n";
+            msg = "Server: Reading from data file...\n";
             sendToClient(msg.c_str());
             return 1;
         case MOTOR_DRIVE:
@@ -193,9 +193,11 @@ void Server::listCommands() {
 }
 
 void Server::shutdown() {
+    std::string msg = "System shutting down!\n";
+    sendToClient(msg.c_str());
     //robot.finish();
 
-    std::string msg = "Shutting down!\n";
+    std::string msg = "Server shutting down!\n";
     sendToClient(msg.c_str());
     fprintf(stdout, "%s", msg.c_str());
 
