@@ -23,10 +23,10 @@
 static int server_fd;
 static volatile int disconnected = 1;
 static volatile int shutdownSIG = 0;
-APES robot;
+static APES robot;
 
-int serverSetup(int port);
-void  clientSetup();
+static int serverSetup(int port);
+static void  clientSetup();
 static int readFromClient(int client_fd, char *cmdline);
 static int sendToClient(int client_fd, const char *msg);
 static int command(int *client_fd, token *tk);
@@ -59,8 +59,13 @@ int main(int argc, char** argv) {
        [] put robot in standby
        [] when connected:
          [X] read commands from client
-         [] add commands to job list
-	     [] execute commands from job list
+         [X] parse commands
+	     [] when command == auto_on
+            [] spawn threads for each sensor/actuator
+         [] when command is manual
+            [] close just the thread to that sensor or actuator
+         [] when command == auto_off
+            [] close all threads to sensors/actuators
        [X] when disconnected:
          [] put robot in standby
      */
@@ -95,7 +100,7 @@ int main(int argc, char** argv) {
 /*
     SERVER/CLIENT FUNCTIONS
 */
-int serverSetup(int port) {
+static int serverSetup(int port) {
     assert(port > 0);
 
     int flags = 1;
@@ -154,7 +159,7 @@ int serverSetup(int port) {
 
 }
 
-void clientSetup() {
+static void clientSetup() {
     pthread_t tid;
     int flags = 1;
     while (1) {
@@ -269,16 +274,17 @@ static int command(int *client_fd, token *tk) {
 
     command_state command = tk->command;
     std::string msg;
+    std::string filename = "data.csv";
 
     switch (command) {
         case START:
             // setup robot and retry on fail
-            /*while (robot.setup("data.csv") < 0) {
-                fprintf(stderr, "ERROR: APES system setup failure!\n");
-                fprintf(stdout, "Retrying...\n");
-                robot.finish();
+            while (robot.setup((char *)filename.c_str()) < 0) {
+                msg = "ERROR: APES system setup failure!\n";
+                sendToClient(*client_fd, msg.c_str());
+                msg = "Retrying...\n";
+                sendToClient(*client_fd, msg.c_str());
             }
-            */
 
             // put in standby
             robot.standby();
@@ -297,7 +303,7 @@ static int command(int *client_fd, token *tk) {
             // shuts down everything
             shutdown(*client_fd);
             return 1;
-        case AUTO:
+        case AUTO_ON:
             // runs things automatically
             /*
                 @TODO:
@@ -308,7 +314,11 @@ static int command(int *client_fd, token *tk) {
                 If we spawn a process, APES system will be copied,
                 so we dont want that...
             */
-            msg = "System in auto mode!\n";
+            msg = "Auto mode enabled!\n";
+            sendToClient(*client_fd, msg.c_str());
+            return 1;
+        case AUTO_OFF:
+            msg = "Auto mode disabled!\n";
             sendToClient(*client_fd, msg.c_str());
             return 1;
         case TEMP:
@@ -373,7 +383,7 @@ static int command(int *client_fd, token *tk) {
             fprintf(stdout, "COMMAND IS MOTOR_STOP!\n");
             //robot.motor_stop();
             return 1;
-        // do things for switch
+        /* do things for switch and encoders*/
         case DRILL_RUN:
             // runs drill
             fprintf(stdout, "COMMAND IS DRILL_RUN!\n");
@@ -389,7 +399,7 @@ static int command(int *client_fd, token *tk) {
         case NONE:
         default:
             //string text = tk->text;
-            msg = "Error: Unknown command!\n";// + text;
+            msg = "ERROR: Unknown command!\n";// + text;
             sendToClient(*client_fd, msg.c_str());
             // not a built-in command
             return 0;
@@ -459,15 +469,15 @@ static void sigint_handler(int sig) {
 }
 
 static void sigpipe_handler(int sig) {
-    int old_errno = errno;
+    //int old_errno = errno;
 
-    sigset_t mask, prev;
-    sigprocmask(SIG_BLOCK, &mask, &prev);
+    //sigset_t mask, prev;
+    //sigprocmask(SIG_BLOCK, &mask, &prev);
 
     disconnected = 1;
 
-    sigprocmask(SIG_SETMASK, &prev, NULL);
-    errno = old_errno;
+    //sigprocmask(SIG_SETMASK, &prev, NULL);
+    //errno = old_errno;
     return;
 }
 
@@ -523,7 +533,6 @@ static ssize_t rio_read(rio_t *rp, char *usrbuf, size_t n) {
 
     while (rp->rio_cnt <= 0) {      /* Refill if buf is empty */
         rp->rio_cnt = read(rp->rio_fd, rp->rio_buf, sizeof(rp->rio_buf));
-        fprintf(stdout, "\t\t\t%s\n", strerror(errno));
         if (rp->rio_cnt < 0) {
             if (errno != EINTR) {
                 return -1;          /* errno set by read() */

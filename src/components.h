@@ -57,7 +57,7 @@ class Wob {
     private:
         pybind11::object HX711;
     public:
-        Wob();
+        Wob(int pinA, int pinB);
         ~Wob();
         float read_wob();
 };

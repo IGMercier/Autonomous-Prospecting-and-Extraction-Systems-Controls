@@ -7,14 +7,17 @@
 namespace py = pybind11;
 using namespace py::literals;
 
-#define TO_BE_DET 1
-
 APES::APES() {
-
+    this->filename = NULL;
+    this->file = NULL;
+    this->wob = NULL;
+    this->therm = NULL;
+    this->amm = NULL;
+    this->wlevel = NULL;
+    this->motor = NULL;
 }
 
 APES::~APES() {
-
 }
 
 /* object methods */
@@ -23,7 +26,8 @@ int APES::setup(char *filename) {
     if (filename != NULL) {
         this->filename = filename;
     } else {
-        this->filename = "data.csv";
+        char *filename_default = "data.csv";
+        this->filename = filename_default;
     }
     this->file = fopen(this->filename, "w");
     fprintf(this->file, "time, sensor, value\n");
@@ -33,12 +37,12 @@ int APES::setup(char *filename) {
     
     // starts python interpreter
     py::initialize_interpreter();
-
-    this->wob = new Wob();
-    this->therm = new Therm(TO_BE_DET, TO_BE_DET);
-    this->amm = new Amm(TO_BE_DET, TO_BE_DET);
-    this->wlevel = new WLevel(TO_BE_DET, TO_BE_DET);
-    this->motor = new Motor(TO_BE_DET, TO_BE_DET);
+    //@TODO: put the correct pin numbers
+    this->wob = new Wob(2, 3);
+    this->therm = new Therm(7, 27);
+    this->amm = new Amm(5, 6);
+    this->wlevel = new WLevel(2, 4);
+    this->motor = new Motor(26, 8);
     
     wiringPiSPISetup(0, 500000);
     wiringPiSPISetup(1, 500000);
@@ -87,16 +91,20 @@ void APES::motor_stop() {
 
 void APES::standby() {
     // ensure that everything is off
-    this->motor_stop();
+    motor_stop();
 }
 
 void APES::finish() {
+    // stop all actuators before deconstructor
+    motor_stop();
+
     fclose(this->file);
 
     // kills the python interpreter
     // and deletes everything, so
     // you better actually want to kill
     // the system if you call this func
+    writeDataVector();
     if (this->wob != NULL) { delete this->wob; }
     if (this->therm != NULL) { delete this->therm; }
     if (this->amm != NULL) { delete this->amm; }
@@ -123,7 +131,7 @@ void APES::saveData(dataPt *data) {
 }
 
 void APES::writeDataVector() {
-    for (int i = 0; i < this->dataVector.size(); i++) {
+    for (unsigned int i = 0; i < this->dataVector.size(); i++) {
         dataPt *data = this->dataVector.at(i);
 
         switch(data->origin) {
