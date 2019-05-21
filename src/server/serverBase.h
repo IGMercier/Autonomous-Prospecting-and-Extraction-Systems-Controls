@@ -1,20 +1,25 @@
 #ifndef _SERVER_BASE_H_
 #define _SERVER_BASE_H_
 
-class serverBase {
+class ServerBase {
     protected:
         int server_fd;
         int client_fd;
     public:
-        serverBase();
-        int serverSetup(int port);
+        ServerBase();
+        void serverSetup(int port);
         void clientSetup();
-        virtual void *thread(void *arg);
-        virtual int command(token *tk);
-        virtual void shutdown();
-        ~serverBase();
-}
+        void readFromClient(char *cmdline);
+        void sendToClient(const char *msg);
+        void* thread(void *arg);
+        void shutdown();
+        ~ServerBase();
+};
 
+/*
+    NEWTORK-SAFE FILE READ/WRITE (BUFFERED)
+    from Computer Systems by Bryant & O'Hallaron
+*/
 #define RIO_BUFSIZE 8192
 typedef struct {
     int rio_fd;                /* Descriptor for this internal buf */
