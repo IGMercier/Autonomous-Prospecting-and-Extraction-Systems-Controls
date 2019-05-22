@@ -1,4 +1,4 @@
-#ifndef _RIO_H
+#ifndef _RIO_H_
 #define _RIO_H_
 
 #include <cstdlib>

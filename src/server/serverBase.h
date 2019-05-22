@@ -9,7 +9,9 @@ class ServerBase {
         int sfd;
         int cfd;
         void createServer(int port);
-        void clientSetup();
+        int setSockOpts();
+        int checkSockOpts();
+        void run();
         int createClient();
         static void *thread(void *arg);
         void readFromClient(char *cmdline);
