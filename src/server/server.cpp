@@ -37,9 +37,6 @@ void Server::run() {
             continue;
         }
 
-        //setSockOpts();
-        //checkSockOpts();
-
         if (pthread_create(&tid, NULL, thread, (void *)(long)this) < 0) {
             close(this->cfd);
             this->cfd = -1;
@@ -59,15 +56,9 @@ void* Server::thread(void *arg) {
     std::string msg = "Connected!\n";
     server->sendToClient(msg.c_str());
     fprintf(stdout, msg.c_str());
-    int flags;
-    while (!disconnected) {
 
-        flags = 1;
-        if (setsockopt(server->cfd, SOL_SOCKET, SO_KEEPALIVE,
-                       (const void *)&flags, sizeof(flags)) < 0) {
-            fprintf(stderr, "\t\t\t%s\n", strerror(errno));
-            continue;
-        }
+    while (!disconnected) {
+        server->setClientSockOpts();
 
         char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
         token tk;
@@ -280,7 +271,6 @@ static void sigint_handler(int sig) {
 
     //robot.shutdown();
     
-    fprintf(stdout, "RECIEVED SIGINT\n");
     sigprocmask(SIG_SETMASK, &prev, NULL);
     errno = old_errno;
 
@@ -296,7 +286,6 @@ static void sigpipe_handler(int sig) {
     
     disconnected = 1;
 
-    fprintf(stdout, "RECIEVED SIGPIPE\n");
     sigprocmask(SIG_SETMASK, &prev, NULL);
     errno = old_errno;
     return;
