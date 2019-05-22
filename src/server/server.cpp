@@ -7,7 +7,6 @@
 #include <cstring>
 #include <assert.h>
 #include <errno.h>
-#include <netinet/tcp.h>
 
 //static APES robot;
 static volatile int disconnected = 1;
@@ -37,7 +36,8 @@ void Server::run() {
             continue;
         }
 
-        if (pthread_create(&tid, NULL, thread, (void *)(long)this) < 0) {
+        if (pthread_create(&tid, NULL, thread, (void *)(long)this) != 0) {
+            fprintf(stderr, "%s\n", strerror(errno));
             close(this->cfd);
             this->cfd = -1;
             continue;
@@ -47,9 +47,17 @@ void Server::run() {
 
 void* Server::thread(void *arg) {
     assert(arg != NULL);
-
-    pthread_detach(pthread_self());
+    
     Server *server = (Server *)(long)arg;
+
+
+    if (pthread_detach(pthread_self()) != 0) {
+        //robot.standby();
+        close(server->cfd);
+        server->cfd = -1;
+        fprintf(stdout, "Disconnected!\n");
+        return NULL;
+    }
 
     disconnected = 0;
 
@@ -63,7 +71,12 @@ void* Server::thread(void *arg) {
         char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
         token tk;
 
-        server->readFromClient(cmdline);
+        int rc = server->readFromClient(cmdline);
+        if (rc < 0) {
+            free(cmdline);
+            break;
+        }
+
         fprintf(stdout, "Received: %s\n", cmdline);
 
         parseline(cmdline, &tk);

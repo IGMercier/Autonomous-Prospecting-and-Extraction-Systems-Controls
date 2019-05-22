@@ -26,8 +26,6 @@ APES::APES() {
     this->motor = NULL;
 }
 
-APES::~APES() {
-}
 
 /* object methods */
 int APES::setup(char *filename) {
@@ -61,32 +59,60 @@ int APES::setup(char *filename) {
     return 0;
 }
 
-float APES::read_temp() {
+dataPt* APES::read_temp() {
     if (this->therm != NULL) {
-        return this->therm->read_temp();
+        float temp = this->therm->read_temp();
+
+        dataPt *data = new dataPt;
+        data->time = std::chrono::system_clock::now();
+        data->sensor = THERM_DATA;
+        data->dataField.dataF = temp;
+
+        return data;
     }
-    return -1;
+    return NULL;
 }
 
-float APES::D_temp() {
+dataPt* APES::D_temp() {
     if (this->therm != NULL) {
-        return this->therm->D_temp();
+        float dtemp = this->therm->D_temp();
+
+        dataPt *data = new dataPt;
+        data->time = std::chrono::system_clock::now();
+        data->sensor = THERM_DATA;
+        data->dataField.dataF = dtemp;
+
+        return data;
     }
-    return -1;
+    return NULL;
 }
 
-float APES::read_curr() {
+dataPt* APES::read_curr() {
     if (this->amm != NULL) {
-        return this->amm->read_curr();
+        float curr = this->amm->read_curr();
+
+        dataPt *data = new dataPt;
+        data->time = std::chrono::system_clock::now();
+        data->sensor = AMM_DATA;
+        data->dataField.dataF = curr;
+
+        return data;
     }
-    return -1;
+    return NULL;
 }
 
-int APES::read_wlevel() {
+dataPt* APES::read_wlevel() {
     if (this->wlevel != NULL) {
-        return this->wlevel->read_wlevel();
+        float force = this->wlevel->read_wlevel();
+
+        dataPt *data = new dataPt;
+        data->time = std::chrono::system_clock::now();
+        data->sensor = WLEVEL_DATA;
+        data->dataField.dataI = force;
+
+        return data;
     }
-    return -1;
+    return NULL;
 }
 
 void APES::motor_drive(bool dir, int speed, int time) {
@@ -141,6 +167,10 @@ void APES::finish() {
     py::finalize_interpreter();
 
     pthread_mutex_destroy(&dataVector_lock);
+    for (unsigned int  = 0; i < this->dataVector.size(); i++) {
+        delete this->dataVector.at(i);
+    }
+    this->dataVector.clear();
 }
 
 void APES::readData(const char *filename) {
@@ -183,9 +213,14 @@ void APES::writeDataVector() {
                         "none", data->time, data->dataField.dataF);
                 break;
         }
+
+        delete data;
     }
 
     this->dataVector.clear();
+}
+
+APES::~APES() {
 }
 
 static void *wob_thread(void *arg) {
@@ -214,3 +249,4 @@ static void *amm_thread(void *arg) {
 
 static void *wlevel_thread(void *arg) {
 }
+

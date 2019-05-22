@@ -5,9 +5,27 @@
 
 #include <cstdio>
 #include <vector>
+#include <chrono>
 #include "components.h"
 
 #define MAXDATA 1024
+
+typedef enum {
+    THERM_DATA,
+    AMM_DATA,
+    WLEVEL_DATA,
+    WOB_DATA
+} sensor;
+
+typedef struct dataPt {
+    sensor origin;
+    union {
+        int dataI;
+        float dataF;
+    } dataField;
+
+    std::chrono::time_point<std::chrono::system_clock> time;
+} dataPt;
 
 class APES {
     private:
@@ -23,10 +41,10 @@ class APES {
         APES();
         ~APES();
         int setup(char *filename);
-        float read_temp();
-        float D_temp();
-        float read_curr();
-        int read_wlevel();
+        dataPt* read_temp();
+        dataPt* D_temp();
+        dataPt* read_curr();
+        dataPt* read_wlevel();
         void motor_drive(bool dir, int speed, int time);
         void motor_stop();
         void readData(const char *filename);

@@ -1,11 +1,7 @@
 #ifndef _RIO_H_
 #define _RIO_H_
 
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
 #include <unistd.h>
-#include <errno.h>
 
 #define RIO_BUFSIZE 8192
 typedef struct {

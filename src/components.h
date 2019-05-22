@@ -2,24 +2,7 @@
 #define _COMPONENTS_H_
 
 #include "libraries/pybind11/include/pybind11/embed.h"
-#include <ctime>
 
-typedef enum {
-    THERM_DATA,
-    AMM_DATA,
-    WLEVEL_DATA,
-    WOB_DATA
-} sensor;
-
-typedef struct dataPt {
-    sensor origin;
-    union {
-        int dataI;
-        float dataF;
-    } dataField;
-
-    time_t time;
-} dataPt;
 
 class Therm {
     private:

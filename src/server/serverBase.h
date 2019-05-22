@@ -1,8 +1,6 @@
 #ifndef _SERVER_BASE_H_
 #define _SERVER_BASE_H_
 
-#include <pthread.h>
-
 class ServerBase {
     public:
         ServerBase();
@@ -15,7 +13,7 @@ class ServerBase {
         void run();
         int createClient();
         static void *thread(void *arg);
-        void readFromClient(char *cmdline);
+        int readFromClient(char *cmdline);
         void sendToClient(const char *msg);
         void shutdown();
         ~ServerBase();
