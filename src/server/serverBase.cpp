@@ -8,9 +8,14 @@
 #include <string>
 #include <cstring>
 #include <assert.h>
+#include <errno.h>
 
 #include "serverBase.h"
 #include "rio.h"
+
+#define IDLE 10
+#define CNT 2
+#define INTVL 5
 
 ServerBase::ServerBase() {
     this->sfd = -1;
@@ -21,45 +26,13 @@ void ServerBase::createServer(int port) {
     fprintf(stdout, "Starting Server!\n");
     assert(port > 0);
 
-    int flags;
     struct sockaddr_in saddr;
     
     if ((this->sfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         return;
     }
 
-    // these if-statements setup the handshake to keep
-    // alive the connection to client
-    // if client does not respond, SIGPIPE is issued
-    flags = 1; // enables address reuse
-    if (setsockopt(this->sfd, SOL_SOCKET, SO_REUSEADDR,
-                   (const void*)&flags, sizeof(int)) < 0) {
-        close(this->sfd);
-        this->sfd = -1;
-        return;
-    }
-
-    flags = 10; // heartbeat frequency
-    if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPIDLE,
-                   (const void*)&flags, sizeof(int)) < 0) {
-        close(this->sfd);
-        this->sfd = -1;
-        return;
-    }
-    flags = 2; // defines number of missed heartbeats as dropped client
-    if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPCNT,
-                   (const void*)&flags, sizeof(int)) < 0) {
-        close(this->sfd);
-        this->sfd = -1;
-        return;
-    }
-    flags = 2; // heatbeat freq when client isn't responding
-    if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPINTVL,
-                   (const void*)&flags, sizeof(int)) < 0) {
-        close(this->sfd);
-        this->sfd = -1;
-        return;
-    }
+    setSockOpts();
 
     memset(&saddr, 0, sizeof(saddr));
     saddr.sin_family = AF_INET;
@@ -80,16 +53,96 @@ void ServerBase::createServer(int port) {
         this->sfd = -1;
         return;
     }
+
     return;
 }
 
-void ServerBase::clientSetup() {
+int ServerBase::setSockOpts() {
+    int flags;
+
+    // these if-statements setup the handshake to keep
+    // alive the connection to client
+    // if client does not respond, SIGPIPE is issued
+    flags = 1; // enables address reuse
+    if (setsockopt(this->sfd, SOL_SOCKET, SO_REUSEADDR,
+                   (const void*)&flags, sizeof(flags)) < 0) {
+        fprintf(stderr, "\t\t\t%s\n", strerror(errno));
+        return -1;
+    }
+
+    flags = IDLE; // heartbeat frequency
+    if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPIDLE,
+                   (const void*)&flags, sizeof(flags)) < 0) {
+        fprintf(stderr, "\t\t\t%s\n", strerror(errno));
+        return -1;
+    }
+    flags = CNT; // defines number of missed heartbeats as dropped client
+    if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPCNT,
+                   (const void*)&flags, sizeof(flags)) < 0) {
+        fprintf(stderr, "\t\t\t%s\n", strerror(errno));
+        return -1;
+    }
+    flags = INTVL; // heatbeat freq when client isn't responding
+    if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPINTVL,
+                   (const void*)&flags, sizeof(flags)) < 0) {
+        fprintf(stderr, "\t\t\t%s\n", strerror(errno));
+        return -1;
+    }
+
+    return 0;
+
+}
+
+int ServerBase::checkSockOpts() {
+    int optval, optlen;
+
+    int fail = 0;
+
+    getsockopt(this->sfd, SOL_SOCKET, SO_REUSEADDR, &optval,(unsigned int*)&optlen);
+    fprintf(stderr, "optval: %d\n", optval);
+    if (optval != 1) {
+        fprintf(stderr, "Error: SO_REUSEADDR not enabled!\n");
+        fail = -1;
+    }
+
+    getsockopt(this->sfd, SOL_TCP, TCP_KEEPIDLE, &optval, (unsigned int*)&optlen);
+    fprintf(stderr, "optval: %d\n", optval);
+    if (optval != IDLE) {
+        fprintf(stderr, "Error: TCP_KEEPIDLE not set!\n");
+        fail = -1;
+    }
+
+    getsockopt(this->sfd, SOL_TCP, TCP_KEEPCNT, &optval, (unsigned int*)&optlen);
+    fprintf(stderr, "optval: %d\n", optval);
+    if (optval != CNT) {
+        fprintf(stderr, "Error: TCP_KEEPCNT not set!\n");
+        fail = -1;
+    }
+
+    getsockopt(this->sfd, SOL_TCP, TCP_KEEPINTVL, &optval, (unsigned int*)&optlen);
+    fprintf(stderr, "optval: %d\n", optval);
+    if (optval != INTVL) {
+        fprintf(stderr, "Error: TCP_KEEPINTVL not set!\n");
+        fail = -1;
+    }
+    
+    getsockopt(this->cfd, SOL_SOCKET, SO_KEEPALIVE, &optval, (unsigned int*)&optlen);
+    fprintf(stderr, "optval: %d\n", optval);
+    if (optval != 1) {
+        fprintf(stderr, "Error: SO_KEEPALIVE not enabled!\n");
+        fail = -1;
+    }
+
+
+    return fail;
+}
+
+void ServerBase::run() {
     assert(this->sfd >= 0);
     pthread_t tid;
 
     while (1) {
         int val = createClient();
-        fprintf(stdout, "BASE CLASS PASSED CREATE_CLIENT\n");
         if (val == -1) {
             this->cfd = -1;
             continue;
@@ -98,6 +151,10 @@ void ServerBase::clientSetup() {
             this->cfd = -1;
             continue;
         }
+
+        //setSockOpts();
+        //checkSockOpts();
+
         if (pthread_create(&tid, NULL, thread, (void *)(long)this) < 0) {
             close(this->cfd);
             this->cfd = -1;
@@ -107,23 +164,25 @@ void ServerBase::clientSetup() {
 }
 
 int ServerBase::createClient() {
-    int flags = 1;
     struct sockaddr_in caddr;
     socklen_t caddr_size;
 
     caddr_size = sizeof(struct sockaddr_in);
 
     // acept() blocks until client connects
-    if ((this->cfd = accept(this->sfd,
+    assert(this->sfd >= 0);
+
+    int rc = accept(this->sfd, (struct sockaddr *)&caddr.sin_addr.s_addr, &caddr_size);
+
+    if (rc < 0) { return -1; }
+
+    /*if ((this->cfd = accept(this->sfd,
                             (struct sockaddr *)&caddr.sin_addr.s_addr,
                              &caddr_size)) < 0) {
         return -1;
-    }
+    }*/
 
-    if (setsockopt(this->cfd, SOL_SOCKET, SO_KEEPALIVE,
-                   (const void *)&flags, sizeof(int)) < 0) {
-        return -2;
-    }
+    this->cfd = rc;
     return 0;
 }
 
@@ -135,10 +194,21 @@ void* ServerBase::thread(void *arg) {
     
    // char *c_ip = inet_ntoa(caddr.sin_addr);
    // std::string ip(c_ip);
-   //std::string msg = "Server: Connected\n";// + ip + "\n";
-   //sendToClient(msg.c_str());
 
     ServerBase *server = (ServerBase *)(long)arg;
+    std::string msg = "Server: Connected\n";// + ip + "\n";
+    server->sendToClient(msg.c_str());
+    int flags;
+    while (1) {
+        flags = 1;
+        if (setsockopt(server->cfd, SOL_SOCKET, SO_KEEPALIVE,
+                       (const void *)&flags, sizeof(flags)) < 0) {
+            fprintf(stderr, "\t\t\t%s\n", strerror(errno));
+            continue;
+        }
+        msg = "in loop\n";
+        server->sendToClient(msg.c_str());
+    }
 
     close(server->cfd);
     server->cfd = -1;
@@ -147,6 +217,7 @@ void* ServerBase::thread(void *arg) {
 
 void ServerBase::readFromClient(char *cmdline) {
     assert(cmdline != NULL);
+    assert(this->cfd >= 0);
 
     rio_t buf;
     rio_readinitb(&buf, this->cfd);
@@ -154,11 +225,14 @@ void ServerBase::readFromClient(char *cmdline) {
 
     cmdline[strlen(cmdline)-1] = '\0';
 
+    //fprintf(stdout, "\t\t\t%s", cmdline);
+
     return;
 }
 
 void ServerBase::sendToClient(const char *msg) {
     assert(msg != NULL);
+    assert(this->cfd >= 0);
 
     rio_writen(this->cfd, (void *)msg, strlen(msg));
 

@@ -7,10 +7,10 @@
 #include <cstring>
 #include <assert.h>
 #include <errno.h>
+#include <netinet/tcp.h>
 
 //static APES robot;
 static volatile int disconnected = 1;
-static volatile int shutdownSIG = 0;
 
 static void sigint_handler(int sig);
 static void sigpipe_handler(int sig);
@@ -22,7 +22,7 @@ Server::Server() {
     //robot = APES();
 }
 
-void Server::clientSetup() {
+void Server::run() {
     assert(this->sfd >= 0);
     pthread_t tid;
 
@@ -36,6 +36,10 @@ void Server::clientSetup() {
             this->cfd = -1;
             continue;
         }
+
+        //setSockOpts();
+        //checkSockOpts();
+
         if (pthread_create(&tid, NULL, thread, (void *)(long)this) < 0) {
             close(this->cfd);
             this->cfd = -1;
@@ -54,15 +58,21 @@ void* Server::thread(void *arg) {
 
     std::string msg = "Connected!\n";
     server->sendToClient(msg.c_str());
-
+    fprintf(stdout, msg.c_str());
+    int flags;
     while (!disconnected) {
-        if (shutdownSIG) { server->shutdown(); }
+
+        flags = 1;
+        if (setsockopt(server->cfd, SOL_SOCKET, SO_KEEPALIVE,
+                       (const void *)&flags, sizeof(flags)) < 0) {
+            fprintf(stderr, "\t\t\t%s\n", strerror(errno));
+            continue;
+        }
 
         char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
         token tk;
 
         server->readFromClient(cmdline);
-
         fprintf(stdout, "Received: %s\n", cmdline);
 
         parseline(cmdline, &tk);
@@ -70,9 +80,11 @@ void* Server::thread(void *arg) {
 
         free(cmdline);
     }
+
     //robot.standby();
     close(server->cfd);
     server->cfd = -1;
+    fprintf(stdout, "Disconnected!\n");
     return NULL;
 
 }
@@ -95,6 +107,7 @@ int Server::command(token *tk) {
             // put in standby
             //robot.standby();
             msg = "System started!\n";
+            //fprintf(stdout, msg.c_str());
             sendToClient(msg.c_str());
             return 1;
         case HELP:
@@ -160,6 +173,7 @@ int Server::command(token *tk) {
         case STANDBY:
             //robot.standby();
             msg = "System in standby!\n";
+            //fprintf(stdout, msg.c_str());
             sendToClient(msg.c_str());
             return 1;
         case WOB:
@@ -235,10 +249,11 @@ void Server::listCommands() {
 }
 
 void Server::shutdown() {
+    //robot.finish();
+
     std::string msg = "System shutting down!\n";
     sendToClient(msg.c_str());
     fprintf(stdout, "%s", msg.c_str());
-    //robot.finish();
 
     msg = "Server shutting down!\n";
     sendToClient(msg.c_str());
@@ -250,7 +265,7 @@ void Server::shutdown() {
     if (close(this->sfd) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
     }
-    
+
     exit(0);
 }
 
@@ -258,9 +273,31 @@ Server::~Server() {
 }
 
 static void sigint_handler(int sig) {
-    exit(0);
+    int old_errno = errno;
+
+    sigset_t mask, prev;
+    sigprocmask(SIG_BLOCK, &mask, &prev);
+
+    //robot.shutdown();
+    
+    fprintf(stdout, "RECIEVED SIGINT\n");
+    sigprocmask(SIG_SETMASK, &prev, NULL);
+    errno = old_errno;
+
+    _exit(0);
+    return;
 }
 
 static void sigpipe_handler(int sig) {
-    exit(0);
+    int old_errno = errno;
+
+    sigset_t mask, prev;
+    sigprocmask(SIG_BLOCK, &mask, &prev);
+    
+    disconnected = 1;
+
+    fprintf(stdout, "RECIEVED SIGPIPE\n");
+    sigprocmask(SIG_SETMASK, &prev, NULL);
+    errno = old_errno;
+    return;
 }

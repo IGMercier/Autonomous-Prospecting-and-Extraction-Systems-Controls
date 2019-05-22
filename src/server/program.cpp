@@ -12,10 +12,16 @@ int main(int argc, char **argv) {
     }
 
     Server server = Server();
-    server.createServer(port);
-    server.clientSetup();
 
+    while (server.sfd < 0) {
+        server.createServer(port);
+    }
+    //server.setSockOpts();
+    server.run();
+
+    fprintf(stdout, "OOPS\n");
     server.shutdown();
 
     return -1;
 }
+
