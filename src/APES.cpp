@@ -181,10 +181,10 @@ void APES::saveData(dataPt *data) {
     assert(data != NULL);
     if (this->dataVector.size() >= MAXDATA) {
         writeDataVector();
-    } else {
-        this->dataVector.push_back(data);
     }
+    this->dataVector.push_back(data);
 
+    return;
 }
 
 void APES::writeDataVector() {
@@ -194,23 +194,23 @@ void APES::writeDataVector() {
         switch(data->origin) {
             case THERM_DATA:
                 fprintf(this->file, "%s, %li, %f\n",
-                        "therm", data->time, data->dataField.dataF);
+                        "therm", data->time.count(), data->dataField.dataF);
                 break;
             case AMM_DATA:
                 fprintf(this->file, "%s, %li, %f\n",
-                        "amm", data->time, data->dataField.dataF);
+                        "amm", data->time.count(), data->dataField.dataF);
                 break;
             case WLEVEL_DATA:
                 fprintf(this->file, "%s, %li, %d\n",
-                        "level", data->time, data->dataField.dataI);
+                        "level", data->time.count(), data->dataField.dataI);
                 break;
             case WOB_DATA:
                 fprintf(this->file, "%s, %li, %f\n",
-                        "wob", data->time, data->dataField.dataF);
+                        "wob", data->time.count(), data->dataField.dataF);
                 break;
             default:
                 fprintf(this->file, "%s, %li, %f\n",
-                        "none", data->time, data->dataField.dataF);
+                        "none", data->time.count(), data->dataField.dataF);
                 break;
         }
 
@@ -234,10 +234,10 @@ static void *therm_thread(void *arg) {
 
     while (1) {
         // @TODO: test this
-        float temp = robot->read_temp();
+        dataPt *data = robot->read_temp();
 
         pthread_mutex_lock(&dataVector_lock);
-        robot->saveData();
+        robot->saveData(data);
         pthread_mutex_unlock(&dataVector_lock);
     }
 

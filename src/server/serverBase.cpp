@@ -13,7 +13,7 @@
 #include <errno.h>
 
 #include "serverBase.h"
-#include "rio.h"
+#include "../rio.h"
 
 #define IDLE 10
 #define CNT 2
