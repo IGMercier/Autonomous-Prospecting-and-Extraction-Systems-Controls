@@ -1,6 +1,6 @@
-#include "helper.h"
 #include <cstring>
 #include <errno.h>
+#include "rio.h"
 
 
 /*
@@ -67,6 +67,7 @@ static ssize_t rio_read(rio_t *rp, char *usrbuf, size_t n) {
         } else {
             rp->rio_bufptr = rp->rio_buf;   /* Reset buffer ptr */
         }
+    }
 
     /* Copy min(n, rp->rio_cnt) bytes from internal buf to user buf */
     cnt = n;

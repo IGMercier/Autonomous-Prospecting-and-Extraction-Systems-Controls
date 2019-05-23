@@ -7,22 +7,23 @@
 #include <cstring>
 #include <assert.h>
 #include <errno.h>
+#include <thread>
 
 //static APES robot;
 static volatile int disconnected = 1;
 
-static void connection(Server *server);
-static void sigint_handler(int sig);
-static void sigpipe_handler(int sig);
+static void connection(Server *server, int *shell_cfd);
+//static void sigint_handler(int sig);
+//static void sigpipe_handler(int sig);
 
 Server::Server() {
-    signal(SIGINT, sigint_handler);
-    signal(SIGPIPE, sigpipe_handler);
-    setCommands();
+    //signal(SIGINT, sigint_handler);
+    //signal(SIGPIPE, sigpipe_handler);
+    //setCommands();
     //robot = APES();
 }
 
-void Server::run() {
+void Server::run(int *shell_cfd) {
     assert(this->sfd >= 0);
 
     while (1) {
@@ -36,12 +37,12 @@ void Server::run() {
             continue;
         }
 
-        std::thread child(connection, this);
+        std::thread child(connection, this, shell_cfd);
         child.detach();
     }
 }
 
-static void connection(Server *server) {
+static void connection(Server *server, int *shell_cfd) {
     assert(server != NULL);
     
     disconnected = 0;
@@ -52,7 +53,9 @@ static void connection(Server *server) {
 
     while (!disconnected) {
         server->setClientSockOpts();
+        *shell_cfd = server->cfd;
 
+        /*
         char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
         token tk;
 
@@ -63,11 +66,14 @@ static void connection(Server *server) {
         }
 
         fprintf(stdout, "Received: %s\n", cmdline);
-
+        
+        
         parseline(cmdline, &tk);
         server->command(&tk);
+        
 
         free(cmdline);
+        */
     }
 
     //robot.standby();
@@ -77,6 +83,8 @@ static void connection(Server *server) {
     return;
 
 }
+
+/*
 int Server::command(token *tk) {
     assert(tk != NULL);
 
@@ -85,13 +93,13 @@ int Server::command(token *tk) {
 
     switch (command) {
         case START:
-            // setup robot and retry on fail
-            /*while (robot.setup("data.csv") < 0) {
+             setup robot and retry on fail
+            while (robot.setup("data.csv") < 0) {
                 fprintf(stderr, "ERROR: APES system setup failure!\n");
-                fprintf(stdout, "Retrying...\n");
+               fprintf(stdout, "Retrying...\n");
                 robot.finish();
             }
-            */
+            
 
             // put in standby
             //robot.standby();
@@ -108,15 +116,15 @@ int Server::command(token *tk) {
             return 1;
         case AUTO_ON:
             // runs things automatically
-            /*
-                @TODO:
-                Will this need to create a new thread?
-                We want this to run in the background,
-                but we also want to be able to input more
-                commands...
-                If we spawn a process, APES system will be copied,
-                so we dont want that...
-            */
+            
+            //    @TODO:
+            //    Will this need to create a new thread?
+            //    We want this to run in the background,
+            //    but we also want to be able to input more
+            //    commands...
+            //    If we spawn a process, APES system will be copied,
+            //    so we dont want that...
+            
             msg = "System in auto mode!\n";
             sendToClient(msg.c_str());
             return 1;
@@ -124,38 +132,37 @@ int Server::command(token *tk) {
             msg = "Auto mode disabled!\n";
             sendToClient(msg.c_str());
             return 1;
-        case TEMP:
-            /*
-            float temp;
-            temp = robot.read_temp();
-            printf(stdout, "Temp (@time): %f\n", temp);
-            */
+        case TEMP: 
+            //float temp;
+            //temp = robot.read_temp();
+            //printf(stdout, "Temp (@time): %f\n", temp);
+            
             msg = "Temp (@time): \n";
             sendToClient(msg.c_str());
             return 1;
         case DTEMP:
-            /*
+            
             float dtemp;
             dtemp = robot.D_temp();
-            */
+            
             msg = "Temp since init: \n";
             sendToClient(msg.c_str());
             return 1;
         case CURR:
-            /*
+            
             float curr;
             curr = robot.read_curr();
             printf(stdout, "Curr (@time): %f\n", curr);
-            */
+            
             msg = "Curr (@time): \n";
             sendToClient(msg.c_str());
             return 1;
         case WLEVEL:
-            /*
+            
             int level;
             level = robot.read_level();
             printf(stdout, "Level (@time): %d\n", level);
-            */
+            
             msg = "Level (@time): \n";
             sendToClient(msg.c_str());
             return 1;
@@ -166,11 +173,11 @@ int Server::command(token *tk) {
             sendToClient(msg.c_str());
             return 1;
         case WOB:
-            /*
+            
             float force;
             force = robot.read_wob();
             printf(stdout, "Force (@time): %f\n", force);
-            */
+            
             msg = "Force (@time): \n";
             sendToClient(msg.c_str());
             return 1;
@@ -209,7 +216,6 @@ int Server::command(token *tk) {
             return 0;
     }
 }
-
 void Server::setCommands() {
     this->commandList.push_back("Help -- Commands:\n");
     this->commandList.push_back("help := prints this message\n");
@@ -235,7 +241,7 @@ void Server::listCommands() {
         sendToClient((this->commandList.at(i)).c_str());
     }
     return;
-}
+}*/
 
 void Server::shutdown() {
     //robot.finish();
@@ -261,6 +267,7 @@ void Server::shutdown() {
 Server::~Server() {
 }
 
+/*
 static void sigint_handler(int sig) {
     int old_errno = errno;
 
@@ -287,4 +294,4 @@ static void sigpipe_handler(int sig) {
     sigprocmask(SIG_SETMASK, &prev, NULL);
     errno = old_errno;
     return;
-}
+}*/

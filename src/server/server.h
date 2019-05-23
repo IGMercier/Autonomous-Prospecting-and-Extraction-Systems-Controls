@@ -11,10 +11,10 @@ class Server : public ServerBase {
         std::vector<std::string> commandList;
     public:
         Server();
-        void run();
-        int command(token *tk);
-        void setCommands();
-        void listCommands();
+        void run(int *shell_cfd);
+        //int command(token *tk);
+        //void setCommands();
+        //void listCommands();
         void shutdown();
         ~Server();
 };

@@ -3,17 +3,19 @@
 #include <cstring>
 #include <string>
 #include <sys/socket.h>
-//#include <sys/types.h> // for AF_INET
+#include <sys/types.h> // for AF_INET
 
-//#include <netdb.h> // for ip_ntoa
-//#include <arpa/inet.h> // for ip_ntoa
+#include <netdb.h> // for ip_ntoa
+#include <arpa/inet.h> // for ip_ntoa
 #include <thread>
 #include <netinet/tcp.h>
 #include <assert.h>
 #include <errno.h>
 
 #include "serverBase.h"
-#include "../rio.h"
+#include "rio.h"
+
+using std::thread;
 
 #define IDLE 10
 #define CNT 2
@@ -92,7 +94,7 @@ void ServerBase::run() {
             continue;
         }
 
-        std::thread child(connection, this);
+        thread child(connection, this);
         child.detach();
     }
     return;
