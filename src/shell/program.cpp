@@ -1,7 +1,7 @@
-#include "shell.h"
+#include "shellBase.h"
 
 int main() {
-    Shell s = Shell();
+    ShellBase s = ShellBase();
     int nothing = 0;
     s.run(&nothing);
 }

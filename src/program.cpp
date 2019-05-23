@@ -2,8 +2,8 @@
 #include <signal.h>
 #include <errno.h>
 
-#include "server/server.h"
-#include "shell/shell.h"
+#include "server/APESServer.h"
+#include "shell/APESShell.h"
 #include "misc/flags.h"
 #include "misc/flags_set.h"
 
@@ -48,7 +48,9 @@ int main(int argc, char** argv) {
     THREAD CALLBACKS
 */
 static void serverThread(int *shell_cfd) {
-    Server server = Server();
+    assert(shell_cfd != NULL);
+    
+    APESServer server = Server();
     while (server.sfd < 0) {
         server.serverSetup(port);
     }
@@ -59,8 +61,11 @@ static void serverThread(int *shell_cfd) {
     return;
 }
 
+   
 static void shellThread(int *shell_cfd) {
-    Shell shell = Shell();
+    assert(shell_cfd != NULL);
+
+    APESShell shell = Shell();
     shell.run(shell_cfd);
 
     // control should never reach here
@@ -78,6 +83,7 @@ static void sigpipe_handler(int sig) {
     sigprocmask(SIG_BLOCK, &mask, &prev);
 
     setDisconnected();
+    //robot.standby();
 
     sigprocmask(SIG_SETMASK, &prev, NULL);
     errno = old_errno;
@@ -91,8 +97,8 @@ static void sigint_handler(int sig) {
     sigset_t mask, prev;
     sigprocmask(SIG_BLOCK, &mask, &prev);
 
-    // robot.shutdown();
     setShutdownSIG();
+    // robot.shutdown();
 
     sigprocmask(SIG_SETMASK, &prev, NULL);
     errno = old_errno;

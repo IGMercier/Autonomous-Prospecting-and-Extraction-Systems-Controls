@@ -10,10 +10,12 @@
 
 typedef enum command_state {
     START,
-    HELP,
-    DATA,
-    NONE,
     STANDBY,
+    DATA,
+    HELP,
+    QUIT,
+    AUTO_ON,
+    AUTO_OFF,
     TEMP,
     DTEMP,
     CURR,
@@ -24,9 +26,7 @@ typedef enum command_state {
     DRILL_RUN,
     DRILL_STOP,
     DRILL_CYCLE,
-    AUTO_ON,
-    AUTO_OFF,
-    QUIT
+    NONE
 } command_state;
 
 typedef struct token {

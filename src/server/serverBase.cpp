@@ -55,8 +55,7 @@ void ServerBase::createServer(int port) {
         return;
     }
 
-    // allows only 1 connection before it starts rejecting connections
-    if (listen(this->sfd, 1) < 0) {
+    if (listen(this->sfd, MAXCONN) < 0) {
         close(this->sfd);
         this->sfd = -1;
         return;

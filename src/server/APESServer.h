@@ -1,18 +1,18 @@
-#ifndef _SERVER_H_
-#define _SERVER_H_
+#ifndef _APES_SERVER_H_
+#define _APES_SERVER_H_
 
 #include "serverBase.h"
 #include "commands.h"
 #include <string>
 #include <vector>
 
-class Server : public ServerBase {
+class APESServer : public ServerBase {
     private:
     public:
-        Server();
+        APESServer();
         void run(int *shell_cfd);
         void shutdown();
-        ~Server();
+        ~APESServer();
 };
 
 #endif

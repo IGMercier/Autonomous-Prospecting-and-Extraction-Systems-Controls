@@ -1,4 +1,4 @@
-#include "server.h"
+#include "APESServer.h"
 #include <cstdlib>
 #include <cstdio>
 #include <unistd.h>
@@ -11,9 +11,9 @@
 
 static void connection(Server *server, int *shell_cfd);
 
-Server::Server() {}
+APESServer::APESServer() {}
 
-void Server::run(int *shell_cfd) {
+void APESServer::run(int *shell_cfd) {
     assert(this->sfd >= 0);
 
     while (!shutdownSIG) {
@@ -55,7 +55,7 @@ static void connection(Server *server, int *shell_cfd) {
 
 }
 
-void Server::shutdown() {
+void APESServer::shutdown() {
     std::string msg = "Server shutting down!\n";
     sendToClient(msg.c_str());
     fprintf(stdout, "%s", msg.c_str());
@@ -73,5 +73,5 @@ void Server::shutdown() {
     return;
 }
 
-Server::~Server() {
+APESServer::~APESServer() {
 }

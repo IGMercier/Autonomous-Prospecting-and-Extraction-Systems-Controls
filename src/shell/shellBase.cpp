@@ -3,28 +3,38 @@
 #include <cstdlib>
 #include <cstdio>
 #include <unistd.h>
-
-#include "shell.h"
-#include "usr_defined.h" // thread_arg, execute
+#include <string>
+#include "shellBase.h"
 //#include "../misc/flags.h"
 //#include "../misc/flags_set.h"
 #include "../misc/rio.h"
 
-#define MAXLINE 1024
-#define MAXARGS 128
+typedef struct thread_arg {
+    char **argv;
+    int bg;
+    int len;
+} thread_arg;
 
+static void execute(thread_arg *arg);
 int shutdownSIG = 0; // remove after testing!!!
 
 using std::thread;
 
-Shell::Shell() {}
-Shell::~Shell() {}
+ShellBase::ShellBase(int *readFrom) {
+    if (readFrom == NULL) {
+        this->readFrom = STDIN_FILENO;
+    } else {
+        this->readFrom = readFrom;
+    }
+}
 
-void Shell::run(int *shell_cfd) {
+ShellBase::~ShellBase() {}
+
+void ShellBase::run() {
     char cmdline[MAXLINE];
 
     rio_t buf;
-    rio_readinitb(&buf, STDIN_FILENO);
+    rio_readinitb(&buf, *(this->readFrom));
 
     while (!shutdownSIG) {
         rio_readlineb(&buf, cmdline, MAXLINE);
@@ -39,7 +49,7 @@ void Shell::run(int *shell_cfd) {
     return; // kills shell thread in main program
 }
 
-void Shell::evaluate(char *cmdline) {
+void ShellBase::evaluate(char *cmdline) {
     char *argv[MAXARGS];
     char buf[MAXLINE];
     int bg;
@@ -77,7 +87,7 @@ void Shell::evaluate(char *cmdline) {
     return;
 }
 
-int Shell::command(char **argv) {
+int ShellBase::command(char **argv) {
     if (!strcmp(argv[0], "quit")) {
         exit(0);
     }
@@ -89,7 +99,7 @@ int Shell::command(char **argv) {
 
 }
 
-int Shell::parseline(char *buf, char **argv) {
+int ShellBase::parseline(char *buf, char **argv) {
     char *delim;
     int argc;
     int bg;
@@ -116,4 +126,27 @@ int Shell::parseline(char *buf, char **argv) {
 
 
     return bg;
+}
+
+void ShellBase::shell_print(std::string msg) {
+    std::string toPrint = "Shell: " + msg;
+
+    rio_writen(*(this->readFrom), toPrint.c_str(), strlen(msg));
+    return;
+}
+
+void execute(thread_arg *arg) {
+    fprintf(stdout, "IN THREAD\n");
+
+    if (arg->bg) {
+        fprintf(stdout, "\t\t\tA BG JOB\n");
+    }
+
+    for (int i = 0; i < arg->len; i++) {
+        if (arg->argv[i] == NULL) { break; }
+
+        printf("%s ", arg->argv[i]);
+    }
+    printf("\n");
+    return;
 }
