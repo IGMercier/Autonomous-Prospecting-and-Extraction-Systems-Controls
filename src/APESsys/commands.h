@@ -36,13 +36,16 @@ typedef enum builtin {
     BUILTIN_NONE
 } builtin;
 
-typedef struct token {
-    char text[MAXLINE]; 
+typedef struct command_token {
+    command_state command;
+} command_token;
+
+typedef struct parse_token {
     int argc;
     char *argv[MAXARGS];
     builtin bcomm;
-} token;
+} parse_token;
 
-int parseline(const char *cmdline, token *tk);
+//int parseline(const char *cmdline, token *tk);
 
 #endif

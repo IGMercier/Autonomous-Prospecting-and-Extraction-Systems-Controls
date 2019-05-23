@@ -3,19 +3,19 @@
 
 extern char **environ;
 
-#define MAXLINE 1024
-#define MAXARGS 128
+#include <string>
+#include "../APESsys/commands.h"
 
 class ShellBase {
     protected:
         int *readFrom;
         void evaluate(char *cmdline);
-        int parseline(char *buf, char **argv);
-        int command(char **argv);
-        void shell_print(char *msg);
+        int parseline(char *cmdline, parse_token *tk);
+        int builtin_command(parse_token *tk);
+        void shell_print(std::string msg);
     public:
         ShellBase(int *readFrom);
-        void run(int *shell_cfd);
+        void run();
         ~ShellBase();
 };
 

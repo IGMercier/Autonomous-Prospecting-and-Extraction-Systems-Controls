@@ -1,6 +1,6 @@
 #include "commands.h"
 #include <cstring>
-
+/*
 // modified from tshlab
 int parseline(const char *cmdline, token *tk) {
     const char delims[] = " \t\r\n";
@@ -80,3 +80,4 @@ int parseline(const char *cmdline, token *tk) {
 
     return 0;
 }
+*/

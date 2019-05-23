@@ -1,7 +1,11 @@
 #include "shellBase.h"
+#include <cstdlib>
+#include <unistd.h>
 
 int main() {
-    ShellBase s = ShellBase();
-    int nothing = 0;
-    s.run(&nothing);
+    int file = STDIN_FILENO;
+    ShellBase s = ShellBase(&file);
+    s.run();
+
+    return -1;
 }
