@@ -1,38 +1,17 @@
-#include "shell.h"
-
-#define MAXLINE 1024
-#define MAXARGS 128
-
 #include <thread>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
 #include <unistd.h>
 
+#include "shell.h"
+#include "../flags.h" // thread_arg, execute
+
+#define MAXLINE 1024
+#define MAXARGS 128
+
 using std::thread;
 
-// put these in external header
-
-typedef struct thread_arg {
-    char **argv;
-    int bg;
-} thread_arg;
-
-void execute(thread_arg *arg) {
-    fprintf(stdout, "IN THREAD\n");
-
-    if (arg->bg) {
-        fprintf(stdout, "A BG JOB\n");
-    }
-
-    for (int i = 0; i < MAXARGS; i++) {
-        if (arg->argv[i] == NULL) { break; }
-
-        printf("%s\n", arg->argv[i]);
-    }
-    return;
-}
-//
 
 Shell::Shell() {}
 Shell::~Shell() {}
@@ -71,6 +50,7 @@ void Shell::evaluate(char *cmdline) {
         thread_arg arg;
         arg.argv = argv;
         arg.bg = bg;
+        arg.len = MAXLINE;
         thread temp(execute, &arg);
         child.swap(temp);
 
