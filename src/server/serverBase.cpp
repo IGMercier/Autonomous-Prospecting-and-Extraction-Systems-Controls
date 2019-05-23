@@ -7,7 +7,7 @@
 
 //#include <netdb.h> // for ip_ntoa
 //#include <arpa/inet.h> // for ip_ntoa
-#include <pthread.h>
+#include <thread>
 #include <netinet/tcp.h>
 #include <assert.h>
 #include <errno.h>
@@ -20,6 +20,7 @@
 #define INTVL 5
 
 static void print_error(int code);
+static void connection(ServerBase *server);
 
 ServerBase::ServerBase() {
     this->sfd = -1;
@@ -72,23 +73,14 @@ int ServerBase::createClient() {
     assert(this->sfd >= 0);
 
     int rc = accept(this->sfd, (struct sockaddr *)&caddr.sin_addr.s_addr, &caddr_size);
-
     if (rc < 0) { return -1; }
-
-    /*if ((this->cfd = accept(this->sfd,
-                            (struct sockaddr *)&caddr.sin_addr.s_addr,
-                             &caddr_size)) < 0) {
-        return -1;
-    }*/
-
     this->cfd = rc;
+
     return 0;
 }
 
 void ServerBase::run() {
     assert(this->sfd >= 0);
-    pthread_t tid;
-
     while (1) {
         int val = createClient();
         if (val == -1) {
@@ -100,26 +92,19 @@ void ServerBase::run() {
             continue;
         }
 
-        
-        if (pthread_create(&tid, NULL, thread, (void *)(long)this) < 0) {
-            close(this->cfd);
-            this->cfd = -1;
-            continue;
-        }
+        std::thread child(connection, this);
+        child.detach();
     }
     return;
 }
 
-void* ServerBase::thread(void *arg) {
+static void connection(ServerBase *server) {
     fprintf(stdout, "BASE CLASS THREAD\n");
-    assert(arg != NULL);
+    assert(server != NULL);
 
-    pthread_detach(pthread_self());
-    
    // char *c_ip = inet_ntoa(caddr.sin_addr);
    // std::string ip(c_ip);
 
-    ServerBase *server = (ServerBase *)(long)arg;
     std::string msg = "Server: Connected\n";// + ip + "\n";
     server->sendToClient(msg.c_str());
     while (1) {
@@ -130,7 +115,7 @@ void* ServerBase::thread(void *arg) {
 
     close(server->cfd);
     server->cfd = -1;
-    return NULL;
+    return;
 }
 
 int ServerBase::readFromClient(char *cmdline) {

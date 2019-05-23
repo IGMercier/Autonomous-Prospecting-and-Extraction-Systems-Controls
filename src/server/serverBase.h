@@ -12,7 +12,6 @@ class ServerBase {
         int checkSockOpts();
         void run();
         int createClient();
-        static void *thread(void *arg);
         int readFromClient(char *cmdline);
         void sendToClient(const char *msg);
         void shutdown();

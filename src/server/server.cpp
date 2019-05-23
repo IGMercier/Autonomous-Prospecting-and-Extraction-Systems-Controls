@@ -11,6 +11,7 @@
 //static APES robot;
 static volatile int disconnected = 1;
 
+static void connection(Server *server);
 static void sigint_handler(int sig);
 static void sigpipe_handler(int sig);
 
@@ -23,7 +24,6 @@ Server::Server() {
 
 void Server::run() {
     assert(this->sfd >= 0);
-    pthread_t tid;
 
     while (1) {
         int val = createClient();
@@ -36,29 +36,14 @@ void Server::run() {
             continue;
         }
 
-        if (pthread_create(&tid, NULL, thread, (void *)(long)this) != 0) {
-            fprintf(stderr, "%s\n", strerror(errno));
-            close(this->cfd);
-            this->cfd = -1;
-            continue;
-        }
+        std::thread child(connection, this);
+        child.detach();
     }
 }
 
-void* Server::thread(void *arg) {
-    assert(arg != NULL);
+static void connection(Server *server) {
+    assert(server != NULL);
     
-    Server *server = (Server *)(long)arg;
-
-
-    if (pthread_detach(pthread_self()) != 0) {
-        //robot.standby();
-        close(server->cfd);
-        server->cfd = -1;
-        fprintf(stdout, "Disconnected!\n");
-        return NULL;
-    }
-
     disconnected = 0;
 
     std::string msg = "Connected!\n";
@@ -89,7 +74,7 @@ void* Server::thread(void *arg) {
     close(server->cfd);
     server->cfd = -1;
     fprintf(stdout, "Disconnected!\n");
-    return NULL;
+    return;
 
 }
 int Server::command(token *tk) {

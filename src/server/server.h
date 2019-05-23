@@ -12,7 +12,6 @@ class Server : public ServerBase {
     public:
         Server();
         void run();
-        static void *thread(void *arg);
         int command(token *tk);
         void setCommands();
         void listCommands();
