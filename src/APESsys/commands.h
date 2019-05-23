@@ -29,11 +29,18 @@ typedef enum command_state {
     NONE
 } command_state;
 
+typedef enum builtin {
+    BUILTIN_FG,
+    BUILTIN_BG,
+    BUILTIN_JOBS,
+    BUILTIN_NONE
+} builtin;
+
 typedef struct token {
     char text[MAXLINE]; 
     int argc;
     char *argv[MAXARGS];
-    command_state command;
+    builtin bcomm;
 } token;
 
 int parseline(const char *cmdline, token *tk);

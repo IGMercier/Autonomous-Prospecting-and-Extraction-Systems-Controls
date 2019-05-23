@@ -8,7 +8,6 @@
 using std::thread;
 static void execute(token *tk, int bg, int len, APESShell *shell);
 
-
 APESShell::APESShell(APES *robot, int *readFrom):Shell(int *readFrom) {
     this->robot = robot;
 }

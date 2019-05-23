@@ -5,17 +5,12 @@
 #include <unistd.h>
 #include <string>
 #include "shellBase.h"
+#include "../APESsys/commands.h"
 //#include "../misc/flags.h"
 //#include "../misc/flags_set.h"
 #include "../misc/rio.h"
 
-typedef struct thread_arg {
-    char **argv;
-    int bg;
-    int len;
-} thread_arg;
-
-static void execute(thread_arg *arg);
+static void execute();
 int shutdownSIG = 0; // remove after testing!!!
 
 using std::thread;
@@ -50,19 +45,17 @@ void ShellBase::run() {
 }
 
 void ShellBase::evaluate(char *cmdline) {
-    char *argv[MAXARGS];
-    char buf[MAXLINE];
     int bg;
+    token tk;
     thread child;
 
-    strcpy(buf, cmdline);
-    bg = parseline(buf, argv);
+    bg = parseline(cmdline, &tk);
 
-    if (argv[0] == NULL) {
+    if (tk.argv[0] == NULL) {
         return;
     }
 
-    if (!command(argv)) {
+    if (!builtin(&tk)) {
         /* CHILD THREAD */
         thread_arg arg;
         arg.argv = argv;
@@ -87,22 +80,33 @@ void ShellBase::evaluate(char *cmdline) {
     return;
 }
 
-int ShellBase::command(char **argv) {
-    if (!strcmp(argv[0], "quit")) {
-        exit(0);
-    }
-    if (!strcmp(argv[0], "&")) {
-        return 1;
-    }
+// returns 1 if a builtin, 0 otherwise
+int ShellBase::builtin(token *tk) {
+    assert(tk != NULL);
 
-    return 0;
+    builtin bcomm = tk->bcomm;
 
+    switch(bcomm) {
+        case BUILTIN_FG:
+            return 1;
+        case BUILTIN_BG:
+            return 1;
+        case BUILTIN_JOBS:
+            return 1;
+        case BUILTIN_NONE:
+        default:
+            return 0;
+    }
 }
 
-int ShellBase::parseline(char *buf, char **argv) {
+int ShellBase::parseline(char *cmdline, token *tk) {
+    char buf[MAXLINE];
+    char *argv[MAXARGS];
     char *delim;
     int argc;
     int bg;
+
+    strncpy(buf, cmdline, MAXLINE);
 
     buf[strlen(buf)-1] = ' ';
 
@@ -118,12 +122,26 @@ int ShellBase::parseline(char *buf, char **argv) {
 
     argv[argc] = NULL;
 
+
     if (argc == 0) { return 1; }
 
-    if ((bg = (*argv[argc-1] == '&')) != 0) {
-        argv[--argc] = NULL;
+
+    tk->argc = argc;
+    tk->argv = argv;
+
+    if (!strcmp(tk->argv[0], "fg")) {
+        tk->bcomm = BUILTIN_FG;
+    } else if (!strcmp(tk->argv[0], "bg")) {
+        tk->bcomm = BUILTIN_BG;
+    } else if (!strcmp(tk->argv[0], "jobs")) {
+        tk->bcomm = BUILTIN_JOBS;
+    } else {
+        tk->bcomm = BUILTIN_NONE;
     }
 
+    if ((bg = (*tk->argv[tk->argc-1] == '&')) != 0) {
+        tk->argv[--(tk->argc)] = NULL;
+    }
 
     return bg;
 }
@@ -135,7 +153,7 @@ void ShellBase::shell_print(std::string msg) {
     return;
 }
 
-void execute(thread_arg *arg) {
+void execute(token *tk) {
     fprintf(stdout, "IN THREAD\n");
 
     if (arg->bg) {
