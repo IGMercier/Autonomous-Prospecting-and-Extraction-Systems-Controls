@@ -15,7 +15,7 @@ Server::Server() {}
 void Server::run(int *shell_cfd) {
     assert(this->sfd >= 0);
 
-    while (1) {
+    while (!shutdownSIG) {
         int val = createClient();
         if (val == -1) {
             this->cfd = -1;
@@ -29,6 +29,8 @@ void Server::run(int *shell_cfd) {
         std::thread child(connection, this, shell_cfd);
         child.detach();
     }
+    shutdown();
+    return; // kills server thread in main program
 }
 
 static void connection(Server *server, int *shell_cfd) {
@@ -63,6 +65,7 @@ void Server::shutdown() {
     if (close(this->sfd) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
     }
+    return;
 }
 
 Server::~Server() {

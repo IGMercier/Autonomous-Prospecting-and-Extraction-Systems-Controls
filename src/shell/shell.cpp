@@ -19,7 +19,7 @@ Shell::~Shell() {}
 void Shell::run() {
     char cmdline[MAXLINE];
 
-    while (1) {
+    while (!shutdownSIG) {
         fgets(cmdline, MAXLINE, stdin);
         if (feof(stdin)) {
             printf("\n");
@@ -29,7 +29,7 @@ void Shell::run() {
 
         evaluate(cmdline);
     }
-    return;
+    return; // kills shell thread in main program
 }
 
 void Shell::evaluate(char *cmdline) {
