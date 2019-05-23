@@ -13,7 +13,7 @@
 #include <errno.h>
 
 #include "serverBase.h"
-#include "rio.h"
+#include "../misc/rio.h"
 
 using std::thread;
 

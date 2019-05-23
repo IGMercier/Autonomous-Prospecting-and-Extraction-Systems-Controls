@@ -4,11 +4,8 @@
 
 #include "server/server.h"
 #include "shell/shell.h"
-#include "flags.h"
-
-extern int VERBOSE;
-extern sig_atomic_t disconnected = 1;
-extern sig_atomic_t shutdownSIG = 0;
+#include "misc/flags.h"
+#include "misc/flags_set.h"
 
 static void sigpipe_handler(int sig);
 static void sigint_handler(int sig);
@@ -59,7 +56,6 @@ static void serverThread(int *shell_cfd) {
     server.run(shell_cfd);
     
     // control should never reach here
-    server.shutdown();
     return;
 }
 
@@ -81,7 +77,7 @@ static void sigpipe_handler(int sig) {
     sigset_t mask, prev;
     sigprocmask(SIG_BLOCK, &mask, &prev);
 
-    disconnected = 1;
+    setDisconnected();
 
     sigprocmask(SIG_SETMASK, &prev, NULL);
     errno = old_errno;
@@ -96,7 +92,7 @@ static void sigint_handler(int sig) {
     sigprocmask(SIG_BLOCK, &mask, &prev);
 
     // robot.shutdown();
-    shutdownSIG = 1;
+    setShutdownSIG();
 
     sigprocmask(SIG_SETMASK, &prev, NULL);
     errno = old_errno;

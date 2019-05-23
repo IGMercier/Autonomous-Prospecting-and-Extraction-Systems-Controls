@@ -5,22 +5,29 @@
 #include <unistd.h>
 
 #include "shell.h"
-#include "../flags.h" // thread_arg, execute
+#include "usr_defined.h" // thread_arg, execute
+//#include "../misc/flags.h"
+//#include "../misc/flags_set.h"
+#include "../misc/rio.h"
 
 #define MAXLINE 1024
 #define MAXARGS 128
 
-using std::thread;
+int shutdownSIG = 0; // remove after testing!!!
 
+using std::thread;
 
 Shell::Shell() {}
 Shell::~Shell() {}
 
-void Shell::run() {
+void Shell::run(int *shell_cfd) {
     char cmdline[MAXLINE];
 
+    rio_t buf;
+    rio_readinitb(&buf, STDIN_FILENO);
+
     while (!shutdownSIG) {
-        fgets(cmdline, MAXLINE, stdin);
+        rio_readlineb(&buf, cmdline, MAXLINE);
         if (feof(stdin)) {
             printf("\n");
             fflush(stdout);

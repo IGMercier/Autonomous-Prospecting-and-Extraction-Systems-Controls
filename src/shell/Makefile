@@ -1,7 +1,7 @@
 CC = g++
 TARGET = shell
 CFLAGS = -g -Wall -std=c++14
-FILES = program.cpp shell.cpp
+FILES = program.cpp shell.cpp usr_defined.cpp ../misc/rio.cpp
 LIBS = -lpthread
 
 all: $(TARGET)

@@ -11,7 +11,7 @@ class Shell {
         void listCommand();
     public:
         Shell();
-        void run();
+        void run(int *shell_cfd);
         ~Shell();
 };
 

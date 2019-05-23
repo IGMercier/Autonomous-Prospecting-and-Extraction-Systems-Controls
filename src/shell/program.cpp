@@ -2,6 +2,6 @@
 
 int main() {
     Shell s = Shell();
-
-    s.run();
+    int nothing = 0;
+    s.run(&nothing);
 }

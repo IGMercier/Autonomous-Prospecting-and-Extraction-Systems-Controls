@@ -1,9 +1,5 @@
-#ifndef _FLAGS_H_
-#define _FLAGS_H_
-
-#include <signal.h>
-sig_atomic_t disconnected = 1;
-sig_atomic_t shutdownSIG = 0;
+#ifndef _USR_DEFINED_H_
+#define _USR_DEFINED_H_
 
 typedef struct thread_arg {
     char **argv;
@@ -12,6 +8,5 @@ typedef struct thread_arg {
 } thread_arg;
 
 void execute(thread_arg *arg);
-
 
 #endif

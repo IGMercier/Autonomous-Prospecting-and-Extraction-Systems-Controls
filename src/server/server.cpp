@@ -6,7 +6,8 @@
 #include <assert.h>
 #include <errno.h>
 #include <thread>
-#include "../flags.h" // disconnected
+#include "../misc/flags.h"
+#include "../misc/flags_set.h"
 
 static void connection(Server *server, int *shell_cfd);
 
@@ -36,13 +37,13 @@ void Server::run(int *shell_cfd) {
 static void connection(Server *server, int *shell_cfd) {
     assert(server != NULL);
     
-    disconnected = 0;
+    unsetDisconnected();
 
     std::string msg = "Connected!\n";
     server->sendToClient(msg.c_str());
     fprintf(stdout, msg.c_str());
 
-    while (!disconnected) {
+    while (!disconnected && !shutdownSIG) {
         server->setClientSockOpts();
         *shell_cfd = server->cfd;
     }
@@ -59,11 +60,15 @@ void Server::shutdown() {
     sendToClient(msg.c_str());
     fprintf(stdout, "%s", msg.c_str());
 
-    if (close(this->cfd) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+    if (this->cfd >= 0) {
+        if (close(this->cfd) < 0) {
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+        }
     }
-    if (close(this->sfd) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+    if (this->sfd >= 0) {
+        if (close(this->sfd) < 0) {
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+        }
     }
     return;
 }
