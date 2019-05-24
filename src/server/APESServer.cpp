@@ -18,8 +18,6 @@ std::mutex log_mtx;
 volatile sig_atomic_t disconnected = 1;
 volatile sig_atomic_t shutdownSIG = 0;
 
-static void connection(APESServer *server);
-
 APESServer::APESServer(char *cmdfile, char *logfile) {
     signal(SIGPIPE, sigpipe_handler);
     //signal(SIGINT, sigint_handler);
@@ -48,25 +46,21 @@ void APESServer::run() {
             this->cfd = -1;
             continue;
         }
-
-        std::thread child(connection, this);
-        child.detach();
+        connection();
     }
     shutdown();
     return; // kills server thread in main program
 }
 
-static void connection(APESServer *server) {
-    assert(server != NULL);
-    
+void APESServer::connection() {
     disconnected = 0;
 
     std::string msg = "Connected!\n";
-    server->sendToClient(msg);
+    sendToClient(msg);
     fprintf(stdout, msg.c_str());
 
     while (!disconnected && !shutdownSIG) {
-        server->setClientSockOpts();
+        setClientSockOpts();
         //fprintf(stdout, "in loop\n");
         //char line[MAXLINE];
         //server->readFromClient(line, MAXLINE);
@@ -90,8 +84,8 @@ static void connection(APESServer *server) {
         //server->sendToClient(rc);
     }
 
-    close(server->cfd);
-    server->cfd = -1;
+    close(this->cfd);
+    this->cfd = -1;
 
     fprintf(stdout, "Disconnected!\n");
     return;

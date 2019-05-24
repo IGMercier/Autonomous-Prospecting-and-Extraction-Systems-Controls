@@ -6,9 +6,6 @@
 #include "../server/APESServer.h"
 //#include "../misc/flags.h"
 
-
-static void serverThread(int port);
-
 int main(int argc, char **argv) {
 
     //sig_atomic_t disconnected = 1;
@@ -21,15 +18,6 @@ int main(int argc, char **argv) {
         port = atoi(argv[1]);
     }
 
-    serverThread(port);
-    //std::thread t(serverThread, port);
-    //t.join();
-
-
-    return -1;
-}
-
-static void serverThread(int port) {
     APESServer server = APESServer(NULL, NULL);
     while (server.sfd < 0) {
         server.createServer(port);
@@ -38,6 +26,5 @@ static void serverThread(int port) {
 
     // control flow should never reach
     server.shutdown();
-    return;
+    return -1;
 }
-

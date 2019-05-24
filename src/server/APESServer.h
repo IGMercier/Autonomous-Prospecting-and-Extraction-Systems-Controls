@@ -10,6 +10,7 @@ class APESServer : public ServerBase {
         char *cmdfile;
         char *logfile;
         APESServer(char *cmdfile, char *logfile);
+        void connection();
         void run();
         void shutdown();
         ~APESServer();

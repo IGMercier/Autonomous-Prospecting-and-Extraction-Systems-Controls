@@ -3,8 +3,7 @@
 #include <unistd.h>
 
 int main() {
-    int file = STDIN_FILENO;
-    APESShell s = APESShell(&file);
+    APESShell s = APESShell(NULL, NULL);
     s.run();
 
     return -1;
