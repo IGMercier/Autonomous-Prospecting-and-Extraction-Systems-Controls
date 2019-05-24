@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <unistd.h>
+#include <assert.h>
 #include "APESShell.h"
 #include "../APESsys/commands.h"
 #include "../misc/rio.h"

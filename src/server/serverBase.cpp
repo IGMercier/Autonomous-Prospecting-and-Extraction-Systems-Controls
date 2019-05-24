@@ -4,7 +4,6 @@
 #include <string>
 #include <sys/socket.h>
 #include <sys/types.h> // for AF_INET
-
 #include <netdb.h> // for ip_ntoa
 #include <arpa/inet.h> // for ip_ntoa
 #include <thread>

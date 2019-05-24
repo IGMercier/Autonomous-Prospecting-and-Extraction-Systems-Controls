@@ -1,8 +1,9 @@
-#include <thread>
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
 #include <cstdio>
 #include <unistd.h>
+#include <thread>
+#include <assert.h>
 #include "shellBase.h"
 //#include "../misc/flags.h"
 //#include "../misc/flags_set.h"

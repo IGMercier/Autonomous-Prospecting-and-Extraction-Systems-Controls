@@ -1,7 +1,7 @@
 #ifndef _SHELL_BASE_H_
 #define _SHELL_BASE_H_
 
-extern char **environ;
+// extern char **environ;
 
 #include <string>
 #include "../APESsys/commands.h"
