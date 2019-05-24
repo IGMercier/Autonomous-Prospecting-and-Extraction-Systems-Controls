@@ -16,5 +16,5 @@ This folder contains all the software stuffs
 
 * To run full system:
     * Run: ```make apes.out``` in source directory
-    * Run: ```./apes <host number> <port number>``` in source directory
+    * Run: ```./apes.out <host number> <port number>``` in source directory
     
