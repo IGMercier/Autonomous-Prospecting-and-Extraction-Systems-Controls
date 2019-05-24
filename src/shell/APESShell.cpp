@@ -1,4 +1,5 @@
 #include <thread>
+#include <cstdlib>
 #include <cstring>
 #include <unistd.h>
 #include "APESShell.h"
@@ -6,24 +7,18 @@
 #include "../misc/rio.h"
 
 using std::thread;
-static void execute(token *tk, int bg, int len, APESShell *shell);
-
-APESShell::APESShell(APES *robot, int *readFrom):Shell(int *readFrom) {
-    this->robot = robot;
-}
+static void execute(parse_token *ltk, int bg, int len, APESShell *shell);
 
 void APESShell::evaluate(char *cmdline) {
-    char *argv[MAXARGS];
-    char buf[MAXLINE];
     int bg;
+    parse_token tk;
     thread child;
-    token tk;
 
-    strncpy(buf, cmdline, MAXLINE);
-    bg = parseline(buf, argv, &tk);
+    bg = parseline(cmdline, &tk);
 
-    if (argv[0] == NULL) { return; }
-    if (!command(argv, &tk)) {
+    if (tk.argc == 0) { return; }
+
+    if (!builtin_command(&tk)) {
         /* CHILD THREAD */
         thread temp(execute, &tk, bg, MAXLINE, this);
         child.swap(temp);
@@ -40,15 +35,78 @@ void APESShell::evaluate(char *cmdline) {
     return;
 }
 
-APESShell::~APESShell() {
-    delete this->robot;
+void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
+    if (!strcmp(ltk->argv[0], "start")) {
+        ctk->command = START;
+    } else if (!strcmp(ltk->argv[0], "standby")) {
+        ctk->command = STANDBY;
+    } else if (!strcmp(ltk->argv[0], "data")) {
+        ctk->command = DATA;
+    } else if (!strcmp(ltk->argv[0], "help")) {
+        ctk->command = HELP;
+    } else if (!strcmp(ltk->argv[0], "quit")) {
+        ctk->command = QUIT;
+    } else if (!strcmp(ltk->argv[0], "auto")) {
+        if (!strcmp(ltk->argv[1], "on")) {
+            ctk->command = AUTO_ON;
+        } else if (!strcmp(ltk->argv[1], "off")) {
+            ctk->command = AUTO_OFF;
+        } else {
+            ctk->command = NONE;
+        }
+    } else if (!strcmp(ltk->argv[0], "temp")) {
+        ctk->command = TEMP;
+    } else if (!strcmp(ltk->argv[0], "dtemp")) {
+        ctk->command = DTEMP;
+    } else if (!strcmp(ltk->argv[0], "curr")) {
+        ctk->command = CURR;
+    } else if (!strcmp(ltk->argv[0], "wlevel")) {
+        ctk->command = WLEVEL;
+    } else if (!strcmp(ltk->argv[0], "wob")) {
+        ctk->command = WOB;
+    } else if (!strcmp(ltk->argv[0], "motor")) {
+        if (!strcmp(ltk->argv[1], "drive")) {
+            ctk->command = MOTOR_DRIVE;
+        } else if (!strcmp(ltk->argv[1], "stop")) {
+            ctk->command = MOTOR_STOP;
+        } else {
+            ctk->command = NONE;
+        }
+    } else if (!strcmp(ltk->argv[0], "drill")) {
+        if (!strcmp(ltk->argv[1], "run")) {
+            ctk->command = DRILL_RUN;
+        } else if (!strcmp(ltk->argv[1], "stop")) {
+            ctk->command = DRILL_STOP;
+        } else if (!strcmp(ltk->argv[1], "cycle")) {
+            ctk->command = DRILL_CYCLE;
+            /*
+                if atoi fails, ctk->command = NONE;
+                else, stick in field
+            */
+            ctk->param = atoi(ltk->argv[2]);
+        } else {
+            ctk->command = NONE;
+        }
+    } else {
+        ctk->command = NONE;
+    }
+
+    return;
 }
 
-static void execute(token *tk, int bg, int len, APESShell *shell) {
-    assert(tk != NULL);
+APESShell::~APESShell() {
+    //delete this->robot;
+}
+
+static void execute(parse_token *ltk, int bg, int len, APESShell *shell) {
+    assert(ltk != NULL);
     assert(shell != NULL);
+
+    command_token ctk;
+
+    shell->parsecommand(ltk, &ctk);
     
-    command_state command = tk->command;
+    command_state command = ctk.command;
     std::string msg;
 
     switch (command) {

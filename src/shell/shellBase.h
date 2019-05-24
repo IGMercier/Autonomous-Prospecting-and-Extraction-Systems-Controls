@@ -6,16 +6,22 @@ extern char **environ;
 #include <string>
 #include "../APESsys/commands.h"
 
+typedef struct parse_token {
+    int argc;
+    char *argv[MAXARGS];
+    builtin bcomm;
+} parse_token;
+
 class ShellBase {
     protected:
         int *readFrom;
-        void evaluate(char *cmdline);
+        virtual void evaluate(char *cmdline);
         int parseline(char *cmdline, parse_token *tk);
         int builtin_command(parse_token *tk);
-        void shell_print(std::string msg);
     public:
         ShellBase(int *readFrom);
         void run();
+        void shell_print(std::string msg);
         ~ShellBase();
 };
 

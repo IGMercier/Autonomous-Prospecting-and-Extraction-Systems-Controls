@@ -1,10 +1,10 @@
-#include "shellBase.h"
+#include "APESShell.h"
 #include <cstdlib>
 #include <unistd.h>
 
 int main() {
     int file = STDIN_FILENO;
-    ShellBase s = ShellBase(&file);
+    APESShell s = APESShell(&file);
     s.run();
 
     return -1;

@@ -3,14 +3,13 @@
 #include <cstdlib>
 #include <cstdio>
 #include <unistd.h>
-#include <string>
 #include "shellBase.h"
 //#include "../misc/flags.h"
 //#include "../misc/flags_set.h"
 #include "../misc/rio.h"
 
-static void execute(parse_token *tk, int bg);
 int shutdownSIG = 0; // remove after testing!!!
+static void execute(parse_token *tk, int bg);
 
 using std::thread;
 
@@ -26,12 +25,13 @@ ShellBase::~ShellBase() {}
 
 void ShellBase::run() {
     char cmdline[MAXLINE];
-
     rio_t buf;
-    rio_readinitb(&buf, *(this->readFrom));
-
+    
     while (!shutdownSIG) {
+
+        rio_readinitb(&buf, *(this->readFrom));
         rio_readlineb(&buf, cmdline, MAXLINE);
+
         if (feof(stdin)) {
             printf("\n");
             fflush(stdout);
@@ -147,9 +147,14 @@ static void execute(parse_token *tk, int bg) {
 
     for (int i = 0; i < tk->argc; i++) {
         if (tk->argv[i] == NULL) { break; }
-
-        printf("%s ", tk->argv[i]);
+        fprintf(stdout, "%s ", tk->argv[i]);
     }
-    printf("\n");
+
+    if (bg) {
+        fprintf(stdout, "\n");
+        
+        fflush(stdout);
+        
+    }
     return;
 }
