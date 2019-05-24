@@ -1,18 +1,28 @@
 CC = g++
-TARGET = apes
-CFLAGS = -g -Wall -fvisibility=hidden `python3-config --cflags`
-LFLAGS = `python3-config --ldflags`
-MAIN_FILES = program.cpp commands.cpp
-SERVER_FILES = server/server.cpp server/serverBase.cpp server/rio.cpp
-SHELL_FILES = shell/shell.cpp shell/helper.cpp
-APES_FILES = APES.cpp components.cpp
-LIBS = -lwiringPi -lpthread
+TARGET_ALL = apes.out
+TARGET_SERVER = server.out
+TARGET_SHELL = shell.out
+
+RIO_FILES = misc/rio.cpp
+SERVER_FILES = tests/serverTest.cpp server/APESServer.cpp server/serverBase.cpp
+SHELL_FILES = tests/shellTest.cpp shell/APESShell.cpp shell/shellBase.cpp
+ALL_FILES = program.cpp APES.cpp components.cpp $(SHELL_FILES) $(SERVER_FILES)
+
+CFLAGS = -g -Wall -fvisibility=hidden -std=c++14
 INCL = -I/usr/include/python3.5m -I/libraries/pybind11/include/
+PYFLAGS = `python3-config --cflags` $(INCL) `python3-config --ldflags`
+LIBS = -lwiringPi -pthread
 
-all: $(TARGET)
+all: $(TARGET_ALL) $(TARGET_SERVER) $(TARGET_SHELL)
 
-$(TARGET): $(FILES)
-	$(CC) -o $(TARGET) $(MAIN_FILES) $(SERVER_FILES) $(LIBS) $(CFLAGS) $(INCL) $(LFLAGS)
+$(TARGET_SHELL): $(SHELL_FILES) $(RIO_FILES)
+	$(CC) -o $(TARGET_SHELL) $(SHELL_FILES) $(RIO_FILES) $(CFLAGS) $(LIBS)
+
+$(TARGET_SERVER): $(SERVER_FILES) $(RIO_FILES)
+	$(CC) -o $(TARGET_SERVER) $(SERVER_FILES) $(RIO_FILES) $(CFLAGS) $(LIBS)
+
+$(TARGET_ALL): $(ALL_FILES) $(RIO_FILES)
+	$(CC) -o $(TARGET_ALL) $(ALL_FILES) $(RIO_FILES) $(CFLAGS) $(PYFLAGS) $(LIBS)
 
 clean:
-	$(RM) $(TARGET)
+	$(RM) $(TARGET_ALL) $(TARGET_SERVER) $(TARGET_SHELL)
