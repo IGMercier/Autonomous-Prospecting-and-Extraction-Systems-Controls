@@ -117,7 +117,7 @@ static void connection(ServerBase *server) {
     return;
 }
 
-int ServerBase::readFromClient(char *cmdline) {
+int ServerBase::readFromClient(char *cmdline, int len) {
     assert(cmdline != NULL);
     assert(this->cfd >= 0);
 

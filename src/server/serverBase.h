@@ -16,7 +16,7 @@ class ServerBase {
         int checkSockOpts();
         void run();
         int createClient();
-        int readFromClient(char *cmdline);
+        int readFromClient(char *cmdline, int len);
         void sendToClient(std::string msg);
         void shutdown();
         ~ServerBase();

@@ -2,14 +2,17 @@
 #include <cstdio>
 #include <csignal>
 #include <errno.h>
+#include <thread>
 #include "../server/APESServer.h"
-#include "../misc/flags.h"
+//#include "../misc/flags.h"
 
+
+static void serverThread(int port);
 
 int main(int argc, char **argv) {
 
-    disconnected = 1;
-    shutdownSIG = 0;
+    //sig_atomic_t disconnected = 1;
+    //sig_atomic_t shutdownSIG = 0;
 
     int port;
     if (argc < 2) {
@@ -18,6 +21,15 @@ int main(int argc, char **argv) {
         port = atoi(argv[1]);
     }
 
+    serverThread(port);
+    //std::thread t(serverThread, port);
+    //t.join();
+
+
+    return -1;
+}
+
+static void serverThread(int port) {
     APESServer server = APESServer(NULL, NULL);
     while (server.sfd < 0) {
         server.createServer(port);
@@ -26,8 +38,6 @@ int main(int argc, char **argv) {
 
     // control flow should never reach
     server.shutdown();
-
-    return -1;
+    return;
 }
-
 

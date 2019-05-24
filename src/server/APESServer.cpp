@@ -1,18 +1,28 @@
 #include "APESServer.h"
 #include <cstdlib>
 #include <cstdio>
+#include <csignal>
 #include <unistd.h>
 #include <cstring>
 #include <assert.h>
 #include <errno.h>
 #include <thread>
-#include "../misc/flags.h"
+#include <mutex>
+//#include "../misc/flags.h"
+
+#define MAXLINE 1024
 
 static void sigpipe_handler(int sig);
+std::mutex cmd_mtx;
+std::mutex log_mtx;
+volatile sig_atomic_t disconnected = 1;
+volatile sig_atomic_t shutdownSIG = 0;
+
 static void connection(APESServer *server);
 
-APESServer::APESServer(char *cmdfile, logfile) {
+APESServer::APESServer(char *cmdfile, char *logfile) {
     signal(SIGPIPE, sigpipe_handler);
+    //signal(SIGINT, sigint_handler);
     if (cmdfile == NULL) {
         this->cmdfile = ".cmdline.txt";
     } else {
@@ -55,28 +65,29 @@ static void connection(APESServer *server) {
     server->sendToClient(msg);
     fprintf(stdout, msg.c_str());
 
-
     while (!disconnected && !shutdownSIG) {
-        char line[RIO_BUFSIZE];
-
         server->setClientSockOpts();
-        fprintf(stdout, "\t\t\t%d\n", disconnected);
+        //fprintf(stdout, "in loop\n");
+        //char line[MAXLINE];
+        //server->readFromClient(line, MAXLINE);
 
-        server->readFromClient(line);
+        //fprintf(stdout, "GREAT\n");
+        //std::unique_lock<std::mutex> clock(cmd_mtx);
+        //FILE *cmd = fopen(server->cmdfile, "w");
+        //fprintf(cmd, line);
+        //fclose(cmd);
+        //clock.unlock();
 
-        std::unique_lock<std::mutex> clock(cmd_mtx);
-        FILE *cmd = fopen(server->cmdfile, "w");
-        fprintf(cmd, line);
-        fclose(cmd)
-        clock.unlock();
 
+        //std::unique_lock<std::mutex> llock(log_mtx);
+        //fprintf(stdout, "I'D BE READING FROM LOGFILE NOW!\n");
+        //FILE *log = fopen(server->logfile, "r");
+        //char *rc = NULL;
+        //size_t len = 0;
+        //getline(&rc, &len, log);
+        //llock.unlock();
 
-        std::unique_lock<std::mutex> llock(log_mtx);
-        fprintf(stdout, "I'D BE READING FROM LOGFILE NOW!\n");
-        //read(server->logfile, (void *)line, RIO_BUFSIZE);
-        llock.unlock();
-
-        server->sendToClient(line);
+        //server->sendToClient(rc);
     }
 
     close(server->cfd);
@@ -122,3 +133,4 @@ static void sigpipe_handler(int sig) {
     errno = old_errno;
     return;
 }
+
