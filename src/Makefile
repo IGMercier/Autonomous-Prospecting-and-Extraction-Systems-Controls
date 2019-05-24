@@ -3,7 +3,7 @@ TARGET_ALL = apes.out
 TARGET_SERVER = server.out
 TARGET_SHELL = shell.out
 
-RIO_FILES = misc/rio.cpp
+MISC_FILES = misc/rio.cpp misc/flags.cpp misc/flags_set.cpp
 SERVER_FILES = tests/serverTest.cpp server/APESServer.cpp server/serverBase.cpp
 SHELL_FILES = tests/shellTest.cpp shell/APESShell.cpp shell/shellBase.cpp
 ALL_FILES = program.cpp APES.cpp components.cpp $(SHELL_FILES) $(SERVER_FILES)
@@ -15,14 +15,14 @@ LIBS = -lwiringPi -pthread
 
 all: $(TARGET_ALL) $(TARGET_SERVER) $(TARGET_SHELL)
 
-$(TARGET_SHELL): $(SHELL_FILES) $(RIO_FILES)
-	$(CC) -o $(TARGET_SHELL) $(SHELL_FILES) $(RIO_FILES) $(CFLAGS) $(LIBS)
+$(TARGET_SHELL): $(SHELL_FILES) $(MISC_FILES)
+	$(CC) -o $(TARGET_SHELL) $(SHELL_FILES) $(MISC_FILES) $(CFLAGS) $(LIBS)
 
-$(TARGET_SERVER): $(SERVER_FILES) $(RIO_FILES)
-	$(CC) -o $(TARGET_SERVER) $(SERVER_FILES) $(RIO_FILES) $(CFLAGS) $(LIBS)
+$(TARGET_SERVER): $(SERVER_FILES) $(MISC_FILES)
+	$(CC) -o $(TARGET_SERVER) $(SERVER_FILES) $(MISC_FILES) $(CFLAGS) $(LIBS)
 
-$(TARGET_ALL): $(ALL_FILES) $(RIO_FILES)
-	$(CC) -o $(TARGET_ALL) $(ALL_FILES) $(RIO_FILES) $(CFLAGS) $(PYFLAGS) $(LIBS)
+$(TARGET_ALL): $(ALL_FILES) $(MISC_FILES)
+	$(CC) -o $(TARGET_ALL) $(ALL_FILES) $(MISC_FILES) $(CFLAGS) $(PYFLAGS) $(LIBS)
 
 clean:
 	$(RM) $(TARGET_ALL) $(TARGET_SERVER) $(TARGET_SHELL)

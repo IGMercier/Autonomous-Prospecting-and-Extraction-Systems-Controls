@@ -6,10 +6,10 @@
 #include "serverBase.h"
 
 class APESServer : public ServerBase {
-    private:
     public:
-        APESServer();
-        void run(int *shell_cfd);
+        int *fd;
+        APESServer(int *fd);
+        void run();
         void shutdown();
         ~APESServer();
 };

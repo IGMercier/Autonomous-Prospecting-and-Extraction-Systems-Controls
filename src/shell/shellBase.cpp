@@ -29,17 +29,17 @@ void ShellBase::run() {
     rio_t buf;
     
     while (!shutdownSIG) {
+        if (*(this->readFrom) >= 0) {
+            rio_readinitb(&buf, *(this->readFrom));
+            rio_readlineb(&buf, cmdline, MAXLINE);
 
-        rio_readinitb(&buf, *(this->readFrom));
-        rio_readlineb(&buf, cmdline, MAXLINE);
-
-        if (feof(stdin)) {
-            printf("\n");
-            fflush(stdout);
-            fflush(stdin);
+            if (feof(stdin)) {
+                printf("\n");
+                fflush(stdout);
+                fflush(stdin);
+            }
+            evaluate(cmdline);
         }
-
-        evaluate(cmdline);
     }
     return; // kills shell thread in main program
 }

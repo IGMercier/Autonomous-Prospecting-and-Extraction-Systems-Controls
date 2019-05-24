@@ -9,11 +9,13 @@
 #include "../misc/flags.h"
 #include "../misc/flags_set.h"
 
-static void connection(Server *server, int *shell_cfd);
+static void connection(APESServer *server);
 
-APESServer::APESServer() {}
+APESServer::APESServer(int *fd) {
+    this->fd = fd;    
+}
 
-void APESServer::run(int *shell_cfd) {
+void APESServer::run() {
     assert(this->sfd >= 0);
 
     while (!shutdownSIG) {
@@ -27,14 +29,14 @@ void APESServer::run(int *shell_cfd) {
             continue;
         }
 
-        std::thread child(connection, this, shell_cfd);
+        std::thread child(connection, this);
         child.detach();
     }
     shutdown();
     return; // kills server thread in main program
 }
 
-static void connection(Server *server, int *shell_cfd) {
+static void connection(APESServer *server) {
     assert(server != NULL);
     
     unsetDisconnected();
@@ -45,11 +47,12 @@ static void connection(Server *server, int *shell_cfd) {
 
     while (!disconnected && !shutdownSIG) {
         server->setClientSockOpts();
-        *shell_cfd = server->cfd;
+        *(server->fd) = server->cfd;
     }
 
     close(server->cfd);
     server->cfd = -1;
+    *(server->fd) = -1;
     fprintf(stdout, "Disconnected!\n");
     return;
 

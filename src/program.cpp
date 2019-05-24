@@ -10,8 +10,8 @@
 static void sigpipe_handler(int sig);
 static void sigint_handler(int sig);
 
-static void serverThread(int *shell_cfd);
-static void shellThread(int *shell_cfd);
+static void serverThread(int *cfd);
+static void shellThread(int *cfd);
 
 int main(int argc, char** argv) {
     signal(SIGPIPE, sigpipe_handler);
@@ -25,10 +25,10 @@ int main(int argc, char** argv) {
         port = atoi(argv[1]);
     }
 
-    int shell_cfd = -1;
+    int cfd = -1;
 
-    std::thread tServer(serverThread, &shell_cfd);
-    std::thread tShell(shellThread, &shell_cfd);
+    std::thread tServer(serverThread, &cfd);
+    std::thread tShell(shellThread, &cfd);
 
     if (tServer.joinable()) {
         tServer.join();
@@ -47,10 +47,10 @@ int main(int argc, char** argv) {
 /*
     THREAD CALLBACKS
 */
-static void serverThread(int *shell_cfd) {
+static void serverThread(int *cfd) {
     assert(shell_cfd != NULL);
     
-    APESServer server = Server();
+    APESServer server = APESServer();
     while (server.sfd < 0) {
         server.serverSetup(port);
     }
@@ -62,11 +62,11 @@ static void serverThread(int *shell_cfd) {
 }
 
    
-static void shellThread(int *shell_cfd) {
+static void shellThread(int *cfd) {
     assert(shell_cfd != NULL);
 
-    APESShell shell = Shell();
-    shell.run(shell_cfd);
+    APESShell shell = APESShell(cfd);
+    shell.run();
 
     // control should never reach here
     return;
