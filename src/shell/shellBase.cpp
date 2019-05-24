@@ -14,7 +14,9 @@ using std::thread;
 
 ShellBase::ShellBase(int *readFrom) {
     if (readFrom == NULL) {
+        fd_mtx.lock();
         *(this->readFrom) = STDIN_FILENO;
+        fd_mtx.unlock();
     } else {
         this->readFrom = readFrom;
     }
