@@ -95,7 +95,7 @@ int ShellBase::builtin_command(parse_token *tk) {
 }
 
 int ShellBase::parseline(char *cmdline, parse_token *tk) {
-    char *delim = " \t\0\n";
+    char *delim = " \t\n";
     char *argv;
     int bg;
 

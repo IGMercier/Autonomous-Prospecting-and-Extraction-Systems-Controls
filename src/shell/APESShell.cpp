@@ -36,6 +36,8 @@ void APESShell::evaluate(char *cmdline) {
 }
 
 void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
+    printf("\t\t\t%s\n", ltk->argv[0]);
+
     if (!strcmp(ltk->argv[0], "start")) {
         ctk->command = START;
     } else if (!strcmp(ltk->argv[0], "standby")) {
