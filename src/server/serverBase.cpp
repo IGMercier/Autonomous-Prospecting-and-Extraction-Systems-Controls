@@ -1,7 +1,6 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
-#include <string>
 #include <sys/socket.h>
 #include <sys/types.h> // for AF_INET
 #include <netdb.h> // for ip_ntoa
@@ -106,11 +105,11 @@ static void connection(ServerBase *server) {
    // std::string ip(c_ip);
 
     std::string msg = "Server: Connected\n";// + ip + "\n";
-    server->sendToClient(msg.c_str());
+    server->sendToClient(msg);
     while (1) {
         server->setClientSockOpts();
         msg = "in loop\n";
-        server->sendToClient(msg.c_str());
+        server->sendToClient(msg);
     }
 
     close(server->cfd);
@@ -133,11 +132,13 @@ int ServerBase::readFromClient(char *cmdline) {
     return 0;
 }
 
-void ServerBase::sendToClient(const char *msg) {
-    assert(msg != NULL);
+void ServerBase::sendToClient(std::string msg) {
+    assert(!msg.empty());
     assert(this->cfd >= 0);
 
-    rio_writen(this->cfd, (void *)msg, strlen(msg));
+    std::string toSend = "Server: " + msg;
+
+    rio_writen(this->cfd, (void *)toSend.c_str(), strlen(toSend.c_str()));
 
     return;
 }

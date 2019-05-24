@@ -3,6 +3,8 @@
 
 #define MAXCONN 1
 
+#include <string>
+
 class ServerBase {
     public:
         ServerBase();
@@ -15,7 +17,7 @@ class ServerBase {
         void run();
         int createClient();
         int readFromClient(char *cmdline);
-        void sendToClient(const char *msg);
+        void sendToClient(std::string msg);
         void shutdown();
         ~ServerBase();
 };

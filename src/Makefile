@@ -3,7 +3,7 @@ TARGET_ALL = apes.out
 TARGET_SERVER = server.out
 TARGET_SHELL = shell.out
 
-MISC_FILES = misc/rio.cpp misc/flags.cpp misc/flags_set.cpp
+MISC_FILES = misc/rio.cpp
 SERVER_FILES = tests/serverTest.cpp server/APESServer.cpp server/serverBase.cpp
 SHELL_FILES = tests/shellTest.cpp shell/APESShell.cpp shell/shellBase.cpp
 ALL_FILES = program.cpp APES.cpp components.cpp $(SHELL_FILES) $(SERVER_FILES)

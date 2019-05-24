@@ -1,9 +1,15 @@
 #include <cstdlib>
 #include <cstdio>
 #include <csignal>
+#include <errno.h>
 #include "../server/APESServer.h"
+#include "../misc/flags.h"
+
 
 int main(int argc, char **argv) {
+
+    disconnected = 1;
+    shutdownSIG = 0;
 
     int port;
     if (argc < 2) {
@@ -24,4 +30,5 @@ int main(int argc, char **argv) {
 
     return -1;
 }
+
 

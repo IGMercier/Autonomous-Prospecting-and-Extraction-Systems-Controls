@@ -5,7 +5,6 @@
 #include "server/APESServer.h"
 #include "shell/APESShell.h"
 #include "misc/flags.h"
-#include "misc/flags_set.h"
 
 static void sigpipe_handler(int sig);
 static void sigint_handler(int sig);
@@ -82,7 +81,7 @@ static void sigpipe_handler(int sig) {
     sigset_t mask, prev;
     sigprocmask(SIG_BLOCK, &mask, &prev);
 
-    setDisconnected();
+    disconnected = 1;
     //robot.standby();
 
     sigprocmask(SIG_SETMASK, &prev, NULL);
@@ -97,7 +96,7 @@ static void sigint_handler(int sig) {
     sigset_t mask, prev;
     sigprocmask(SIG_BLOCK, &mask, &prev);
 
-    setShutdownSIG();
+    shutdownSIG = 1;
     // robot.shutdown();
 
     sigprocmask(SIG_SETMASK, &prev, NULL);

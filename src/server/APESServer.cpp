@@ -7,11 +7,12 @@
 #include <errno.h>
 #include <thread>
 #include "../misc/flags.h"
-#include "../misc/flags_set.h"
 
+static void sigpipe_handler(int sig);
 static void connection(APESServer *server);
 
 APESServer::APESServer(int *fd) {
+    signal(SIGPIPE, sigpipe_handler);
     this->fd = fd;    
 }
 
@@ -39,20 +40,27 @@ void APESServer::run() {
 static void connection(APESServer *server) {
     assert(server != NULL);
     
-    unsetDisconnected();
+    disconnected = 0;
 
     std::string msg = "Connected!\n";
-    server->sendToClient(msg.c_str());
+    server->sendToClient(msg);
     fprintf(stdout, msg.c_str());
 
     while (!disconnected && !shutdownSIG) {
         server->setClientSockOpts();
+        fprintf(stdout, "\t\t\t%d\n", disconnected);
+
+        fd_mtx.lock();
         *(server->fd) = server->cfd;
+        fd_mtx.unlock();
     }
 
     close(server->cfd);
     server->cfd = -1;
+
+    fd_mtx.lock();
     *(server->fd) = -1;
+    fd_mutex.unlock();
     fprintf(stdout, "Disconnected!\n");
     return;
 
@@ -60,7 +68,7 @@ static void connection(APESServer *server) {
 
 void APESServer::shutdown() {
     std::string msg = "Server shutting down!\n";
-    sendToClient(msg.c_str());
+    sendToClient(msg);
     fprintf(stdout, "%s", msg.c_str());
 
     if (this->cfd >= 0) {
@@ -77,4 +85,19 @@ void APESServer::shutdown() {
 }
 
 APESServer::~APESServer() {
+}
+
+/* REMOVE AFTER TESTING */
+static void sigpipe_handler(int sig) {
+    int old_errno = errno;
+    sigset_t mask, prev;
+    sigprocmask(SIG_BLOCK, &mask, &prev);
+
+    fprintf(stdout, "IN SIG HANDLER\n");
+
+    disconnected = 1;
+
+    sigprocmask(SIG_SETMASK, &prev, NULL);
+    errno = old_errno;
+    return;
 }

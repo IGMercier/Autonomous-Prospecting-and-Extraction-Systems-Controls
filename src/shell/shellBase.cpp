@@ -5,11 +5,9 @@
 #include <thread>
 #include <assert.h>
 #include "shellBase.h"
-//#include "../misc/flags.h"
-//#include "../misc/flags_set.h"
+#include "../misc/flags.h"
 #include "../misc/rio.h"
 
-int shutdownSIG = 0; // remove after testing!!!
 static void execute(parse_token *tk, int bg);
 
 using std::thread;
@@ -29,8 +27,10 @@ void ShellBase::run() {
     rio_t buf;
     
     while (!shutdownSIG) {
+        fd_mtx.lock();
         if (*(this->readFrom) >= 0) {
             rio_readinitb(&buf, *(this->readFrom));
+            fd_mtx.unlock();
             rio_readlineb(&buf, cmdline, MAXLINE);
 
             if (feof(stdin)) {
@@ -39,6 +39,8 @@ void ShellBase::run() {
                 fflush(stdin);
             }
             evaluate(cmdline);
+        } else {
+            fd_mtx.unlock();
         }
     }
     return; // kills shell thread in main program
