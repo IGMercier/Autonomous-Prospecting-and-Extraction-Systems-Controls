@@ -12,14 +12,26 @@ static void execute(parse_token *tk, int bg);
 
 using std::thread;
 
-ShellBase::ShellBase(int *readFrom) {
+ShellBase::ShellBase(char *cmdfile, char *logfile) {
+    if (cmdfile == NULL) {
+        this->cmdfile = ".cmdline.txt";
+    } else {
+        this->cmdfile = cmdfile;
+    }
+
+    if (logfile == NULL) {
+        this->logfile = ".log.txt";
+    } else {
+        this->logfile = logfile;
+    }
+    /*
     if (readFrom == NULL) {
-        fd_mtx.lock();
+        std::unique_lock<std::mutex> lock(fd_mtx);
         *(this->readFrom) = STDIN_FILENO;
-        fd_mtx.unlock();
+        lock.unlock();
     } else {
         this->readFrom = readFrom;
-    }
+    }*/
 }
 
 ShellBase::~ShellBase() {}
@@ -29,21 +41,17 @@ void ShellBase::run() {
     rio_t buf;
     
     while (!shutdownSIG) {
-        fd_mtx.lock();
-        if (*(this->readFrom) >= 0) {
-            rio_readinitb(&buf, *(this->readFrom));
-            fd_mtx.unlock();
-            rio_readlineb(&buf, cmdline, MAXLINE);
+        std::unique_lock<std::mutex> clock(cmd_mtx);
+        rio_readinitb(&buf, this->cmdfile);
+        rio_readlineb(&buf, cmdline, MAXLINE);
+        clock.unlock();
 
-            if (feof(stdin)) {
-                printf("\n");
-                fflush(stdout);
-                fflush(stdin);
-            }
-            evaluate(cmdline);
-        } else {
-            fd_mtx.unlock();
+        if (feof(stdin)) {
+            printf("\n");
+            fflush(stdout);
+            fflush(stdin);
         }
+        evaluate(cmdline);
     }
     return; // kills shell thread in main program
 }
@@ -137,8 +145,13 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
 
 void ShellBase::shell_print(std::string msg) {
     std::string toPrint = "Shell: " + msg;
+    
+    std::unique_lock<std::mutex> llock(log_mtx);
+    FILE *log = fopen(this->logfile, "w");
+    fprintf(log, toPrint.c_str();
+    fclose(log);
+    llock.unlock();
 
-    rio_writen(*(this->readFrom), (void *)toPrint.c_str(), strlen(toPrint.c_str()));
     return;
 }
 

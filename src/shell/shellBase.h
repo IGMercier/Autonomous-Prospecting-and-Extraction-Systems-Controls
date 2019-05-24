@@ -14,12 +14,13 @@ typedef struct parse_token {
 
 class ShellBase {
     protected:
-        int *readFrom;
+        char *cmdfile;
+        char *logfile;
         virtual void evaluate(char *cmdline);
         int parseline(char *cmdline, parse_token *tk);
         int builtin_command(parse_token *tk);
     public:
-        ShellBase(int *readFrom);
+        ShellBase(char *cmdfile, char *logfile);
         void run();
         void shell_print(std::string msg);
         ~ShellBase();

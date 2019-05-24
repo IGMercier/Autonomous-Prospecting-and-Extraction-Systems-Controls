@@ -7,8 +7,9 @@
 
 class APESServer : public ServerBase {
     public:
-        int *fd;
-        APESServer(int *fd);
+        char *cmdfile;
+        char *logfile;
+        APESServer(char *cmdfile, char *logfile);
         void run();
         void shutdown();
         ~APESServer();

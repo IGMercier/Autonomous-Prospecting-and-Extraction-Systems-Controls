@@ -24,10 +24,8 @@ int main(int argc, char** argv) {
         port = atoi(argv[1]);
     }
 
-    int cfd = -1;
-
-    std::thread tServer(serverThread, &cfd);
-    std::thread tShell(shellThread, &cfd);
+    std::thread tServer(serverThread);
+    std::thread tShell(shellThread);
 
     if (tServer.joinable()) {
         tServer.join();
@@ -46,7 +44,7 @@ int main(int argc, char** argv) {
 /*
     THREAD CALLBACKS
 */
-static void serverThread(int *cfd) {
+static void serverThread() {
     assert(shell_cfd != NULL);
     
     APESServer server = APESServer();
@@ -54,17 +52,17 @@ static void serverThread(int *cfd) {
         server.serverSetup(port);
     }
     assert(server.sfd >= 0);
-    server.run(shell_cfd);
+    server.run();
     
     // control should never reach here
     return;
 }
 
    
-static void shellThread(int *cfd) {
+static void shellThread() {
     assert(shell_cfd != NULL);
 
-    APESShell shell = APESShell(cfd);
+    APESShell shell = APESShell();
     shell.run();
 
     // control should never reach here

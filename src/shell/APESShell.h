@@ -10,7 +10,7 @@ class APESShell : public ShellBase {
         //APES *robot;
         void evaluate(char *cmdline);
     public:
-        APESShell(/*APES *robot, */int *readFrom) : ShellBase(readFrom) {
+        APESShell(/*APES *robot, */char *cmdfile, char *logfile) : ShellBase(cmdfile, logfile) {
             //this->robot = robot;    
         }
         void parsecommand(parse_token *ltk, command_token *ctk);

@@ -11,9 +11,18 @@
 static void sigpipe_handler(int sig);
 static void connection(APESServer *server);
 
-APESServer::APESServer(int *fd) {
+APESServer::APESServer(char *cmdfile, logfile) {
     signal(SIGPIPE, sigpipe_handler);
-    this->fd = fd;    
+    if (cmdfile == NULL) {
+        this->cmdfile = ".cmdline.txt";
+    } else {
+        this->cmdfile = cmdfile;
+    }
+    if (logfile == NULL) {
+        this->logfile = ".log.txt";
+    } else {
+        this->logfile = logfile;
+    }
 }
 
 void APESServer::run() {
@@ -46,21 +55,33 @@ static void connection(APESServer *server) {
     server->sendToClient(msg);
     fprintf(stdout, msg.c_str());
 
+
     while (!disconnected && !shutdownSIG) {
+        char line[RIO_BUFSIZE];
+
         server->setClientSockOpts();
         fprintf(stdout, "\t\t\t%d\n", disconnected);
 
-        fd_mtx.lock();
-        *(server->fd) = server->cfd;
-        fd_mtx.unlock();
+        server->readFromClient(line);
+
+        std::unique_lock<std::mutex> clock(cmd_mtx);
+        FILE *cmd = fopen(server->cmdfile, "w");
+        fprintf(cmd, line);
+        fclose(cmd)
+        clock.unlock();
+
+
+        std::unique_lock<std::mutex> llock(log_mtx);
+        fprintf(stdout, "I'D BE READING FROM LOGFILE NOW!\n");
+        //read(server->logfile, (void *)line, RIO_BUFSIZE);
+        llock.unlock();
+
+        server->sendToClient(line);
     }
 
     close(server->cfd);
     server->cfd = -1;
 
-    fd_mtx.lock();
-    *(server->fd) = -1;
-    fd_mutex.unlock();
     fprintf(stdout, "Disconnected!\n");
     return;
 
