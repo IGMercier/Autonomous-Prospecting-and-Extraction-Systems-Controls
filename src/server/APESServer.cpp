@@ -71,14 +71,14 @@ void APESServer::execute() {
             fclose(cmd);
             cmdlock.unlock();
         } else if (rc < 0) { break; }
-
+/*
         std::unique_lock<std::mutex> loglock(log_mtx);
         FILE *log = fopen(this->logfile.c_str(), "r");
         char logline[MAXLINE];
         fgets(logline, MAXLINE, log);
         fprintf(stdout, "In log: %s\n", logline);
         loglock.unlock();
-
+*/
 
     }
 
