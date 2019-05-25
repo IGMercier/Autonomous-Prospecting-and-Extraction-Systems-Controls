@@ -63,6 +63,10 @@ void APESServer::execute() {
         } else if (rc > 0) {
             cmdline[strlen(cmdline)-1] = '\0';
             fprintf(stdout, "Received: %s\n", cmdline);
+
+            FILE *cmd = fopen("cmd.txt", "w");
+            fprintf(cmd, "%s\n", cmdline);
+            fclose(cmd);
         }
 
     }
