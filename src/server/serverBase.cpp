@@ -118,20 +118,18 @@ void ServerBase::connection() {
 
     while (1) {
         setClientSockOpts();
-        fd_set rset = set;
-    
-        int sel = select(this->cfd + 1, &rset, 0, 0, 0);
-        if (sel > 0) {
-            char buf[1024] = {0};
-            int bytes = recv(this->cfd, buf, sizeof(buf), 0);
-            if (bytes > 0) { printf("YAY\n"); }
-            else if (bytes == 0) { break; }
-            else { break; }
-        } else if (sel < 0) {
-            break;
+        char buf[1024] = {0};
+        
+        struct sigaction new_actn, old_actn;
+        new_actn.sa_handler = SIG_IGN;
+        sigemptyset (&new_actn.sa_mask);
+        new_actn.sa_flags = 0;
+        sigaction(SIGPIPE, &new_actn, &old_actn);
+        int 
+        if (write(this->cfd, (void *)buf, sizeof(buf)) < 0) {
+            print_error(errno);
         }
-
-
+        sigaction (SIGPIPE, &old_actn, NULL);
         //sendToClient(msg);
     }
     return;
