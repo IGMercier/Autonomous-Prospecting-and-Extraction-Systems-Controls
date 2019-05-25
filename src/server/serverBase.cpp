@@ -32,7 +32,7 @@ void ServerBase::createServer(int port) {
         return;
     }
 
-    setSockOpts();
+    setServerSockOpts();
 
     memset(&saddr, 0, sizeof(saddr));
     saddr.sin_family = AF_INET;
@@ -57,7 +57,7 @@ void ServerBase::createServer(int port) {
     return;
 }
 
-int ServerBase::setSockOpts() {
+int ServerBase::setServerSockOpts() {
     int flags;
 
     // these if-statements setup the handshake to keep
@@ -152,9 +152,6 @@ void ServerBase::run() {
             continue;
         }
 
-        //setSockOpts();
-        //checkSockOpts();
-
         if (pthread_create(&tid, NULL, thread, (void *)(long)this) < 0) {
             close(this->cfd);
             this->cfd = -1;
@@ -176,14 +173,19 @@ int ServerBase::createClient() {
 
     if (rc < 0) { return -1; }
 
-    /*if ((this->cfd = accept(this->sfd,
-                            (struct sockaddr *)&caddr.sin_addr.s_addr,
-                             &caddr_size)) < 0) {
-        return -1;
-    }*/
-
     this->cfd = rc;
     return 0;
+}
+
+int ServerBase::setClientSockOpts() {
+    int flags = 1;
+    if (setsockopt(this->cfd, SOL_SOCKET, SO_KEEPALIVE,
+                   (const void *)&flags, sizeof(flags)) < 0) {
+        fprintf(stderr, "\t\t\t%s\n", strerror(errno));
+        return -1;
+    }
+    return 0;
+
 }
 
 void* ServerBase::thread(void *arg) {
@@ -198,14 +200,8 @@ void* ServerBase::thread(void *arg) {
     ServerBase *server = (ServerBase *)(long)arg;
     std::string msg = "Server: Connected\n";// + ip + "\n";
     server->sendToClient(msg.c_str());
-    int flags;
     while (1) {
-        flags = 1;
-        if (setsockopt(server->cfd, SOL_SOCKET, SO_KEEPALIVE,
-                       (const void *)&flags, sizeof(flags)) < 0) {
-            fprintf(stderr, "\t\t\t%s\n", strerror(errno));
-            continue;
-        }
+        server->setClientSockOpts();
         msg = "in loop\n";
         server->sendToClient(msg.c_str());
     }
