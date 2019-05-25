@@ -70,7 +70,7 @@ void APESServer::execute() {
             cmdline[strlen(cmdline)-1] = '\0';
             fprintf(stdout, "Received: %s\n", cmdline);
 
-            FILE *cmd = fopen("cmd.txt", "w");
+            FILE *cmd = fopen(this->cmdfile.c_str(), "w");
             fprintf(cmd, "%s\n", cmdline);
             fclose(cmd);
         }
