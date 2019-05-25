@@ -51,6 +51,8 @@ void APESServer::execute() {
     std::string msg = "Connected!\n";
     sendToClient(msg.c_str());
     fprintf(stdout, msg.c_str());
+    msg = "END";
+    sendToClient(msg.c_str());
     
     char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
     while (1) {
@@ -61,33 +63,39 @@ void APESServer::execute() {
         memset(cmdline, 0, MAXLINE);
 
         int fail = 0;
-        while (strncmp(cmdline, "end", MAXLINE)) {
+        std::unique_lock<std::mutex> cmdlock(cmd_mtx);
+        while (strncmp(cmdline, "END", MAXLINE)) {
             int rc;
             if ((rc = readFromClient(cmdline)) > 0) {
                 cmdline[strlen(cmdline)-1] = '\0';
-                //fprintf(stdout, "Received: %s\n", cmdline);
-                fprintf(stdout, "Received!\n");
                 msg = "Received!\n";
                 sendToClient(msg.c_str());
-/*
-                std::unique_lock<std::mutex> cmdlock(cmd_mtx);
-                 FILE *cmd = fopen(this->cmdfile.c_str(), "w");
+                fprintf(stdout, "%s", msg.c_str());
+                msg = "END";
+                sendToClient(msg.c_str());
+               
+                // writes to command file for shell to read
+                FILE *cmd = fopen(this->cmdfile.c_str(), "a");
                 fprintf(cmd, "%s\n", cmdline);
                 fclose(cmd);
-                cmdlock.unlock();
-                */
+
             } else if (rc < 0) { fail = 1; break; }
         }
-        if (fail) { break; }
+        cmdlock.unlock();
         fprintf(stdout, "Finished reading!\n");
-/*
+
+        if (fail) { break; }
+
+
+        char logline[MAXLINE] = {0};
         std::unique_lock<std::mutex> loglock(log_mtx);
-        FILE *log = fopen(this->logfile.c_str(), "r");
-        char logline[MAXLINE];
-        fgets(logline, MAXLINE, log);
-        fprintf(stdout, "In log: %s\n", logline);
+        while (strncmp(logline, "END", MAXLINE)) {
+            FILE *log = fopen(this->logfile.c_str(), "r");
+            fgets(logline, MAXLINE, log);
+            fprintf(stdout, "In log: %s\n", logline);
+        }
         loglock.unlock();
-*/
+
     }
 
     free(cmdline);
