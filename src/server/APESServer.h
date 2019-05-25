@@ -8,8 +8,9 @@
 class APESServer : public ServerBase {
     private:
         std::string cmdfile;
+        std::string logfile;
     public:
-        APESServer(std::string cmdfile);
+        APESServer(std::string cmdfile, std::string logfile);
         void run();
         void execute();
         void shutdown();

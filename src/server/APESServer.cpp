@@ -11,8 +11,9 @@
 
 static void sigint_handler(int sig);
 std::mutex cmd_mtx;
+std::mutex log_mtx;
 
-APESServer::APESServer(std::string cmdfile) {
+APESServer::APESServer(std::string cmdfile, std::string logfile) {
     signal(SIGINT, sigint_handler);
     signal(SIGPIPE, SIG_IGN);
 
@@ -20,6 +21,12 @@ APESServer::APESServer(std::string cmdfile) {
         this->cmdfile = "cmd.txt";
     } else {
         this->cmdfile = cmdfile;
+    }
+    
+    if (logfile.empty()) {
+        this->logfile = "log.txt";
+    } else {
+        this->logfile = logfile;
     }
 }
 
@@ -58,12 +65,19 @@ void APESServer::execute() {
             cmdline[strlen(cmdline)-1] = '\0';
             fprintf(stdout, "Received: %s\n", cmdline);
 
-            std::unique_lock<std::mutex> lock(cmd_mtx);
+            std::unique_lock<std::mutex> cmdlock(cmd_mtx);
             FILE *cmd = fopen(this->cmdfile.c_str(), "w");
             fprintf(cmd, "%s\n", cmdline);
             fclose(cmd);
-            lock.unlock();
+            cmdlock.unlock();
         } else if (rc < 0) { break; }
+
+        std::unique_lock<std::mutex> loglock(log_mtx);
+        FILE *log = fopen(this->logfile.c_str(), "r");
+        char logline[MAXLINE];
+        fgets(logline, MAXLINE, log);
+        fprintf(stdout, "In log: %s\n", logline);
+        loglock.unlock();
 
 
     }
@@ -100,16 +114,6 @@ APESServer::~APESServer() {
 }
 
 static void sigint_handler(int sig) {
-    int old_errno = errno;
-
-    sigset_t mask, prev;
-    sigprocmask(SIG_BLOCK, &mask, &prev);
-
-    
-    fprintf(stdout, "RECIEVED SIGINT\n");
-    sigprocmask(SIG_SETMASK, &prev, NULL);
-    errno = old_errno;
-
     _exit(0);
     return;
 }
