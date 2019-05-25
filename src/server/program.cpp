@@ -1,6 +1,6 @@
 #include <cstdlib>
 #include <cstdio>
-#include "server.h"
+#include "APESServer.h"
 
 int main(int argc, char **argv) {
 
@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
         port = atoi(argv[1]);
     }
 
-    Server server = Server();
+    APESServer server = APESServer();
 
     while (server.sfd < 0) {
         server.createServer(port);

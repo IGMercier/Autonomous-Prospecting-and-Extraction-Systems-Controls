@@ -70,6 +70,14 @@ int ServerBase::setServerSockOpts() {
         return -1;
     }
 
+    flags = 1;
+    if (setsockopt(this->sfd, SOL_SOCKET, SO_KEEPALIVE,
+                   (const void*)&flags, sizeof(flags)) < 0) {
+        fprintf(stderr, "\t\t\t%s\n", strerror(errno));
+        return -1;
+    }
+    
+
     flags = IDLE; // heartbeat frequency
     if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPIDLE,
                    (const void*)&flags, sizeof(flags)) < 0) {
@@ -126,7 +134,7 @@ int ServerBase::checkSockOpts() {
         fail = -1;
     }
     
-    getsockopt(this->cfd, SOL_SOCKET, SO_KEEPALIVE, &optval, (unsigned int*)&optlen);
+    getsockopt(this->sfd, SOL_SOCKET, SO_KEEPALIVE, &optval, (unsigned int*)&optlen);
     fprintf(stderr, "optval: %d\n", optval);
     if (optval != 1) {
         fprintf(stderr, "Error: SO_KEEPALIVE not enabled!\n");
