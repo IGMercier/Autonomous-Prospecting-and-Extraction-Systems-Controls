@@ -6,28 +6,25 @@
 #include <cstring>
 #include <assert.h>
 #include <errno.h>
-#include <thread>
+#include <netinet/tcp.h>
 #include <mutex>
-//#include "../misc/flags.h"
 
-#define MAXLINE 1024
-
-static void sigpipe_handler(int sig);
+static void sigint_handler(int sig);
 std::mutex cmd_mtx;
 std::mutex log_mtx;
-volatile sig_atomic_t disconnected = 1;
-volatile sig_atomic_t shutdownSIG = 0;
 
-APESServer::APESServer(char *cmdfile, char *logfile) {
-    signal(SIGPIPE, sigpipe_handler);
-    //signal(SIGINT, sigint_handler);
-    if (cmdfile == NULL) {
-        this->cmdfile = ".cmdline.txt";
+APESServer::APESServer(std::string cmdfile, std::string logfile) {
+    signal(SIGINT, sigint_handler);
+    signal(SIGPIPE, SIG_IGN);
+
+    if (cmdfile.empty()) {
+        this->cmdfile = "cmd.txt";
     } else {
         this->cmdfile = cmdfile;
     }
-    if (logfile == NULL) {
-        this->logfile = ".log.txt";
+    
+    if (logfile.empty()) {
+        this->logfile = "log.txt";
     } else {
         this->logfile = logfile;
     }
@@ -36,7 +33,7 @@ APESServer::APESServer(char *cmdfile, char *logfile) {
 void APESServer::run() {
     assert(this->sfd >= 0);
 
-    while (!shutdownSIG) {
+    while (1) {
         int val = createClient();
         if (val == -1) {
             this->cfd = -1;
@@ -46,47 +43,64 @@ void APESServer::run() {
             this->cfd = -1;
             continue;
         }
-        connection();
+        execute();
     }
-    shutdown();
-    return; // kills server thread in main program
 }
 
-void APESServer::connection() {
-    disconnected = 0;
-
+void APESServer::execute() {
     std::string msg = "Connected!\n";
-    sendToClient(msg);
+    sendToClient(msg.c_str());
     fprintf(stdout, msg.c_str());
-
-    while (!disconnected && !shutdownSIG) {
+    msg = "END";
+    sendToClient(msg.c_str());
+    
+    char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
+    while (1) {
         setClientSockOpts();
-        //fprintf(stdout, "in loop\n");
-        //char line[MAXLINE];
-        //server->readFromClient(line, MAXLINE);
+        setServerSockOpts();
+        //checkSockOpts();
 
-        //fprintf(stdout, "GREAT\n");
-        //std::unique_lock<std::mutex> clock(cmd_mtx);
-        //FILE *cmd = fopen(server->cmdfile, "w");
-        //fprintf(cmd, line);
-        //fclose(cmd);
-        //clock.unlock();
+        memset(cmdline, 0, MAXLINE);
+
+        int fail = 0;
+        std::unique_lock<std::mutex> cmdlock(cmd_mtx);
+        while (strncmp(cmdline, "END", MAXLINE)) {
+            int rc;
+            if ((rc = readFromClient(cmdline)) > 0) {
+                cmdline[strlen(cmdline)-1] = '\0';
+                msg = "Received!\n";
+                sendToClient(msg.c_str());
+                fprintf(stdout, "%s", msg.c_str());
+                msg = "END";
+                sendToClient(msg.c_str());
+               
+                // writes to command file for shell to read
+                FILE *cmd = fopen(this->cmdfile.c_str(), "a");
+                fprintf(cmd, "%s\n", cmdline);
+                fclose(cmd);
+
+            } else if (rc < 0) { fail = 1; break; }
+        }
+        cmdlock.unlock();
+        fprintf(stdout, "Finished reading!\n");
+
+        if (fail) { break; }
 
 
-        //std::unique_lock<std::mutex> llock(log_mtx);
-        //fprintf(stdout, "I'D BE READING FROM LOGFILE NOW!\n");
-        //FILE *log = fopen(server->logfile, "r");
-        //char *rc = NULL;
-        //size_t len = 0;
-        //getline(&rc, &len, log);
-        //llock.unlock();
+        char logline[MAXLINE] = {0};
+        std::unique_lock<std::mutex> loglock(log_mtx);
+        while (strncmp(logline, "END", MAXLINE)) {
+            FILE *log = fopen(this->logfile.c_str(), "r");
+            fgets(logline, MAXLINE, log);
+            fprintf(stdout, "In log: %s\n", logline);
+        }
+        loglock.unlock();
 
-        //server->sendToClient(rc);
     }
 
+    free(cmdline);
     close(this->cfd);
     this->cfd = -1;
-
     fprintf(stdout, "Disconnected!\n");
     return;
 
@@ -113,18 +127,7 @@ void APESServer::shutdown() {
 APESServer::~APESServer() {
 }
 
-/* REMOVE AFTER TESTING */
-static void sigpipe_handler(int sig) {
-    int old_errno = errno;
-    sigset_t mask, prev;
-    sigprocmask(SIG_BLOCK, &mask, &prev);
-
-    fprintf(stdout, "IN SIG HANDLER\n");
-
-    disconnected = 1;
-
-    sigprocmask(SIG_SETMASK, &prev, NULL);
-    errno = old_errno;
+static void sigint_handler(int sig) {
+    _exit(0);
     return;
 }
-

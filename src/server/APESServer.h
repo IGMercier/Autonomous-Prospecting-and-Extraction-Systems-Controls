@@ -1,17 +1,18 @@
 #ifndef _APES_SERVER_H_
 #define _APES_SERVER_H_
 
-#include <string>
-#include <vector>
 #include "serverBase.h"
+#include "commands.h"
+#include <string>
 
 class APESServer : public ServerBase {
+    private:
+        std::string cmdfile;
+        std::string logfile;
     public:
-        char *cmdfile;
-        char *logfile;
-        APESServer(char *cmdfile, char *logfile);
-        void connection();
+        APESServer(std::string cmdfile, std::string logfile);
         void run();
+        void execute();
         void shutdown();
         ~APESServer();
 };

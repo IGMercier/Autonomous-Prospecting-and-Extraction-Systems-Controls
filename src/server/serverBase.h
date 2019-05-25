@@ -17,8 +17,9 @@ class ServerBase {
         void run();
         void connection();
         int createClient();
-        int readFromClient(char *cmdline, int len);
-        void sendToClient(std::string msg);
+        static void *thread(void *arg);
+        int readFromClient(char *cmdline);
+        void sendToClient(const char *msg);
         void shutdown();
         ~ServerBase();
 };

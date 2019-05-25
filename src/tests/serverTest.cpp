@@ -18,7 +18,8 @@ int main(int argc, char **argv) {
         port = atoi(argv[1]);
     }
 
-    ServerBase server = ServerBase();
+    APESServer server = APESServer("cmd.txt", "log.txt");
+    
     while (server.sfd < 0) {
         server.createServer(port);
     }
