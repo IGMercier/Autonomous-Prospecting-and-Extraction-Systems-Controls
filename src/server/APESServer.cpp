@@ -52,28 +52,15 @@ void APESServer::execute() {
         memset(cmdline, 0, MAXLINE);
 
         int rc;
-        if ((rc = read(this->cfd, cmdline, MAXLINE)) < 0) {//readFromClient(cmdline);
-            if (errno == ECONNRESET) {
-                fprintf(stdout, "%s\n", strerror(errno));
-                break;
-            } else if (errno == EPIPE) {
-                fprintf(stdout, "%s\n", strerror(errno));
-                break;
-            } else if (errno == ETIMEDOUT) {
-                fprintf(stdout, "%s\n", strerror(errno));
-                break;
-            } else { 
-                fprintf(stdout, "%s\n", strerror(errno));
-                break;
-            }
-        } else if (rc > 0) {
+        if ((rc = readFromClient(cmdline)) > 0) {
             cmdline[strlen(cmdline)-1] = '\0';
             fprintf(stdout, "Received: %s\n", cmdline);
 
             FILE *cmd = fopen(this->cmdfile.c_str(), "w");
             fprintf(cmd, "%s\n", cmdline);
             fclose(cmd);
-        }
+        } else if (rc < 0) { break; }
+
 
     }
 

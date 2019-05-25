@@ -16,6 +16,7 @@
 #define IDLE 10
 #define CNT 2
 #define INTVL 5
+#define MAXLINE 1024
 
 ServerBase::ServerBase() {
     this->sfd = -1;
@@ -222,16 +223,25 @@ void* ServerBase::thread(void *arg) {
 int ServerBase::readFromClient(char *cmdline) {
     assert(cmdline != NULL);
     assert(this->cfd >= 0);
-
-    rio_t buf;
-    rio_readinitb(&buf, this->cfd);
-    int rc = rio_readlineb(&buf, cmdline, RIO_BUFSIZE);
-
-    if (rc < 0) { return -1; }
-
-    cmdline[strlen(cmdline)-1] = '\0';
-
-    //fprintf(stdout, "\t\t\t%s", cmdline);
+    
+    int rc;
+    if ((rc = read(this->cfd, cmdline, MAXLINE)) < 0) {
+        if (errno == ECONNRESET) {
+            fprintf(stdout, "%s\n", strerror(errno));
+            return -1;
+        } else if (errno == EPIPE) {
+            fprintf(stdout, "%s\n", strerror(errno));
+            return -1;
+        } else if (errno == ETIMEDOUT) {
+            fprintf(stdout, "%s\n", strerror(errno));
+            return -1;
+        } else { 
+            fprintf(stdout, "%s\n", strerror(errno));
+            return -1;
+        }
+    } else if (rc > 0) {
+        return 1;
+    }
 
     return 0;
 }
