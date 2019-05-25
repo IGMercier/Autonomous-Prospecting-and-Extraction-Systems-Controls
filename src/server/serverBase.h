@@ -15,7 +15,7 @@ class ServerBase {
         void run();
         int createClient();
         static void *thread(void *arg);
-        void readFromClient(char *cmdline);
+        int readFromClient(char *cmdline);
         void sendToClient(const char *msg);
         void shutdown();
         ~ServerBase();

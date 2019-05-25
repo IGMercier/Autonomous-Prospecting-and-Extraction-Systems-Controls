@@ -32,7 +32,7 @@ void ServerBase::createServer(int port) {
         return;
     }
 
-    setServerSockOpts();
+    if (setServerSockOpts() < 0) { fprintf(stdout, "WHUT\n"); }
 
     memset(&saddr, 0, sizeof(saddr));
     saddr.sin_family = AF_INET;
@@ -79,19 +79,19 @@ int ServerBase::setServerSockOpts() {
     
 
     flags = IDLE; // heartbeat frequency
-    if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPIDLE,
+    if (setsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPIDLE,
                    (const void*)&flags, sizeof(flags)) < 0) {
         fprintf(stderr, "\t\t\t%s\n", strerror(errno));
         return -1;
     }
     flags = CNT; // defines number of missed heartbeats as dropped client
-    if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPCNT,
+    if (setsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPCNT,
                    (const void*)&flags, sizeof(flags)) < 0) {
         fprintf(stderr, "\t\t\t%s\n", strerror(errno));
         return -1;
     }
     flags = INTVL; // heatbeat freq when client isn't responding
-    if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPINTVL,
+    if (setsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPINTVL,
                    (const void*)&flags, sizeof(flags)) < 0) {
         fprintf(stderr, "\t\t\t%s\n", strerror(errno));
         return -1;
@@ -113,33 +113,33 @@ int ServerBase::checkSockOpts() {
         fail = -1;
     }
 
-    getsockopt(this->sfd, SOL_TCP, TCP_KEEPIDLE, &optval, (unsigned int*)&optlen);
+    getsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPIDLE, &optval, (unsigned int*)&optlen);
     fprintf(stderr, "optval: %d\n", optval);
     if (optval != IDLE) {
         fprintf(stderr, "Error: TCP_KEEPIDLE not set!\n");
         fail = -1;
     }
 
-    getsockopt(this->sfd, SOL_TCP, TCP_KEEPCNT, &optval, (unsigned int*)&optlen);
+    getsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPCNT, &optval, (unsigned int*)&optlen);
     fprintf(stderr, "optval: %d\n", optval);
     if (optval != CNT) {
         fprintf(stderr, "Error: TCP_KEEPCNT not set!\n");
         fail = -1;
     }
 
-    getsockopt(this->sfd, SOL_TCP, TCP_KEEPINTVL, &optval, (unsigned int*)&optlen);
+    getsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPINTVL, &optval, (unsigned int*)&optlen);
     fprintf(stderr, "optval: %d\n", optval);
     if (optval != INTVL) {
         fprintf(stderr, "Error: TCP_KEEPINTVL not set!\n");
         fail = -1;
     }
-    
-    getsockopt(this->sfd, SOL_SOCKET, SO_KEEPALIVE, &optval, (unsigned int*)&optlen);
+   /* 
+    getsockopt(this->cfd, SOL_SOCKET, SO_KEEPALIVE, &optval, (unsigned int*)&optlen);
     fprintf(stderr, "optval: %d\n", optval);
     if (optval != 1) {
         fprintf(stderr, "Error: SO_KEEPALIVE not enabled!\n");
         fail = -1;
-    }
+    }*/
 
 
     return fail;
@@ -219,19 +219,21 @@ void* ServerBase::thread(void *arg) {
     return NULL;
 }
 
-void ServerBase::readFromClient(char *cmdline) {
+int ServerBase::readFromClient(char *cmdline) {
     assert(cmdline != NULL);
     assert(this->cfd >= 0);
 
     rio_t buf;
     rio_readinitb(&buf, this->cfd);
-    rio_readlineb(&buf, cmdline, RIO_BUFSIZE);
+    int rc = rio_readlineb(&buf, cmdline, RIO_BUFSIZE);
+
+    if (rc < 0) { return -1; }
 
     cmdline[strlen(cmdline)-1] = '\0';
 
     //fprintf(stdout, "\t\t\t%s", cmdline);
 
-    return;
+    return 0;
 }
 
 void ServerBase::sendToClient(const char *msg) {
