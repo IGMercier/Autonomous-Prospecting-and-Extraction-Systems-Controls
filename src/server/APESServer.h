@@ -4,11 +4,12 @@
 #include "serverBase.h"
 #include "commands.h"
 #include <string>
-#include <vector>
 
 class APESServer : public ServerBase {
+    private:
+        std::string cmdfile;
     public:
-        APESServer();
+        APESServer(std::string cmdfile);
         void run();
         void execute();
         void shutdown();

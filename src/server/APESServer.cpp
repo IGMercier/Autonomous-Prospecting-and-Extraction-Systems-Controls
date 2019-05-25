@@ -10,9 +10,15 @@
 
 static void sigint_handler(int sig);
 
-APESServer::APESServer() {
+APESServer::APESServer(std::string cmdfile) {
     signal(SIGINT, sigint_handler);
     signal(SIGPIPE, SIG_IGN);
+
+    if (cmdfile.empty()) {
+        this->cmdfile = "cmd.txt";
+    } else {
+        this->cmdfile = cmdfile;
+    }
 }
 
 void APESServer::run() {

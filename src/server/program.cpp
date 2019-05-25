@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
         port = atoi(argv[1]);
     }
 
-    APESServer server = APESServer();
+    APESServer server = APESServer("cmd.txt");
 
     while (server.sfd < 0) {
         server.createServer(port);
