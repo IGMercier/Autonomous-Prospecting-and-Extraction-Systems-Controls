@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <csignal>
 #include <sys/socket.h>
 #include <sys/types.h> // for AF_INET
 #include <netdb.h> // for ip_ntoa
@@ -9,18 +10,19 @@
 #include <netinet/tcp.h>
 #include <assert.h>
 #include <errno.h>
+#include <sys/time.h>
 
 #include "serverBase.h"
 #include "../misc/rio.h"
 
 using std::thread;
 
-#define IDLE 10
-#define CNT 2
-#define INTVL 5
+#define EN      1
+#define IDLE    10
+#define CNT     2
+#define INTVL   5
 
 static void print_error(int code);
-static void connection(ServerBase *server);
 
 ServerBase::ServerBase() {
     this->sfd = -1;
@@ -28,8 +30,8 @@ ServerBase::ServerBase() {
 }
 
 void ServerBase::createServer(int port) {
-    fprintf(stdout, "Starting Server!\n");
     assert(port > 0);
+    fprintf(stdout, "Starting Server!\n");
 
     struct sockaddr_in saddr;
     
@@ -91,29 +93,47 @@ void ServerBase::run() {
             continue;
         }
 
-        thread child(connection, this);
-        child.detach();
+        fprintf(stdout, "Connected!\n");
+        connection();
+        fprintf(stdout, "Disconnected!\n");
+        close(this->cfd);
+        this->cfd = -1;
     }
     return;
 }
 
-static void connection(ServerBase *server) {
+void ServerBase::connection() {
     fprintf(stdout, "BASE CLASS THREAD\n");
-    assert(server != NULL);
 
    // char *c_ip = inet_ntoa(caddr.sin_addr);
    // std::string ip(c_ip);
 
-    std::string msg = "Server: Connected\n";// + ip + "\n";
-    server->sendToClient(msg);
-    while (1) {
-        server->setClientSockOpts();
-        msg = "in loop\n";
-        server->sendToClient(msg);
-    }
+    std::string msg = "Connected\n";// + ip + "\n";
+    sendToClient(msg);
 
-    close(server->cfd);
-    server->cfd = -1;
+    fd_set set;
+    struct timeval timeout;
+    FD_ZERO(&set);
+    FD_SET(this->cfd, &set);
+
+    while (1) {
+        setClientSockOpts();
+        fd_set rset = set;
+    
+        int sel = select(this->cfd + 1, &rset, 0, 0, 0);
+        if (sel > 0) {
+            char buf[1024] = {0};
+            int bytes = recv(this->cfd, buf, sizeof(buf), 0);
+            if (bytes > 0) { printf("YAY\n"); }
+            else if (bytes == 0) { break; }
+            else { break; }
+        } else if (sel < 0) {
+            break;
+        }
+
+
+        //sendToClient(msg);
+    }
     return;
 }
 
@@ -124,9 +144,7 @@ int ServerBase::readFromClient(char *cmdline, int len) {
     rio_t buf;
     rio_readinitb(&buf, this->cfd);
 
-    rio_readlineb(&buf, cmdline, RIO_BUFSIZE);
-    if (errno == EINTR) { return -1; }
-
+    rio_readlineb(&buf, cmdline, len);
     cmdline[strlen(cmdline)-1] = '\0';
 
     return 0;
@@ -153,8 +171,8 @@ void ServerBase::shutdown() {
 }
 
 int ServerBase::setClientSockOpts() {
-    int flags = 1;
-    if (setsockopt(this->cfd, SOL_SOCKET, SO_KEEPALIVE,
+    int flags = EN;
+    if (setsockopt(this->sfd, SOL_SOCKET, SO_KEEPALIVE,
                    (const void *)&flags, sizeof(flags)) < 0) {
         print_error(errno);
         return -1;
@@ -168,7 +186,7 @@ int ServerBase::setServerSockOpts() {
     // these if-statements setup the handshake to keep
     // alive the connection to client
     // if client does not respond, SIGPIPE is issued
-    flags = 1; // enables address reuse
+    flags = EN; // enables address reuse
     if (setsockopt(this->sfd, SOL_SOCKET, SO_REUSEADDR,
                    (const void*)&flags, sizeof(flags)) < 0) {
         print_error(errno);
@@ -176,19 +194,19 @@ int ServerBase::setServerSockOpts() {
     }
 
     flags = IDLE; // heartbeat frequency
-    if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPIDLE,
+    if (setsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPIDLE,
                    (const void*)&flags, sizeof(flags)) < 0) {
         print_error(errno);
         return -1;
     }
     flags = CNT; // defines number of missed heartbeats as dropped client
-    if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPCNT,
+    if (setsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPCNT,
                    (const void*)&flags, sizeof(flags)) < 0) {
         print_error(errno);
         return -1;
     }
     flags = INTVL; // heatbeat freq when client isn't responding
-    if (setsockopt(this->sfd, SOL_TCP, TCP_KEEPINTVL,
+    if (setsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPINTVL,
                    (const void*)&flags, sizeof(flags)) < 0) {
         print_error(errno);
         return -1;

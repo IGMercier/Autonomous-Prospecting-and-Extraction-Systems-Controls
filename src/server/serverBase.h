@@ -15,6 +15,7 @@ class ServerBase {
         int setClientSockOpts();
         int checkSockOpts();
         void run();
+        void connection();
         int createClient();
         int readFromClient(char *cmdline, int len);
         void sendToClient(std::string msg);

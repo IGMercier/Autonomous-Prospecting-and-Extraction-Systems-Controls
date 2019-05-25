@@ -3,7 +3,7 @@
 #include <csignal>
 #include <errno.h>
 #include <thread>
-#include "../server/APESServer.h"
+#include "../server/serverBase.h"
 //#include "../misc/flags.h"
 
 int main(int argc, char **argv) {
@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
         port = atoi(argv[1]);
     }
 
-    APESServer server = APESServer(NULL, NULL);
+    ServerBase server = ServerBase();
     while (server.sfd < 0) {
         server.createServer(port);
     }
