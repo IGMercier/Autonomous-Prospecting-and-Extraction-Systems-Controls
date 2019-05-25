@@ -14,9 +14,9 @@ using std::thread;
 
 ShellBase::ShellBase(int *readFrom) {
     if (readFrom == NULL) {
-        fd_mtx.lock();
+       // fd_mtx.lock();
         *(this->readFrom) = STDIN_FILENO;
-        fd_mtx.unlock();
+       // fd_mtx.unlock();
     } else {
         this->readFrom = readFrom;
     }
@@ -28,11 +28,11 @@ void ShellBase::run() {
     char cmdline[MAXLINE];
     rio_t buf;
     
-    while (!shutdownSIG) {
-        fd_mtx.lock();
+    while (1) {
+       // fd_mtx.lock();
         if (*(this->readFrom) >= 0) {
             rio_readinitb(&buf, *(this->readFrom));
-            fd_mtx.unlock();
+            //fd_mtx.unlock();
             rio_readlineb(&buf, cmdline, MAXLINE);
 
             if (feof(stdin)) {
@@ -42,7 +42,7 @@ void ShellBase::run() {
             }
             evaluate(cmdline);
         } else {
-            fd_mtx.unlock();
+            //fd_mtx.unlock();
         }
     }
     return; // kills shell thread in main program
