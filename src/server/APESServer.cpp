@@ -60,17 +60,26 @@ void APESServer::execute() {
 
         memset(cmdline, 0, MAXLINE);
 
-        int rc;
-        if ((rc = readFromClient(cmdline)) > 0) {
-            cmdline[strlen(cmdline)-1] = '\0';
-            fprintf(stdout, "Received: %s\n", cmdline);
-
-            std::unique_lock<std::mutex> cmdlock(cmd_mtx);
-            FILE *cmd = fopen(this->cmdfile.c_str(), "w");
-            fprintf(cmd, "%s\n", cmdline);
-            fclose(cmd);
-            cmdlock.unlock();
-        } else if (rc < 0) { break; }
+        int fail = 0;
+        while (strncmp(cmdline, "end", MAXLINE)) {
+            int rc;
+            if ((rc = readFromClient(cmdline)) > 0) {
+                cmdline[strlen(cmdline)-1] = '\0';
+                //fprintf(stdout, "Received: %s\n", cmdline);
+                fprintf(stdout, "Received!\n");
+                msg = "Received!\n";
+                sendToClient(msg.c_str());
+/*
+                std::unique_lock<std::mutex> cmdlock(cmd_mtx);
+                 FILE *cmd = fopen(this->cmdfile.c_str(), "w");
+                fprintf(cmd, "%s\n", cmdline);
+                fclose(cmd);
+                cmdlock.unlock();
+                */
+            } else if (rc < 0) { fail = 1; break; }
+        }
+        if (fail) { break; }
+        fprintf(stdout, "Finished reading!\n");
 /*
         std::unique_lock<std::mutex> loglock(log_mtx);
         FILE *log = fopen(this->logfile.c_str(), "r");
@@ -79,7 +88,6 @@ void APESServer::execute() {
         fprintf(stdout, "In log: %s\n", logline);
         loglock.unlock();
 */
-
     }
 
     free(cmdline);
