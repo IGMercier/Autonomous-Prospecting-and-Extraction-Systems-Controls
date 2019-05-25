@@ -7,8 +7,10 @@
 #include <assert.h>
 #include <errno.h>
 #include <netinet/tcp.h>
+#include <mutex>
 
 static void sigint_handler(int sig);
+std::mutex cmd_mtx;
 
 APESServer::APESServer(std::string cmdfile) {
     signal(SIGINT, sigint_handler);
@@ -56,9 +58,11 @@ void APESServer::execute() {
             cmdline[strlen(cmdline)-1] = '\0';
             fprintf(stdout, "Received: %s\n", cmdline);
 
+            std::unique_lock<std::mutex> lock(cmd_mtx);
             FILE *cmd = fopen(this->cmdfile.c_str(), "w");
             fprintf(cmd, "%s\n", cmdline);
             fclose(cmd);
+            lock.unlock();
         } else if (rc < 0) { break; }
 
 
