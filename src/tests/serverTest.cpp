@@ -18,7 +18,9 @@ int main(int argc, char **argv) {
         port = atoi(argv[1]);
     }
 
-    APESServer server = APESServer("cmd.txt", "log.txt");
+    std::deque<char *> *cmdq = new std::deque<char *>;
+    std::deque<char *> *logq = new std::deque<char *>;
+    APESServer server = APESServer(cmdq, logq);
     
     while (server.sfd < 0) {
         server.createServer(port);

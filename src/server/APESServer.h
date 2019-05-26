@@ -2,15 +2,15 @@
 #define _APES_SERVER_H_
 
 #include "serverBase.h"
-#include "commands.h"
 #include <string>
+#include <deque>
 
 class APESServer : public ServerBase {
     private:
-        std::string cmdfile;
-        std::string logfile;
+        std::deque<char *> *cmdq;
+        std::deque<char *> *logq;
     public:
-        APESServer(std::string cmdfile, std::string logfile);
+        APESServer(std::deque<char *> *cmdq, std::deque<char *> *logq);
         void run();
         void execute();
         void shutdown();

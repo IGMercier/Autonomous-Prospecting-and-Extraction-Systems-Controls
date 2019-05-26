@@ -9,25 +9,21 @@
 #include <netinet/tcp.h>
 #include <mutex>
 
+#define MAXLINE 1024
+
 static void sigint_handler(int sig);
 std::mutex cmd_mtx;
 std::mutex log_mtx;
 
-APESServer::APESServer(std::string cmdfile, std::string logfile) {
+APESServer::APESServer(std::deque<char *> *cmdq, std::deque<char *> *logq) {
     signal(SIGINT, sigint_handler);
     signal(SIGPIPE, SIG_IGN);
 
-    if (cmdfile.empty()) {
-        this->cmdfile = "cmd.txt";
-    } else {
-        this->cmdfile = cmdfile;
-    }
-    
-    if (logfile.empty()) {
-        this->logfile = "log.txt";
-    } else {
-        this->logfile = logfile;
-    }
+    this->cmdq = cmdq;
+    this->logq = logq;
+
+    this->cmdq->clear();
+    this->logq->clear();
 }
 
 void APESServer::run() {
@@ -54,7 +50,7 @@ void APESServer::execute() {
     msg = "END";
     sendToClient(msg.c_str());
     
-    char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
+    char cmdline[MAXLINE];
     while (1) {
         setClientSockOpts();
         setServerSockOpts();
@@ -64,41 +60,47 @@ void APESServer::execute() {
 
         int fail = 0;
         std::unique_lock<std::mutex> cmdlock(cmd_mtx);
-        while (strncmp(cmdline, "END", MAXLINE)) {
+        while (1) {
             int rc;
             if ((rc = readFromClient(cmdline)) > 0) {
                 cmdline[strlen(cmdline)-1] = '\0';
                 msg = "Received!\n";
                 sendToClient(msg.c_str());
-                fprintf(stdout, "%s", msg.c_str());
+                //fprintf(stdout, "%s", msg.c_str());
                 msg = "END";
                 sendToClient(msg.c_str());
                
-                // writes to command file for shell to read
-                FILE *cmd = fopen(this->cmdfile.c_str(), "a");
-                fprintf(cmd, "%s\n", cmdline);
-                fclose(cmd);
+                if (!strncmp(cmdline, "END", MAXLINE)) {
+                    break;
+                } else {
+                    // writes to command file for shell to read
+                    char *buf = (char *)calloc(1, sizeof(cmdline));
+                    strncpy(buf, cmdline, MAXLINE);
+                    this->cmdq->push_back(buf);
+                }
 
             } else if (rc < 0) { fail = 1; break; }
         }
         cmdlock.unlock();
-        fprintf(stdout, "Finished reading!\n");
 
         if (fail) { break; }
 
 
-        char logline[MAXLINE] = {0};
         std::unique_lock<std::mutex> loglock(log_mtx);
-        while (strncmp(logline, "END", MAXLINE)) {
-            FILE *log = fopen(this->logfile.c_str(), "r");
-            fgets(logline, MAXLINE, log);
-            fprintf(stdout, "In log: %s\n", logline);
+        if (!this->logq->empty()) {
+            char *logline = this->logq->at(0);
+            this->logq->pop_front();
+            //printf("%s", logline);
         }
         loglock.unlock();
 
+        for (unsigned int i = 0; i < this->cmdq->size(); i++) {
+            printf("%s\n", this->cmdq->at(i));
+            fflush(stdout);
+        }
+
     }
 
-    free(cmdline);
     close(this->cfd);
     this->cfd = -1;
     fprintf(stdout, "Disconnected!\n");
