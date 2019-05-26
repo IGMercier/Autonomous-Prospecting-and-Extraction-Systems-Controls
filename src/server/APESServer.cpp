@@ -71,7 +71,7 @@ void APESServer::execute() {
                     break;
                 } else {
                     // writes to command file for shell to read
-                    char *buf = (char *)calloc(1, sizeof(cmdline));
+                    char *buf = (char *)calloc(MAXLINE, sizeof(char));
                     strncpy(buf, cmdline, MAXLINE);
                     this->cmdq->push_back(buf);
                 }
