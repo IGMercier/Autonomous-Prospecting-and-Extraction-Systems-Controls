@@ -17,19 +17,16 @@ static void execute(parse_token *ltk, int bg, int len, APESShell *shell);
 
 void APESShell::run() {
 
-    char cmdline[MAXLINE];
-
     while (1) {
-        memset(cmdline, 0, MAXLINE);
-
+        char *cmdline;
         std::unique_lock<std::mutex> cmdlock(cmd_mtx);
-
-        FILE *cmd = fopen(this->cmdfile.c_str(), "r");
-        fgets(cmdline, MAXLINE, cmd);
-
+        if (!this->cmdq->empty()) {
+            cmdline = this->cmdq->at(0);
+            this->cmdq->pop_front();
+        } else {
+            continue;
+        }
         cmdlock.unlock();
-
-        printf("HERE\n");
 
         evaluate(cmdline);
     }
@@ -64,10 +61,9 @@ void APESShell::evaluate(char *cmdline) {
 
 void APESShell::toSend(std::string msg) {
     std::unique_lock<std::mutex> loglock(log_mtx);
-    FILE *log = fopen(this->logfile.c_str(), "a");
-    fprintf(log, msg.c_str());
-    fclose(log);
+    this->logq->push_back((char *)msg.c_str());
     loglock.unlock();
+    printf(msg.c_str());
 }
 
 void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
@@ -115,12 +111,18 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
         } else if (!strcmp(ltk->argv[1], "stop")) {
             ctk->command = DRILL_STOP;
         } else if (!strcmp(ltk->argv[1], "cycle")) {
-            ctk->command = DRILL_CYCLE;
-            /*
-                if atoi fails, ctk->command = NONE;
-                else, stick in field
-            */
-            ctk->param = atoi(ltk->argv[2]);
+            if (ltk->argv[2] != NULL) {
+                ctk->command = DRILL_CYCLE;
+
+                int rc = atoi(ltk->argv[2]);
+                if (rc == 0) {
+                    ctk->command = NONE;
+                } else {
+                    ctk->param = rc;
+                }
+            } else {
+                ctk->command = NONE;
+            }
         } else {
             ctk->command = NONE;
         }
@@ -132,14 +134,9 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
 }
 
 APESShell::~APESShell() {}
-APESShell::APESShell(std::string cmdfile, std::string logfile) {
-    if (cmdfile.empty()) {
-        this->cmdfile = "cmd.txt";
-    } else { this->cmdfile = cmdfile; }
-    
-    if (logfile.empty()) {
-        this->logfile = "log.txt";
-    } else { this->logfile = logfile; }
+APESShell::APESShell(std::deque<char *> *cmdq, std::deque<char *> *logq) {
+    this->cmdq = cmdq;
+    this->logq = logq;
 }
 
 static void execute(parse_token *ltk, int bg, int len, APESShell *shell) {

@@ -21,9 +21,6 @@ APESServer::APESServer(std::deque<char *> *cmdq, std::deque<char *> *logq) {
 
     this->cmdq = cmdq;
     this->logq = logq;
-
-    this->cmdq->clear();
-    this->logq->clear();
 }
 
 void APESServer::run() {
@@ -93,12 +90,6 @@ void APESServer::execute() {
             //printf("%s", logline);
         }
         loglock.unlock();
-
-        for (unsigned int i = 0; i < this->cmdq->size(); i++) {
-            printf("%s\n", this->cmdq->at(i));
-            fflush(stdout);
-        }
-
     }
 
     close(this->cfd);

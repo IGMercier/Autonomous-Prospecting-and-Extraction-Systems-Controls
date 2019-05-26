@@ -92,7 +92,11 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
     int argc = 0;
     tk->argc = 0;
 
-    while ((argv = strsep(&cmdline, delim)) != NULL) {
+    char *buf = (char *)calloc(MAXLINE, sizeof(char));
+    strncpy(buf, cmdline, MAXLINE);
+
+    while ((argv = strsep(&buf, delim)) != NULL) {
+
         tk->argv[argc] = argv;
         argc++;
         if (argc == MAXARGS) { break; } 
@@ -113,10 +117,12 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
         tk->bcomm = BUILTIN_NONE;
     }
 
-    if ((bg = (*(tk->argv[(tk->argc)-2]) == '&')) != 0) {
-        tk->argv[--(tk->argc)] = NULL;
+
+    if ((bg = (*(tk->argv[(tk->argc)-1]) == '&')) != 0) {
         tk->argv[--(tk->argc)] = NULL;
     }
+
+    free(buf);
 
     return bg;
 }

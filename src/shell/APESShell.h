@@ -5,14 +5,15 @@
 
 #define VERBOSE 1
 #include <string>
+#include <deque>
 
 class APESShell : public ShellBase {
     protected:
         //APES *robot;
     public:
-        std::string cmdfile;
-        std::string logfile;
-        APESShell(std::string cmdfile, std::string logfile);
+        std::deque<char *> *cmdq;
+        std::deque<char *> *logq;
+        APESShell(std::deque<char *> *cmdq, std::deque<char *> *logq);
         void run() override;
         void toSend(std::string msg);
         void evaluate(char *cmdline) override;
