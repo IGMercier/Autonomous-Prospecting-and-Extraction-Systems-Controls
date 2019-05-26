@@ -7,20 +7,20 @@
 
 class ServerBase {
     public:
-        ServerBase();
         int sfd;
         int cfd;
+
+        ServerBase();
         void createServer(int port);
+        int createClient();
+        virtual void run();
+        virtual void execute();
         int setServerSockOpts();
         int setClientSockOpts();
         int checkSockOpts();
-        void run();
-        void connection();
-        int createClient();
-        static void *thread(void *arg);
         int readFromClient(char *cmdline);
         void sendToClient(const char *msg);
-        void shutdown();
+        virtual void shutdown();
         ~ServerBase();
 };
 

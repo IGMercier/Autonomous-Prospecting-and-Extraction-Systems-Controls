@@ -7,8 +7,8 @@
 static void sigpipe_handler(int sig);
 static void sigint_handler(int sig);
 
-static void serverThread(int *cfd);
-static void shellThread(int *cfd);
+static void serverThread(sysArgs *args);
+static void shellThread(sysArgs *args);
 
 int main(int argc, char** argv) {
     int port;
@@ -18,8 +18,22 @@ int main(int argc, char** argv) {
         port = atoi(argv[1]);
     }
 
-    std::thread tServer(serverThread);
-    std::thread tShell(shellThread);
+    std::mutex cmd_mtx;
+    std::mutex log_mtx;
+    std::deque<char *> *cmdq = new std::deque<char *>;
+    std::deque<char *> *logq = new std::deque<char *>;
+    cmdq->clear();
+    logq->clear();
+
+    sysArgs args;
+    args.cmd_mtx = &cmd_mtx;
+    args.log_mtx = &cmd_mtx;
+    args.cmdq = cmdq;
+    args.logq = logq;
+
+
+    std::thread tServer(serverThread, &args);
+    std::thread tShell(shellThread, &args);
 
     if (tServer.joinable()) {
         tServer.join();
@@ -28,6 +42,9 @@ int main(int argc, char** argv) {
     if (tShell.joinable()) {
         tShell.join();
     }
+
+    delete cmdq;
+    delete logq;
 
     // control should never reach here
     return -1;
@@ -38,10 +55,10 @@ int main(int argc, char** argv) {
 /*
     THREAD CALLBACKS
 */
-static void serverThread() {
-    assert(shell_cfd != NULL);
+static void serverThread(sysArgs *args) {
+    assert(args != NULL);
     
-    APESServer server = APESServer();
+    APESServer server = APESServer(args);
     while (server.sfd < 0) {
         server.serverSetup(port);
     }
@@ -53,10 +70,10 @@ static void serverThread() {
 }
 
    
-static void shellThread() {
-    assert(shell_cfd != NULL);
+static void shellThread(sysArgs *args) {
+    assert(args != NULL);
 
-    APESShell shell = APESShell();
+    APESShell shell = APESShell(args);
     shell.run();
 
     // control should never reach here

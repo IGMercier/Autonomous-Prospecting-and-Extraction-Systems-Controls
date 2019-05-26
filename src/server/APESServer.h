@@ -12,9 +12,9 @@ class APESServer : public ServerBase {
         std::deque<char *> *logq;
     public:
         APESServer(sysArgs *args);
-        void run();
-        void execute();
-        void shutdown();
+        void run() override;
+        void execute() override;
+        void shutdown() override;
         ~APESServer();
 };
 
