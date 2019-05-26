@@ -59,7 +59,7 @@ void APESShell::toSend(std::string msg) {
     std::unique_lock<std::mutex> loglock(*(this->log_mtx));
     this->logq->push_back((char *)msg.c_str());
     loglock.unlock();
-    printf(msg.c_str());
+    printf("%s\n", msg.c_str());
 }
 
 void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {

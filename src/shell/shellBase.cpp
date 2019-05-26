@@ -129,7 +129,7 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
 
 void ShellBase::print(std::string msg) {
     std::string toPrint = "Shell: " + msg;
-    printf(msg.c_str());
+    printf("%s\n", msg.c_str());
     return;
 }
 

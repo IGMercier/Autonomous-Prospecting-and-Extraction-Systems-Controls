@@ -42,7 +42,7 @@ void APESServer::run() {
 void APESServer::execute() {
     std::string msg = "Connected!\n";
     sendToClient(msg.c_str());
-    fprintf(stdout, msg.c_str());
+    fprintf(stdout,"%s",  msg.c_str());
     msg = "END";
     sendToClient(msg.c_str());
     

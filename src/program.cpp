@@ -1,13 +1,11 @@
 #include <thread>
 #include <errno.h>
+#include <assert.h>
 
 #include "server/APESServer.h"
 #include "shell/APESShell.h"
 
-static void sigpipe_handler(int sig);
-static void sigint_handler(int sig);
-
-static void serverThread(sysArgs *args);
+static void serverThread(sysArgs *args, int port);
 static void shellThread(sysArgs *args);
 
 int main(int argc, char** argv) {
@@ -32,7 +30,7 @@ int main(int argc, char** argv) {
     args.logq = logq;
 
 
-    std::thread tServer(serverThread, &args);
+    std::thread tServer(serverThread, &args, port);
     std::thread tShell(shellThread, &args);
 
     if (tServer.joinable()) {
@@ -55,12 +53,12 @@ int main(int argc, char** argv) {
 /*
     THREAD CALLBACKS
 */
-static void serverThread(sysArgs *args) {
+static void serverThread(sysArgs *args, int port) {
     assert(args != NULL);
     
     APESServer server = APESServer(args);
     while (server.sfd < 0) {
-        server.serverSetup(port);
+        server.createServer(port);
     }
     assert(server.sfd >= 0);
     server.run();
