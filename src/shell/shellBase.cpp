@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <unistd.h>
 #include "shellBase.h"
+#include <assert.h>
 //#include "../misc/flags.h"
 //#include "../misc/flags_set.h"
 #include "../misc/rio.h"
@@ -13,13 +14,7 @@ static void execute(parse_token *tk, int bg);
 
 using std::thread;
 
-ShellBase::ShellBase(int *readFrom) {
-    if (readFrom == NULL) {
-        *(this->readFrom) = STDIN_FILENO;
-    } else {
-        this->readFrom = readFrom;
-    }
-}
+ShellBase::ShellBase() {}
 
 ShellBase::~ShellBase() {}
 
@@ -29,7 +24,7 @@ void ShellBase::run() {
     
     while (!shutdownSIG) {
 
-        rio_readinitb(&buf, *(this->readFrom));
+        rio_readinitb(&buf, STDIN_FILENO);
         rio_readlineb(&buf, cmdline, MAXLINE);
 
         if (feof(stdin)) {
@@ -123,17 +118,17 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
         tk->bcomm = BUILTIN_NONE;
     }
 
-    if ((bg = (*(tk->argv[(tk->argc)-1]) == '&')) != 0) {
+    if ((bg = (*(tk->argv[(tk->argc)-2]) == '&')) != 0) {
+        tk->argv[--(tk->argc)] = NULL;
         tk->argv[--(tk->argc)] = NULL;
     }
 
     return bg;
 }
 
-void ShellBase::shell_print(std::string msg) {
+void ShellBase::print(std::string msg) {
     std::string toPrint = "Shell: " + msg;
-
-    rio_writen(*(this->readFrom), (void *)toPrint.c_str(), strlen(toPrint.c_str()));
+    printf(msg.c_str());
     return;
 }
 

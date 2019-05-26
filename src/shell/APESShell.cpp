@@ -3,6 +3,7 @@
 #include <cstring>
 #include <unistd.h>
 #include "APESShell.h"
+#include <assert.h>
 #include "../APESsys/commands.h"
 #include "../misc/rio.h"
 
@@ -15,6 +16,7 @@ void APESShell::evaluate(char *cmdline) {
     thread child;
 
     bg = parseline(cmdline, &tk);
+    if (bg) { printf("BJ JOBS\n"); }
 
     if (tk.argc == 0) { return; }
 
@@ -115,110 +117,110 @@ static void execute(parse_token *ltk, int bg, int len, APESShell *shell) {
         case START:
             if (VERBOSE) {
                 msg = "System started!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case STANDBY:
             if (VERBOSE) {
                 msg = "System in standby!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case DATA:
             if (VERBOSE) {
                 msg = "Reading from data file!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case HELP:
             if (VERBOSE) {
                 msg = "Listing Help Commands!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case QUIT:
             if (VERBOSE) {
                 msg = "System shutting down!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case AUTO_ON:
             if (VERBOSE) {
                 msg = "System's auto mode enabled!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case AUTO_OFF:
             if (VERBOSE) {
                 msg = "System's auto mode disabled!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case TEMP:
             if (VERBOSE) {
                 msg = "Reading temp!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case DTEMP:
             if (VERBOSE) {
                 msg = "Reading dtemp!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case CURR:
             if (VERBOSE) {
                 msg = "Reading curr!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case WLEVEL:
             if (VERBOSE) {
                 msg = "Reading wlevel!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case WOB:
             if (VERBOSE) {
                 msg = "Reading wob!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case MOTOR_DRIVE:
             if (VERBOSE) {
                 msg = "System's motor enabled for []!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case MOTOR_STOP:
             if (VERBOSE) {
                 msg = "System's motor disabled!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case DRILL_RUN:
             if (VERBOSE) {
                 msg = "System's drill enabled!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case DRILL_STOP:
             if (VERBOSE) {
                 msg = "System's drill disabled!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case DRILL_CYCLE:
             if (VERBOSE) {
                 msg = "System's drill duty cycle changed!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
         case NONE:
         default:
             if (VERBOSE) {
                 msg = "Not a valid command (use 'help' for more info)!\n";
-                shell->shell_print(msg);
+                shell->print(msg);
             }
             break;
     }
