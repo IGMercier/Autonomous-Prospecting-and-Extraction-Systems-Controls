@@ -173,11 +173,12 @@ int ServerBase::createClient() {
     // acept() blocks until client connects
     assert(this->sfd >= 0);
 
-    int rc = accept(this->sfd, (struct sockaddr *)&caddr.sin_addr.s_addr, &caddr_size);
-
-    if (rc < 0) { return -1; }
-
-    this->cfd = rc;
+    if ((this->cfd = accept(this->sfd,
+                           (struct sockaddr *)&caddr.sin_addr.s_addr,
+                           &caddr_size)) < 0) {
+        this->cfd = -1;
+        return -1;
+    }
     return 0;
 }
 

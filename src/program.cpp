@@ -23,15 +23,15 @@ int main(int argc, char** argv) {
     cmdq->clear();
     logq->clear();
 
-    sysArgs args;
-    args.cmd_mtx = &cmd_mtx;
-    args.log_mtx = &cmd_mtx;
-    args.cmdq = cmdq;
-    args.logq = logq;
+    sysArgs *args = new sysArgs;
+    args->cmd_mtx = &cmd_mtx;
+    args->log_mtx = &cmd_mtx;
+    args->cmdq = cmdq;
+    args->logq = logq;
 
 
-    std::thread tServer(serverThread, &args, port);
-    std::thread tShell(shellThread, &args);
+    std::thread tServer(serverThread, args, port);
+    std::thread tShell(shellThread, args);
 
     if (tServer.joinable()) {
         tServer.join();
@@ -43,6 +43,7 @@ int main(int argc, char** argv) {
 
     delete cmdq;
     delete logq;
+    delete args;
 
     // control should never reach here
     return -1;
