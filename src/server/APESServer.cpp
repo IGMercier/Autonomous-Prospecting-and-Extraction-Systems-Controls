@@ -26,9 +26,9 @@ void APESServer::run() {
     assert(this->sfd >= 0);
 
     while (1) {
-        if (createClient() < 0) {
-            continue;
-        }
+        int val = createClient();
+        if (val < 0) { continue; }
+
         execute();
     }
 }

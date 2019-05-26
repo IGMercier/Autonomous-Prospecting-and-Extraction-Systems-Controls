@@ -31,14 +31,14 @@ int main(int argc, char **argv) {
     args.logq = logq;
 
 
-    APESServer server = APESServer(&args);
+    APESServer *server = new APESServer(&args);
     
-    while (server.sfd < 0) {
-        server.createServer(port);
+    while (server->sfd < 0) {
+        server->createServer(port);
     }
-    server.run();
+    server->run();
 
     // control flow should never reach
-    server.shutdown();
+    server->shutdown();
     return -1;
 }

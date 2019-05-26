@@ -29,9 +29,11 @@ int main(int argc, char** argv) {
     args->cmdq = cmdq;
     args->logq = logq;
 
+    serverThread(args, port);
 
-    std::thread tServer(serverThread, args, port);
-    std::thread tShell(shellThread, args);
+    /*
+    //std::thread tServer(serverThread, args, port);
+    //std::thread tShell(shellThread, args);
 
     if (tServer.joinable()) {
         tServer.join();
@@ -39,7 +41,7 @@ int main(int argc, char** argv) {
 
     if (tShell.joinable()) {
         tShell.join();
-    }
+    }*/
 
     delete cmdq;
     delete logq;
