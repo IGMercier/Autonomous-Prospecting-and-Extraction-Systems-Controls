@@ -13,9 +13,9 @@ class APESShell : public ShellBase {
         std::string cmdfile;
         std::string logfile;
         APESShell(std::string cmdfile, std::string logfile);
-        void run();
+        void run() override;
         void toSend(std::string msg);
-        void evaluate(char *cmdline);
+        void evaluate(char *cmdline) override;
         void parsecommand(parse_token *ltk, command_token *ctk);
         ~APESShell();
 

@@ -12,21 +12,25 @@
 
 using std::thread;
 std::mutex log_mtx;
+std::mutex cmd_mtx;
 static void execute(parse_token *ltk, int bg, int len, APESShell *shell);
 
 void APESShell::run() {
-    char cmdline[MAXLINE];
-    rio_t buf;
-    
-    while (1) {
-        rio_readinitb(&buf, STDIN_FILENO);
-        rio_readlineb(&buf, cmdline, MAXLINE);
 
-        if (feof(stdin)) {
-            printf("\n");
-            fflush(stdout);
-            fflush(stdin);
-        }
+    char cmdline[MAXLINE];
+
+    while (1) {
+        memset(cmdline, 0, MAXLINE);
+
+        std::unique_lock<std::mutex> cmdlock(cmd_mtx);
+
+        FILE *cmd = fopen(this->cmdfile.c_str(), "r");
+        fgets(cmdline, MAXLINE, cmd);
+
+        cmdlock.unlock();
+
+        printf("HERE\n");
+
         evaluate(cmdline);
     }
     return; // kills shell thread in main program

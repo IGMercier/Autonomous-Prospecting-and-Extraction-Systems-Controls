@@ -2,6 +2,7 @@
 #define _SHELL_BASE_H_
 
 #include <string>
+
 #include "../APESsys/commands.h"
 
 typedef struct parse_token {
@@ -12,12 +13,12 @@ typedef struct parse_token {
 
 class ShellBase {
     protected:
-        void evaluate(char *cmdline);
+        virtual void evaluate(char *cmdline);
         int parseline(char *cmdline, parse_token *tk);
         int builtin_command(parse_token *tk);
     public:
         ShellBase();
-        void run();
+        virtual void run();
         void print(std::string msg);
         ~ShellBase();
 };
