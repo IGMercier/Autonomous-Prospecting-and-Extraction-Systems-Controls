@@ -1,26 +1,25 @@
-#include "APESServer.h"
 #include <cstdlib>
 #include <cstdio>
 #include <csignal>
+#include <string>
 #include <unistd.h>
 #include <cstring>
 #include <assert.h>
 #include <errno.h>
 #include <netinet/tcp.h>
-#include <mutex>
+
+#include "APESServer.h"
 
 #define MAXLINE 1024
 
-static void sigint_handler(int sig);
-std::mutex cmd_mtx;
-std::mutex log_mtx;
-
-APESServer::APESServer(std::deque<char *> *cmdq, std::deque<char *> *logq) {
-    signal(SIGINT, sigint_handler);
+APESServer::APESServer(sysArgs *args) {
     signal(SIGPIPE, SIG_IGN);
 
-    this->cmdq = cmdq;
-    this->logq = logq;
+    this->cmd_mtx = args->cmd_mtx;
+    this->log_mtx = args->log_mtx;
+
+    this->cmdq = args->cmdq;
+    this->logq = args->logq;
 }
 
 void APESServer::run() {
@@ -56,7 +55,7 @@ void APESServer::execute() {
         memset(cmdline, 0, MAXLINE);
 
         int fail = 0;
-        std::unique_lock<std::mutex> cmdlock(cmd_mtx);
+        std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
         while (1) {
             int rc;
             if ((rc = readFromClient(cmdline)) > 0) {
@@ -83,14 +82,24 @@ void APESServer::execute() {
         if (fail) { break; }
 
 
-        std::unique_lock<std::mutex> loglock(log_mtx);
-        if (!this->logq->empty()) {
+        std::unique_lock<std::mutex> loglock(*(this->log_mtx));
+        while (!this->logq->empty()) {
             char *logline = this->logq->at(0);
+            printf("%s\n", logline);
             this->logq->pop_front();
-            //printf("%s", logline);
+
         }
         loglock.unlock();
     }
+
+    // if disconnected, clears command queue and inserts standby command
+    std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
+    char *buf = (char *)calloc(MAXLINE, sizeof(char));
+    strncpy(buf, "standby", MAXLINE);
+    this->cmdq->clear();
+    this->cmdq->push_back(buf);
+    cmdlock.unlock();
+
 
     close(this->cfd);
     this->cfd = -1;
@@ -120,7 +129,3 @@ void APESServer::shutdown() {
 APESServer::~APESServer() {
 }
 
-static void sigint_handler(int sig) {
-    _exit(0);
-    return;
-}

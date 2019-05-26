@@ -1,9 +1,10 @@
 #include "../shell/APESShell.h"
-#include <cstdlib>
-#include <unistd.h>
-#include <string>
 
 int main() {
+
+
+    std::mutex cmd_mtx;
+    std::mutex log_mtx;
 
     std::deque<char *> *cmdq = new std::deque<char *>;
     std::deque<char *> *logq = new std::deque<char *>;
@@ -26,7 +27,14 @@ int main() {
     cmdq->push_back("drill stop");
     cmdq->push_back("drill cycle joshua");
     cmdq->push_back("blarg");
-    APESShell s = APESShell(cmdq, logq);
+
+    sysArgs args;
+    args.cmd_mtx = &cmd_mtx;
+    args.log_mtx = &log_mtx;
+    args.cmdq = cmdq;
+    args.logq = logq;
+
+    APESShell s = APESShell(&args);
     s.run();
 
     return -1;

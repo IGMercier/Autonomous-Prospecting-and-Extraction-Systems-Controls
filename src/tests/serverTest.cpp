@@ -1,10 +1,4 @@
-#include <cstdlib>
-#include <cstdio>
-#include <csignal>
-#include <errno.h>
-#include <thread>
 #include "../server/APESServer.h"
-//#include "../misc/flags.h"
 
 int main(int argc, char **argv) {
 
@@ -18,9 +12,26 @@ int main(int argc, char **argv) {
         port = atoi(argv[1]);
     }
 
+    std::mutex cmd_mtx;
+    std::mutex log_mtx;
+
     std::deque<char *> *cmdq = new std::deque<char *>;
     std::deque<char *> *logq = new std::deque<char *>;
-    APESServer server = APESServer(cmdq, logq);
+
+    logq->push_back("Sytem started!");
+    logq->push_back("Sytem standby!");
+    logq->push_back("Sytem shutting down!");
+    logq->push_back("Sytem drive!");
+    logq->push_back("Sytem stop!");
+
+    sysArgs args;
+    args.cmd_mtx = &cmd_mtx;
+    args.log_mtx = &log_mtx;
+    args.cmdq = cmdq;
+    args.logq = logq;
+
+
+    APESServer server = APESServer(&args);
     
     while (server.sfd < 0) {
         server.createServer(port);

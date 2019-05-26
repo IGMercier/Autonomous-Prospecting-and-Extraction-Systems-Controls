@@ -1,25 +1,21 @@
-#include <thread>
 #include <cstdlib>
 #include <cstring>
+#include <thread>
 #include <string>
 #include <unistd.h>
 #include <assert.h>
+
 #include "APESShell.h"
-#include <assert.h>
-#include <mutex>
 #include "../APESsys/commands.h"
-#include "../misc/rio.h"
 
 using std::thread;
-std::mutex log_mtx;
-std::mutex cmd_mtx;
 static void execute(parse_token *ltk, int bg, int len, APESShell *shell);
 
 void APESShell::run() {
 
     while (1) {
         char *cmdline;
-        std::unique_lock<std::mutex> cmdlock(cmd_mtx);
+        std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
         if (!this->cmdq->empty()) {
             cmdline = this->cmdq->at(0);
             this->cmdq->pop_front();
@@ -60,7 +56,7 @@ void APESShell::evaluate(char *cmdline) {
 }
 
 void APESShell::toSend(std::string msg) {
-    std::unique_lock<std::mutex> loglock(log_mtx);
+    std::unique_lock<std::mutex> loglock(*(this->log_mtx));
     this->logq->push_back((char *)msg.c_str());
     loglock.unlock();
     printf(msg.c_str());
@@ -134,9 +130,11 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
 }
 
 APESShell::~APESShell() {}
-APESShell::APESShell(std::deque<char *> *cmdq, std::deque<char *> *logq) {
-    this->cmdq = cmdq;
-    this->logq = logq;
+APESShell::APESShell(sysArgs *args) {
+    this->cmd_mtx = args->cmd_mtx;
+    this->log_mtx = args->log_mtx;
+    this->cmdq = args->cmdq;
+    this->logq = args->logq;
 }
 
 static void execute(parse_token *ltk, int bg, int len, APESShell *shell) {

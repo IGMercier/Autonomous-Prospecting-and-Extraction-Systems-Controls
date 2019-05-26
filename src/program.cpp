@@ -1,10 +1,8 @@
 #include <thread>
-#include <signal.h>
 #include <errno.h>
 
 #include "server/APESServer.h"
 #include "shell/APESShell.h"
-#include "misc/flags.h"
 
 static void sigpipe_handler(int sig);
 static void sigint_handler(int sig);
@@ -13,10 +11,6 @@ static void serverThread(int *cfd);
 static void shellThread(int *cfd);
 
 int main(int argc, char** argv) {
-    signal(SIGPIPE, sigpipe_handler);
-    signal(SIGINT, sigint_handler);
-    signal(SIGTSTP, SIG_IGN);
-
     int port;
     if (argc < 2) {
         port = 16778;
@@ -66,39 +60,5 @@ static void shellThread() {
     shell.run();
 
     // control should never reach here
-    return;
-}
-
-
-/*
-    SIGNAL HANDLERS
-*/
-static void sigpipe_handler(int sig) {
-    int old_errno = errno;
-
-    sigset_t mask, prev;
-    sigprocmask(SIG_BLOCK, &mask, &prev);
-
-    disconnected = 1;
-    //robot.standby();
-
-    sigprocmask(SIG_SETMASK, &prev, NULL);
-    errno = old_errno;
-
-    return;
-}
-
-static void sigint_handler(int sig) {
-    int old_errno = errno;
-
-    sigset_t mask, prev;
-    sigprocmask(SIG_BLOCK, &mask, &prev);
-
-    shutdownSIG = 1;
-    // robot.shutdown();
-
-    sigprocmask(SIG_SETMASK, &prev, NULL);
-    errno = old_errno;
-
     return;
 }
