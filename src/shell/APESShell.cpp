@@ -1,14 +1,36 @@
 #include <thread>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <unistd.h>
 #include <assert.h>
 #include "APESShell.h"
+#include <assert.h>
+#include <mutex>
 #include "../APESsys/commands.h"
 #include "../misc/rio.h"
 
 using std::thread;
+std::mutex log_mtx;
 static void execute(parse_token *ltk, int bg, int len, APESShell *shell);
+
+void APESShell::run() {
+    char cmdline[MAXLINE];
+    rio_t buf;
+    
+    while (1) {
+        rio_readinitb(&buf, STDIN_FILENO);
+        rio_readlineb(&buf, cmdline, MAXLINE);
+
+        if (feof(stdin)) {
+            printf("\n");
+            fflush(stdout);
+            fflush(stdin);
+        }
+        evaluate(cmdline);
+    }
+    return; // kills shell thread in main program
+}
 
 void APESShell::evaluate(char *cmdline) {
     int bg;
@@ -36,8 +58,16 @@ void APESShell::evaluate(char *cmdline) {
     return;
 }
 
+void APESShell::toSend(std::string msg) {
+    std::unique_lock<std::mutex> loglock(log_mtx);
+    FILE *log = fopen(this->logfile.c_str(), "a");
+    fprintf(log, msg.c_str());
+    fclose(log);
+    loglock.unlock();
+}
+
 void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
-    printf("\t\t\t%s\n", ltk->argv[0]);
+    //printf("\t\t\t%s\n", ltk->argv[0]);
 
     if (!strcmp(ltk->argv[0], "start")) {
         ctk->command = START;
@@ -97,8 +127,15 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
     return;
 }
 
-APESShell::~APESShell() {
-    //delete this->robot;
+APESShell::~APESShell() {}
+APESShell::APESShell(std::string cmdfile, std::string logfile) {
+    if (cmdfile.empty()) {
+        this->cmdfile = "cmd.txt";
+    } else { this->cmdfile = cmdfile; }
+    
+    if (logfile.empty()) {
+        this->logfile = "log.txt";
+    } else { this->logfile = logfile; }
 }
 
 static void execute(parse_token *ltk, int bg, int len, APESShell *shell) {
@@ -111,115 +148,119 @@ static void execute(parse_token *ltk, int bg, int len, APESShell *shell) {
     
     command_state command = ctk.command;
     std::string msg;
+    if (bg) {
+        msg = "BG job: ";
+        shell->toSend(msg);
+    }
 
     switch (command) {
         case START:
             if (VERBOSE) {
                 msg = "System started!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case STANDBY:
             if (VERBOSE) {
                 msg = "System in standby!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case DATA:
             if (VERBOSE) {
                 msg = "Reading from data file!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case HELP:
             if (VERBOSE) {
                 msg = "Listing Help Commands!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case QUIT:
             if (VERBOSE) {
                 msg = "System shutting down!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case AUTO_ON:
             if (VERBOSE) {
                 msg = "System's auto mode enabled!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case AUTO_OFF:
             if (VERBOSE) {
                 msg = "System's auto mode disabled!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case TEMP:
             if (VERBOSE) {
                 msg = "Reading temp!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case DTEMP:
             if (VERBOSE) {
                 msg = "Reading dtemp!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case CURR:
             if (VERBOSE) {
                 msg = "Reading curr!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case WLEVEL:
             if (VERBOSE) {
                 msg = "Reading wlevel!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case WOB:
             if (VERBOSE) {
                 msg = "Reading wob!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case MOTOR_DRIVE:
             if (VERBOSE) {
                 msg = "System's motor enabled for []!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case MOTOR_STOP:
             if (VERBOSE) {
                 msg = "System's motor disabled!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case DRILL_RUN:
             if (VERBOSE) {
                 msg = "System's drill enabled!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case DRILL_STOP:
             if (VERBOSE) {
                 msg = "System's drill disabled!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case DRILL_CYCLE:
             if (VERBOSE) {
                 msg = "System's drill duty cycle changed!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
         case NONE:
         default:
             if (VERBOSE) {
                 msg = "Not a valid command (use 'help' for more info)!\n";
-                shell->print(msg);
+                shell->toSend(msg);
             }
             break;
     }

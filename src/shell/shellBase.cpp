@@ -5,30 +5,14 @@
 #include <thread>
 #include <assert.h>
 #include "shellBase.h"
+#include <assert.h>
 //#include "../misc/flags.h"
 #include "../misc/rio.h"
-#include <mutex>
 
 static void execute(parse_token *tk, int bg);
 
 using std::thread;
-std::mutex cmd_mtx;
-std::mutex log_mtx;
-
-ShellBase::ShellBase(std::string cmdfile, std::string logfile) {
-    if (cmdfile.empty()) {
-        this->cmdfile = "cmd.txt";
-    } else {
-        this->cmdfile = cmdfile;
-    }
-
-    if (logfile.empty()) {
-        this->logfile = "log.txt";
-    } else {
-        this->logfile = logfile;
-    }
-}
-
+ShellBase::ShellBase() {}
 ShellBase::~ShellBase() {}
 
 void ShellBase::run() {
@@ -36,10 +20,8 @@ void ShellBase::run() {
     rio_t buf;
     
     while (1) {
-        std::unique_lock<std::mutex> cmdlock(cmd_mtx);
         rio_readinitb(&buf, STDIN_FILENO);
         rio_readlineb(&buf, cmdline, MAXLINE);
-        cmdlock.unlock();
 
         if (feof(stdin)) {
             printf("\n");
@@ -131,7 +113,8 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
         tk->bcomm = BUILTIN_NONE;
     }
 
-    if ((bg = (*(tk->argv[(tk->argc)-1]) == '&')) != 0) {
+    if ((bg = (*(tk->argv[(tk->argc)-2]) == '&')) != 0) {
+        tk->argv[--(tk->argc)] = NULL;
         tk->argv[--(tk->argc)] = NULL;
     }
 
@@ -140,13 +123,7 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
 
 void ShellBase::print(std::string msg) {
     std::string toPrint = "Shell: " + msg;
-    
-    std::unique_lock<std::mutex> loglock(log_mtx);
-    FILE *log = fopen(this->logfile.c_str(), "w");
-    fprintf(log, toPrint.c_str());
-    fclose(log);
-    loglock.unlock();
-
+    printf(msg.c_str());
     return;
 }
 

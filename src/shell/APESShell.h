@@ -4,15 +4,18 @@
 //#include "../APESsys/APES.h"
 
 #define VERBOSE 1
+#include <string>
 
 class APESShell : public ShellBase {
     protected:
         //APES *robot;
     public:
+        std::string cmdfile;
+        std::string logfile;
+        APESShell(std::string cmdfile, std::string logfile);
+        void run();
+        void toSend(std::string msg);
         void evaluate(char *cmdline);
-        APESShell(/*APES *robot, */std::string cmdfile, std::string logfile) : ShellBase(cmdfile, logfile) {
-            //this->robot = robot;    
-        }
         void parsecommand(parse_token *ltk, command_token *ctk);
         ~APESShell();
 
