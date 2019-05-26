@@ -29,6 +29,8 @@ ServerBase::ServerBase() {
     this->cfd = -1;
 }
 
+ServerBase::~ServerBase() {}
+
 void ServerBase::createServer(int port) {
     assert(port > 0);
     fprintf(stdout, "Starting Server!\n");

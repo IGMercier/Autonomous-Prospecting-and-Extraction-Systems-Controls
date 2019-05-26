@@ -108,7 +108,7 @@ void APESServer::execute() {
 
 void APESServer::shutdown() {
     std::string msg = "Server shutting down!\n";
-    sendToClient(msg);
+    sendToClient(msg.c_str());
     fprintf(stdout, "%s", msg.c_str());
 
     if (this->cfd >= 0) {

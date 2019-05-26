@@ -5,33 +5,28 @@
 #include <thread>
 #include <assert.h>
 #include "shellBase.h"
-#include "../misc/flags.h"
+//#include "../misc/flags.h"
 #include "../misc/rio.h"
+#include <mutex>
 
 static void execute(parse_token *tk, int bg);
 
 using std::thread;
+std::mutex cmd_mtx;
+std::mutex log_mtx;
 
-ShellBase::ShellBase(char *cmdfile, char *logfile) {
-    if (cmdfile == NULL) {
-        this->cmdfile = ".cmdline.txt";
+ShellBase::ShellBase(std::string cmdfile, std::string logfile) {
+    if (cmdfile.empty()) {
+        this->cmdfile = "cmd.txt";
     } else {
         this->cmdfile = cmdfile;
     }
 
-    if (logfile == NULL) {
-        this->logfile = ".log.txt";
+    if (logfile.empty()) {
+        this->logfile = "log.txt";
     } else {
         this->logfile = logfile;
     }
-    /*
-    if (readFrom == NULL) {
-        std::unique_lock<std::mutex> lock(fd_mtx);
-        *(this->readFrom) = STDIN_FILENO;
-        lock.unlock();
-    } else {
-        this->readFrom = readFrom;
-    }*/
 }
 
 ShellBase::~ShellBase() {}
@@ -40,11 +35,11 @@ void ShellBase::run() {
     char cmdline[MAXLINE];
     rio_t buf;
     
-    while (!shutdownSIG) {
-        std::unique_lock<std::mutex> clock(cmd_mtx);
-        rio_readinitb(&buf, this->cmdfile);
+    while (1) {
+        std::unique_lock<std::mutex> cmdlock(cmd_mtx);
+        rio_readinitb(&buf, STDIN_FILENO);
         rio_readlineb(&buf, cmdline, MAXLINE);
-        clock.unlock();
+        cmdlock.unlock();
 
         if (feof(stdin)) {
             printf("\n");
@@ -143,14 +138,14 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
     return bg;
 }
 
-void ShellBase::shell_print(std::string msg) {
+void ShellBase::print(std::string msg) {
     std::string toPrint = "Shell: " + msg;
     
-    std::unique_lock<std::mutex> llock(log_mtx);
-    FILE *log = fopen(this->logfile, "w");
-    fprintf(log, toPrint.c_str();
+    std::unique_lock<std::mutex> loglock(log_mtx);
+    FILE *log = fopen(this->logfile.c_str(), "w");
+    fprintf(log, toPrint.c_str());
     fclose(log);
-    llock.unlock();
+    loglock.unlock();
 
     return;
 }

@@ -8,9 +8,9 @@
 class APESShell : public ShellBase {
     protected:
         //APES *robot;
-        void evaluate(char *cmdline);
     public:
-        APESShell(/*APES *robot, */char *cmdfile, char *logfile) : ShellBase(cmdfile, logfile) {
+        void evaluate(char *cmdline);
+        APESShell(/*APES *robot, */std::string cmdfile, std::string logfile) : ShellBase(cmdfile, logfile) {
             //this->robot = robot;    
         }
         void parsecommand(parse_token *ltk, command_token *ctk);

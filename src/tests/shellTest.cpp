@@ -3,7 +3,10 @@
 #include <unistd.h>
 
 int main() {
-    APESShell s = APESShell(NULL, NULL);
+
+    std::string c = "cmd.txt";
+    std::string l = "log.txt";
+    APESShell s = APESShell(c, l);
     s.run();
 
     return -1;
