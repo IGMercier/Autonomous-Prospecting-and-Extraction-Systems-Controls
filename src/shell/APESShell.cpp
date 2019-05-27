@@ -25,6 +25,7 @@ void APESShell::run() {
         }
         cmdlock.unlock();
 
+
         evaluate((char *)cmdline.c_str());
     }
     return; // kills shell thread in main program

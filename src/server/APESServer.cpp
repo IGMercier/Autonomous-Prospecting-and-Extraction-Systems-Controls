@@ -24,7 +24,6 @@ APESServer::APESServer(sysArgs *args) {
 
     this->cmd_mtx = args->cmd_mtx;
     this->log_mtx = args->log_mtx;
-
     this->cmdq = args->cmdq;
     this->logq = args->logq;
 }
@@ -57,7 +56,7 @@ void APESServer::run(int port) {
 void APESServer::execute() {
     std::string msg = "Connected!\n";
     sendToClient(msg.c_str());
-    fprintf(stdout,"%s",  msg.c_str());
+    //fprintf(stdout,"%s",  msg.c_str());
     msg = "END";
     sendToClient(msg.c_str());
     
@@ -70,13 +69,10 @@ void APESServer::execute() {
         memset(cmdline, 0, MAXLINE);
 
         int fail = 0;
-        std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
         while (1) {
             int rc;
             if ((rc = readFromClient(cmdline)) > 0) {
                 cmdline[strlen(cmdline)-1] = '\0';
-                msg = "Received!\n";
-                sendToClient(msg.c_str());
                 //fprintf(stdout, "%s", msg.c_str());
                 msg = "END";
                 sendToClient(msg.c_str());
@@ -85,13 +81,14 @@ void APESServer::execute() {
                     break;
                 } else {
                     // writes to command file for shell to read
-                    std::string buf(cmdline);
+                    std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
+                    std::string buf = cmdline;
                     this->cmdq->push_back(buf);
+                    cmdlock.unlock();
                 }
 
             } else if (rc < 0) { fail = 1; break; }
         }
-        cmdlock.unlock();
 
         if (fail) { break; }
 
@@ -99,10 +96,9 @@ void APESServer::execute() {
         std::unique_lock<std::mutex> loglock(*(this->log_mtx));
         while (!this->logq->empty()) {
             std::string logline = this->logq->at(0);
-            printf("%s\n", logline.c_str());
-            this->logq->pop_front();
+            printf("%s", logline.c_str());
+            this->logq->pop_front();;
         }
-        fflush(stdout);
         loglock.unlock();
     }
 
@@ -110,9 +106,8 @@ void APESServer::execute() {
 
     // if disconnected, clears command queue and inserts standby command
     std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
-    char *buf = (char *)calloc(MAXLINE, sizeof(char));
-    strncpy(buf, "standby", MAXLINE);
     this->cmdq->clear();
+    std::string buf = "standby";
     this->cmdq->push_back(buf);
     cmdlock.unlock();
 

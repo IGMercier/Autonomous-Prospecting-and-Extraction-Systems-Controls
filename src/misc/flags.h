@@ -8,6 +8,7 @@
 #define VERBOSE 1
 #define MAXLINE 1024
 
+
 typedef struct sysArgs {
     std::mutex *cmd_mtx;
     std::mutex *log_mtx;

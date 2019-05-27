@@ -18,6 +18,7 @@ int main(int argc, char** argv) {
 
     std::mutex cmd_mtx;
     std::mutex log_mtx;
+
     std::deque<std::string> *cmdq = new std::deque<std::string>;
     std::deque<std::string> *logq = new std::deque<std::string>;
     cmdq->clear();
@@ -25,7 +26,7 @@ int main(int argc, char** argv) {
 
     sysArgs *args = new sysArgs;
     args->cmd_mtx = &cmd_mtx;
-    args->log_mtx = &cmd_mtx;
+    args->log_mtx = &log_mtx;
     args->cmdq = cmdq;
     args->logq = logq;
 
