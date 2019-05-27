@@ -13,7 +13,7 @@ class APESServer : public ServerBase {
         std::deque<std::string> *logq;
     public:
         APESServer(sysArgs *args);
-        void run(int port);
+        void run(int port) override;
         void execute() override;
         void shutdown() override;
         virtual ~APESServer();

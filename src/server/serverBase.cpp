@@ -175,7 +175,7 @@ int ServerBase::createClient() {
     assert(this->sfd >= 0);
 
     int rc = accept(this->sfd,
-                    (struct sockaddr *)&caddr.sin_addr.s_addr,
+                    (struct sockaddr *)&caddr,
                     &caddr_size);
     if (rc < 0) { return -1; }
     this->cfd = rc;

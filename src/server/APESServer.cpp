@@ -35,18 +35,8 @@ void APESServer::run(int port) {
     assert(this->sfd >= 0);
 
     while (1) {
-        struct sockaddr_in caddr;
-        socklen_t caddr_size;
-
-        caddr_size = sizeof(struct sockaddr_in);
-
-        assert(this->sfd >= 0);
-        // accept() blocks until client connects
-        int rc = accept(this->sfd,
-                        (struct sockaddr *)&caddr.sin_addr.s_addr,
-                        &caddr_size);
-        if (rc < 0) { continue; }
-        this->cfd = rc;
+        createClient();
+        if (this->cfd < 0);
         
         assert(this->cfd >= 0);
         execute();
