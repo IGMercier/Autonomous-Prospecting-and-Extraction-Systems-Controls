@@ -1,7 +1,6 @@
 #include <cstdlib>
 #include <cstdio>
 #include <csignal>
-#include <string>
 #include <unistd.h>
 #include <cstring>
 #include <assert.h>
@@ -10,10 +9,13 @@
 
 #include "APESServer.h"
 
-#define MAXLINE 1024
-
 APESServer::APESServer(sysArgs *args) {
     signal(SIGPIPE, SIG_IGN);
+    assert(args != NULL);
+    assert(args->cmd_mtx != NULL);
+    assert(args->log_mtx != NULL);
+    assert(args->cmdq != NULL);
+    assert(args->logq != NULL);
 
     this->cmd_mtx = args->cmd_mtx;
     this->log_mtx = args->log_mtx;
@@ -22,13 +24,17 @@ APESServer::APESServer(sysArgs *args) {
     this->logq = args->logq;
 }
 
-void APESServer::run() {
+void APESServer::run(int port) {
+    while (this->sfd < 0) {
+        createServer(port);
+    }
     assert(this->sfd >= 0);
 
     while (1) {
-        int val = createClient();
-        if (val < 0) { continue; }
-
+        int val;
+        if ((val = createClient()) < 0) { continue; }
+        
+        assert(this->cfd >= 0);
         execute();
     }
 }
@@ -64,8 +70,7 @@ void APESServer::execute() {
                     break;
                 } else {
                     // writes to command file for shell to read
-                    char *buf = (char *)calloc(MAXLINE, sizeof(char));
-                    strncpy(buf, cmdline, MAXLINE);
+                    std::string buf(cmdline);
                     this->cmdq->push_back(buf);
                 }
 
@@ -78,11 +83,11 @@ void APESServer::execute() {
 
         std::unique_lock<std::mutex> loglock(*(this->log_mtx));
         while (!this->logq->empty()) {
-            char *logline = this->logq->at(0);
-            printf("%s\n", logline);
+            std::string logline = this->logq->at(0);
+            printf("%s\n", logline.c_str());
             this->logq->pop_front();
-
         }
+        fflush(stdout);
         loglock.unlock();
     }
 

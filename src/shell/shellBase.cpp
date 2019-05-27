@@ -7,6 +7,7 @@
 #include "shellBase.h"
 #include <assert.h>
 #include "../misc/rio.h"
+#include "../misc/flags.h"
 
 
 static void execute(parse_token *tk, int bg);
@@ -85,7 +86,8 @@ int ShellBase::builtin_command(parse_token *tk) {
 }
 
 int ShellBase::parseline(char *cmdline, parse_token *tk) {
-    char *delim = " \t\n";
+    std::string sdelim = " \t\n";
+    const char *delim = sdelim.c_str();
     char *argv;
     int bg;
 
@@ -104,7 +106,10 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
 
     tk->argc = argc;
 
-    if (tk->argc == 0) { return 1; }
+    if (tk->argc == 0) {
+        free(buf);
+        return 1;
+    }
 
     
     if (!strcmp(tk->argv[0], "fg")) {
@@ -123,7 +128,6 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
     }
 
     free(buf);
-
     return bg;
 }
 

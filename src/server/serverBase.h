@@ -3,7 +3,6 @@
 
 #define MAXCONN 1
 
-#include <string>
 
 class ServerBase {
     public:
@@ -21,7 +20,7 @@ class ServerBase {
         int readFromClient(char *cmdline);
         void sendToClient(const char *msg);
         virtual void shutdown();
-        ~ServerBase();
+        virtual ~ServerBase();
 };
 
 #endif

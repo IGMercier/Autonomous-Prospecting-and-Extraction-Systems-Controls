@@ -3,13 +3,15 @@
 
 #include <mutex>
 #include <deque>
+#include <string>
 
 #define VERBOSE 1
+#define MAXLINE 1024
 
 typedef struct sysArgs {
     std::mutex *cmd_mtx;
     std::mutex *log_mtx;
-    std::deque<char *> *cmdq;
-    std::deque<char *> *logq; 
+    std::deque<std::string> *cmdq;
+    std::deque<std::string> *logq; 
 } sysArgs;
 #endif

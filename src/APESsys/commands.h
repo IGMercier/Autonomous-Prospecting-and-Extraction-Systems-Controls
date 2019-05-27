@@ -6,7 +6,6 @@
     COMMAND & PARSING DEFINITIONS AND HELPER FUNCTIONS
 */
 #define MAXARGS  128
-#define MAXLINE  1024
 
 typedef enum command_state {
     START,

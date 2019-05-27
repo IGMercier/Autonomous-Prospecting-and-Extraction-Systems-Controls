@@ -20,7 +20,7 @@ class ShellBase {
         ShellBase();
         virtual void run();
         void print(std::string msg);
-        ~ShellBase();
+        virtual ~ShellBase();
 };
 
 

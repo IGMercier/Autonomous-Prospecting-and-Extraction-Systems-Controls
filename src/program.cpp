@@ -18,8 +18,8 @@ int main(int argc, char** argv) {
 
     std::mutex cmd_mtx;
     std::mutex log_mtx;
-    std::deque<char *> *cmdq = new std::deque<char *>;
-    std::deque<char *> *logq = new std::deque<char *>;
+    std::deque<std::string> *cmdq = new std::deque<std::string>;
+    std::deque<std::string> *logq = new std::deque<std::string>;
     cmdq->clear();
     logq->clear();
 
@@ -29,19 +29,12 @@ int main(int argc, char** argv) {
     args->cmdq = cmdq;
     args->logq = logq;
 
-    serverThread(args, port);
-
-    /*
-    //std::thread tServer(serverThread, args, port);
-    //std::thread tShell(shellThread, args);
-
-    if (tServer.joinable()) {
-        tServer.join();
-    }
-
+    std::thread tServer(serverThread, args, port);
+    tServer.detach();
+    std::thread tShell(shellThread, args);
     if (tShell.joinable()) {
         tShell.join();
-    }*/
+    }
 
     delete cmdq;
     delete logq;
@@ -59,24 +52,21 @@ int main(int argc, char** argv) {
 static void serverThread(sysArgs *args, int port) {
     assert(args != NULL);
     
-    APESServer server = APESServer(args);
-    while (server.sfd < 0) {
-        server.createServer(port);
-    }
-    assert(server.sfd >= 0);
-    server.run();
+    APESServer *server = new APESServer(args);
+    server->run(port);
     
     // control should never reach here
+    delete server;
     return;
 }
 
-   
 static void shellThread(sysArgs *args) {
     assert(args != NULL);
 
-    APESShell shell = APESShell(args);
-    shell.run();
+    APESShell *shell = new APESShell(args);
+    shell->run();
 
     // control should never reach here
+    delete shell;
     return;
 }

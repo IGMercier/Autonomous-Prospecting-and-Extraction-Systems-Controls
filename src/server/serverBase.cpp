@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <string>
 #include <sys/socket.h>
 #include <sys/types.h> // for AF_INET
 #include <netdb.h> // for ip_ntoa
@@ -11,12 +12,12 @@
 
 #include "serverBase.h"
 #include "../misc/rio.h"
+#include "../misc/flags.h"
 
 #define EN      1
 #define IDLE    10
 #define CNT     2
 #define INTVL   5
-#define MAXLINE 1024
 
 ServerBase::ServerBase() {
     this->sfd = -1;
@@ -170,15 +171,14 @@ int ServerBase::createClient() {
 
     caddr_size = sizeof(struct sockaddr_in);
 
-    // acept() blocks until client connects
+    // accept() blocks until client connects
     assert(this->sfd >= 0);
 
-    if ((this->cfd = accept(this->sfd,
-                           (struct sockaddr *)&caddr.sin_addr.s_addr,
-                           &caddr_size)) < 0) {
-        this->cfd = -1;
-        return -1;
-    }
+    int rc = accept(this->sfd,
+                    (struct sockaddr *)&caddr.sin_addr.s_addr,
+                    &caddr_size);
+    if (rc < 0) { return -1; }
+    this->cfd = rc;
     return 0;
 }
 

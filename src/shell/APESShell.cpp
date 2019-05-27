@@ -9,22 +9,23 @@
 #include "../APESsys/commands.h"
 
 using std::thread;
-static void execute(parse_token *ltk, int bg, int len, APESShell *shell);
+static void execute(parse_token *ltk, int bg, APESShell *shell);
 
 void APESShell::run() {
 
     while (1) {
-        char *cmdline;
+        std::string cmdline;
         std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
         if (!this->cmdq->empty()) {
             cmdline = this->cmdq->at(0);
             this->cmdq->pop_front();
         } else {
+            cmdlock.unlock();
             continue;
         }
         cmdlock.unlock();
 
-        evaluate(cmdline);
+        evaluate((char *)cmdline.c_str());
     }
     return; // kills shell thread in main program
 }
@@ -40,7 +41,7 @@ void APESShell::evaluate(char *cmdline) {
 
     if (!builtin_command(&tk)) {
         /* CHILD THREAD */
-        thread temp(execute, &tk, bg, MAXLINE, this);
+        thread temp(execute, &tk, bg, this);
         child.swap(temp);
 
         if (bg) { child.detach(); }
@@ -57,9 +58,8 @@ void APESShell::evaluate(char *cmdline) {
 
 void APESShell::toSend(std::string msg) {
     std::unique_lock<std::mutex> loglock(*(this->log_mtx));
-    this->logq->push_back((char *)msg.c_str());
+    this->logq->push_back(msg);
     loglock.unlock();
-    printf("%s\n", msg.c_str());
 }
 
 void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
@@ -137,7 +137,7 @@ APESShell::APESShell(sysArgs *args) {
     this->logq = args->logq;
 }
 
-static void execute(parse_token *ltk, int bg, int len, APESShell *shell) {
+static void execute(parse_token *ltk, int bg, APESShell *shell) {
     assert(ltk != NULL);
     assert(shell != NULL);
 

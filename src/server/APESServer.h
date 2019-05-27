@@ -3,19 +3,20 @@
 
 #include "serverBase.h"
 #include "../misc/flags.h"
+#include <string>
 
 class APESServer : public ServerBase {
     private:
         std::mutex *cmd_mtx;
         std::mutex *log_mtx;
-        std::deque<char *> *cmdq;
-        std::deque<char *> *logq;
+        std::deque<std::string> *cmdq;
+        std::deque<std::string> *logq;
     public:
         APESServer(sysArgs *args);
-        void run();
+        void run(int port);
         void execute() override;
         void shutdown() override;
-        ~APESServer();
+        virtual ~APESServer();
 };
 
 #endif
