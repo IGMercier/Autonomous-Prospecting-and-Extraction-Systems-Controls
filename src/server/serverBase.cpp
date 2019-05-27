@@ -216,7 +216,7 @@ int ServerBase::readFromClient(char *cmdline) {
     assert(this->cfd >= 0);
     
     int rc;
-    if ((rc = read(this->cfd, cmdline, MAXLINE)) < 0) {
+    if ((rc = read(this->cfd, cmdline, sizeof(cmdline))) < 0) {
         if (errno == ECONNRESET) {
             fprintf(stdout, "%s\n", strerror(errno));
             return -1;

@@ -7,6 +7,11 @@
 #include <errno.h>
 #include <netinet/tcp.h>
 
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+
 #include "APESServer.h"
 
 APESServer::APESServer(sysArgs *args) {
@@ -31,8 +36,18 @@ void APESServer::run(int port) {
     assert(this->sfd >= 0);
 
     while (1) {
-        int val;
-        if ((val = createClient()) < 0) { continue; }
+        struct sockaddr_in caddr;
+        socklen_t caddr_size;
+
+        caddr_size = sizeof(struct sockaddr_in);
+
+        assert(this->sfd >= 0);
+        // accept() blocks until client connects
+        int rc = accept(this->sfd,
+                        (struct sockaddr *)&caddr.sin_addr.s_addr,
+                        &caddr_size);
+        if (rc < 0) { continue; }
+        this->cfd = rc;
         
         assert(this->cfd >= 0);
         execute();
@@ -46,7 +61,7 @@ void APESServer::execute() {
     msg = "END";
     sendToClient(msg.c_str());
     
-    char cmdline[MAXLINE];
+    char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
     while (1) {
         setClientSockOpts();
         setServerSockOpts();
@@ -90,6 +105,8 @@ void APESServer::execute() {
         fflush(stdout);
         loglock.unlock();
     }
+
+    free(cmdline);
 
     // if disconnected, clears command queue and inserts standby command
     std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
