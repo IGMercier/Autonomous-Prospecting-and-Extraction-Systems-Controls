@@ -56,9 +56,9 @@ void APESServer::run(int port) {
 void APESServer::execute() {
     std::string msg = "Connected!\n";
     sendToClient(msg.c_str());
+    //msg = "END";
+    //sendToClient(msg.c_str());
     //fprintf(stdout,"%s",  msg.c_str());
-    msg = "END";
-    sendToClient(msg.c_str());
     
     char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
     while (1) {
@@ -97,6 +97,7 @@ void APESServer::execute() {
         while (!this->logq->empty()) {
             std::string logline = this->logq->at(0);
             printf("%s", logline.c_str());
+            sendToClient(logline.c_str());
             this->logq->pop_front();;
         }
         loglock.unlock();
