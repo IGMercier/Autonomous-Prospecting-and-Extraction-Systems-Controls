@@ -46,7 +46,4 @@ typedef struct command_token {
     int param;
 } command_token;
 
-
-//int parseline(const char *cmdline, token *tk);
-
 #endif

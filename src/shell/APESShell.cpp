@@ -6,13 +6,22 @@
 #include <assert.h>
 
 #include "APESShell.h"
+//#include "../APESsys/APES.h"
 #include "../APESsys/commands.h"
 
 using std::thread;
 static void execute(parse_token *ltk, int bg, APESShell *shell);
 
-void APESShell::run() {
+APESShell::APESShell(sysArgs *args) {
+    //this->robot = new APES();
+    this->cmd_mtx = args->cmd_mtx;
+    this->log_mtx = args->log_mtx;
+    this->cmdq = args->cmdq;
+    this->logq = args->logq;
+}
 
+
+void APESShell::run() {
     while (1) {
         std::string cmdline;
         std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
@@ -130,14 +139,6 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
     return;
 }
 
-APESShell::~APESShell() {}
-APESShell::APESShell(sysArgs *args) {
-    this->cmd_mtx = args->cmd_mtx;
-    this->log_mtx = args->log_mtx;
-    this->cmdq = args->cmdq;
-    this->logq = args->logq;
-}
-
 static void execute(parse_token *ltk, int bg, APESShell *shell) {
     assert(ltk != NULL);
     assert(shell != NULL);
@@ -155,113 +156,91 @@ static void execute(parse_token *ltk, int bg, APESShell *shell) {
 
     switch (command) {
         case START:
-            if (VERBOSE) {
-                msg = "System started!\n";
-                shell->toSend(msg);
-            }
+            //this->robot->setup();
+            //this->robot->standby();
+            msg = "System started!\n";
+            shell->toSend(msg);
             break;
         case STANDBY:
-            if (VERBOSE) {
-                msg = "System in standby!\n";
-                shell->toSend(msg);
-            }
+            //this->robot->standby();
+            msg = "System in standby!\n";
+            shell->toSend(msg);
             break;
         case DATA:
-            if (VERBOSE) {
-                msg = "Reading from data file!\n";
-                shell->toSend(msg);
-            }
+            //this->robot->readData();
+            msg = "Reading from data file!\n";
+            shell->toSend(msg);
             break;
         case HELP:
-            if (VERBOSE) {
-                msg = "Listing Help Commands!\n";
-                shell->toSend(msg);
-            }
+            msg = "Listing Help Commands!\n";
+            shell->toSend(msg);
             break;
         case QUIT:
-            if (VERBOSE) {
-                msg = "System shutting down!\n";
-                shell->toSend(msg);
-            }
+            //this->robot->finish();
+            msg = "System shutting down!\n";
+            shell->toSend(msg);
             break;
         case AUTO_ON:
-            if (VERBOSE) {
-                msg = "System's auto mode enabled!\n";
-                shell->toSend(msg);
-            }
+            msg = "System's auto mode enabled!\n";
+            shell->toSend(msg);
             break;
         case AUTO_OFF:
-            if (VERBOSE) {
-                msg = "System's auto mode disabled!\n";
-                shell->toSend(msg);
-            }
+            msg = "System's auto mode disabled!\n";
+            shell->toSend(msg);
             break;
         case TEMP:
-            if (VERBOSE) {
-                msg = "Reading temp!\n";
-                shell->toSend(msg);
-            }
+            //this->robot->read_temp();
+            msg = "Reading temp!\n";
+            shell->toSend(msg);
             break;
         case DTEMP:
-            if (VERBOSE) {
-                msg = "Reading dtemp!\n";
-                shell->toSend(msg);
-            }
+            //this->robot->read_dtemp();
+            msg = "Reading dtemp!\n";
+            shell->toSend(msg);
             break;
         case CURR:
-            if (VERBOSE) {
-                msg = "Reading curr!\n";
-                shell->toSend(msg);
-            }
+            //this->robot->read_curr();
+            msg = "Reading curr!\n";
+            shell->toSend(msg);
             break;
         case WLEVEL:
-            if (VERBOSE) {
-                msg = "Reading wlevel!\n";
-                shell->toSend(msg);
-            }
+            //this->robot->read_wlevel();
+            msg = "Reading wlevel!\n";
+            shell->toSend(msg);
             break;
         case WOB:
-            if (VERBOSE) {
-                msg = "Reading wob!\n";
-                shell->toSend(msg);
-            }
+            msg = "Reading wob!\n";
+            shell->toSend(msg);
             break;
         case MOTOR_DRIVE:
-            if (VERBOSE) {
-                msg = "System's motor enabled for []!\n";
-                shell->toSend(msg);
-            }
+            msg = "System's motor enabled for []!\n";
+            shell->toSend(msg);
             break;
         case MOTOR_STOP:
-            if (VERBOSE) {
-                msg = "System's motor disabled!\n";
-                shell->toSend(msg);
-            }
+            msg = "System's motor disabled!\n";
+            shell->toSend(msg);
             break;
         case DRILL_RUN:
-            if (VERBOSE) {
-                msg = "System's drill enabled!\n";
-                shell->toSend(msg);
-            }
+            msg = "System's drill enabled!\n";
+            shell->toSend(msg);
             break;
         case DRILL_STOP:
-            if (VERBOSE) {
-                msg = "System's drill disabled!\n";
-                shell->toSend(msg);
-            }
+            msg = "System's drill disabled!\n";
+            shell->toSend(msg);
             break;
         case DRILL_CYCLE:
-            if (VERBOSE) {
-                msg = "System's drill duty cycle changed!\n";
-                shell->toSend(msg);
-            }
+            msg = "System's drill duty cycle changed!\n";
+            shell->toSend(msg);
             break;
         case NONE:
         default:
-            if (VERBOSE) {
-                msg = "Not a valid command (use 'help' for more info)!\n";
-                shell->toSend(msg);
-            }
+            msg = "Not a valid command (use 'help' for more info)!\n";
+            shell->toSend(msg);
             break;
     }
+}
+
+APESShell::~APESShell() {
+    //this->robot->finish();
+    //delete this->robot;
 }

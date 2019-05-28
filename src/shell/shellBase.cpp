@@ -91,7 +91,7 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
     int argc = 0;
     tk->argc = 0;
 
-    char *buf = (char *)calloc(MAXLINE, sizeof(char));
+    char *buf = new char[MAXLINE];
     strncpy(buf, cmdline, MAXLINE);
 
     while ((argv = strsep(&buf, delim)) != NULL) {
@@ -104,7 +104,7 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
     tk->argc = argc;
 
     if (tk->argc == 0) {
-        free(buf);
+        delete buf;
         return 1;
     }
 
@@ -124,7 +124,7 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
         tk->argv[--(tk->argc)] = NULL;
     }
 
-    free(buf);
+    delete buf;
     return bg;
 }
 

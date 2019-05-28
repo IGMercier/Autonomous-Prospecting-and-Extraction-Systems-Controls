@@ -62,7 +62,6 @@ void APESServer::execute() {
         int rc;
         while ((rc = readFromClient(cmdline)) > 0) {
                 //cmdline[strlen(cmdline)-1] = '\0';
-                sendToClient(delim);
                
                 if (!strncmp(cmdline, delim, MAXLINE)) {
                     break;
@@ -78,7 +77,6 @@ void APESServer::execute() {
 
         if (rc < 0) { break; }
 
-
         std::unique_lock<std::mutex> loglock(*(this->log_mtx));
         while (!this->logq->empty()) {
             std::string logline = this->logq->at(0);
@@ -87,6 +85,7 @@ void APESServer::execute() {
             this->logq->pop_front();;
         }
         loglock.unlock();
+        sendToClient(delim);
     }
 
     free(cmdline);

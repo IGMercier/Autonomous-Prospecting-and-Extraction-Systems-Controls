@@ -1,8 +1,6 @@
 #ifndef _APES_H_
 #define _APES_H_
 
-//#include "libraries/pybind11/include/pybind11/embed.h" <- I might not need this here!
-
 #include <cstdio>
 #include <vector>
 #include <chrono>
@@ -42,9 +40,12 @@ class APES {
         ~APES();
         int setup(char *filename);
         dataPt* read_temp();
-        dataPt* D_temp();
+        dataPt* read_dtemp();
         dataPt* read_curr();
         dataPt* read_wlevel();
+        dataPt* read_wob();
+        void auto_on();
+        void auto_off();
         void motor_drive(bool dir, int speed, int time);
         void motor_stop();
         void readData(const char *filename);
