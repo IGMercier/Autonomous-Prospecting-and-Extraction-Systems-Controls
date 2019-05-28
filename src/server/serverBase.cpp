@@ -26,7 +26,7 @@ ServerBase::ServerBase() {
 
 void ServerBase::createServer(int port) {
     assert(port > 0);
-    fprintf(stdout, "Starting Server!\n");
+    print("Starting Server!");
 
     struct sockaddr_in saddr;
     
@@ -35,7 +35,7 @@ void ServerBase::createServer(int port) {
         return;
     }
 
-    if (setServerSockOpts() < 0) { fprintf(stdout, "WHUT\n"); }
+    if (setServerSockOpts() < 0) { print("WHUT"); }
 
     memset(&saddr, 0, sizeof(saddr));
     saddr.sin_family = AF_INET;
@@ -103,14 +103,14 @@ int ServerBase::setServerSockOpts() {
     flags = EN; // enables address reuse
     if (setsockopt(this->sfd, SOL_SOCKET, SO_REUSEADDR,
                    (const void*)&flags, sizeof(flags)) < 0) {
-        fprintf(stderr, "\t\t\t\t%s\n", strerror(errno));
+        print(strerror(errno));
         return -1;
     }
 
     flags = 1;
     if (setsockopt(this->sfd, SOL_SOCKET, SO_KEEPALIVE,
                    (const void*)&flags, sizeof(flags)) < 0) {
-        fprintf(stderr, "\t\t\t%s\n", strerror(errno));
+        print(strerror(errno));
         return -1;
     }
     
@@ -118,19 +118,19 @@ int ServerBase::setServerSockOpts() {
     flags = IDLE; // heartbeat frequency
     if (setsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPIDLE,
                    (const void*)&flags, sizeof(flags)) < 0) {
-        fprintf(stderr, "\t\t\t\t%s\n", strerror(errno));
+        print(strerror(errno));
         return -1;
     }
     flags = CNT; // defines number of missed heartbeats as dropped client
     if (setsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPCNT,
                    (const void*)&flags, sizeof(flags)) < 0) {
-        fprintf(stderr, "\t\t\t\t%s\n", strerror(errno));
+        print(strerror(errno));
         return -1;
     }
     flags = INTVL; // heatbeat freq when client isn't responding
     if (setsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPINTVL,
                    (const void*)&flags, sizeof(flags)) < 0) {
-        fprintf(stderr, "\t\t\t\t%s\n", strerror(errno));
+        print(strerror(errno));
         return -1;
     }
 
@@ -142,7 +142,7 @@ int ServerBase::setClientSockOpts() {
     int flags = 1;
     if (setsockopt(this->cfd, SOL_SOCKET, SO_KEEPALIVE,
                    (const void *)&flags, sizeof(flags)) < 0) {
-        fprintf(stderr, "\t\t\t%s\n", strerror(errno));
+        print(strerror(errno));
         return -1;
     }
     return 0;
@@ -155,39 +155,28 @@ int ServerBase::checkSockOpts() {
     int fail = 0;
 
     getsockopt(this->sfd, SOL_SOCKET, SO_REUSEADDR, &optval,(unsigned int*)&optlen);
-    fprintf(stderr, "optval: %d\n", optval);
     if (optval != 1) {
-        fprintf(stderr, "Error: SO_REUSEADDR not enabled!\n");
+        print(strerror(errno));
         fail = -1;
     }
 
     getsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPIDLE, &optval, (unsigned int*)&optlen);
-    fprintf(stderr, "optval: %d\n", optval);
     if (optval != IDLE) {
-        fprintf(stderr, "Error: TCP_KEEPIDLE not set!\n");
+        print(strerror(errno));
         fail = -1;
     }
 
     getsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPCNT, &optval, (unsigned int*)&optlen);
-    fprintf(stderr, "optval: %d\n", optval);
     if (optval != CNT) {
-        fprintf(stderr, "Error: TCP_KEEPCNT not set!\n");
+        print(strerror(errno));
         fail = -1;
     }
 
     getsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPINTVL, &optval, (unsigned int*)&optlen);
-    fprintf(stderr, "optval: %d\n", optval);
     if (optval != INTVL) {
-        fprintf(stderr, "Error: TCP_KEEPINTVL not set!\n");
+        print(strerror(errno));
         fail = -1;
     }
-   /* 
-    getsockopt(this->cfd, SOL_SOCKET, SO_KEEPALIVE, &optval, (unsigned int*)&optlen);
-    fprintf(stderr, "optval: %d\n", optval);
-    if (optval != 1) {
-        fprintf(stderr, "Error: SO_KEEPALIVE not enabled!\n");
-        fail = -1;
-    }*/
 
     return fail;
 }
@@ -199,19 +188,19 @@ int ServerBase::readFromClient(char *cmdline) {
     int rc;
     if ((rc = read(this->cfd, cmdline, MAXLINE)) < 0) {
         if (errno == ENOTCONN) {
-            fprintf(stdout, "%s\n", strerror(errno));
+            print(strerror(errno));
             return -1;
         } else if (errno == ECONNRESET) {
-            fprintf(stdout, "%s\n", strerror(errno));
+            print(strerror(errno));
             return -1;
         } else if (errno == EPIPE) {
-            fprintf(stdout, "%s\n", strerror(errno));
+            print(strerror(errno));
             return -1;
         } else if (errno == ETIMEDOUT) {
-            fprintf(stdout, "%s\n", strerror(errno));
+            print(strerror(errno));
             return -1;
         } else { 
-            fprintf(stdout, "%s\n", strerror(errno));
+            print(strerror(errno));
             return -1;
         }
     } else if (rc > 0) {
@@ -228,19 +217,19 @@ int ServerBase::sendToClient(const char *msg) {
     int rc;
     if ((rc = write(this->cfd, msg, strlen(msg)+1)) < 0) {
         if (errno == ENOTCONN) {
-            fprintf(stdout, "%s\n", strerror(errno));
+            print(strerror(errno));
             return -1;
         } else if (errno == ECONNRESET) {
-            fprintf(stdout, "%s\n", strerror(errno));
+            print(strerror(errno));
             return -1;
         } else if (errno == EPIPE) {
-            fprintf(stdout, "%s\n", strerror(errno));
+            print(strerror(errno));
             return -1;
         } else if (errno == ETIMEDOUT) {
-            fprintf(stdout, "%s\n", strerror(errno));
+            print(strerror(errno));
             return -1;
         } else { 
-            fprintf(stdout, "%s\n", strerror(errno));
+            print(strerror(errno));
             return -1;
         }
     } else if (rc > 0) {
@@ -248,6 +237,12 @@ int ServerBase::sendToClient(const char *msg) {
     }
 
     return 0;
+}
+
+void ServerBase::print(const char *msg) {
+    if (VERBOSE) {
+        printf("\t\t\t\t%s\n", msg);
+    }
 }
 
 void ServerBase::shutdown() {

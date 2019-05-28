@@ -14,6 +14,8 @@
 
 #include "APESServer.h"
 
+static char *delim = "\r\n";
+
 APESServer::APESServer(sysArgs *args) {
     signal(SIGPIPE, SIG_IGN);
     assert(args != NULL);
@@ -48,7 +50,6 @@ void APESServer::execute() {
     sendToClient(msg.c_str());
     //msg = "END";
     //sendToClient(msg.c_str());
-    //fprintf(stdout,"%s",  msg.c_str());
     
     char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
     while (1) {
@@ -60,11 +61,10 @@ void APESServer::execute() {
 
         int rc;
         while ((rc = readFromClient(cmdline)) > 0) {
-                cmdline[strlen(cmdline)-1] = '\0';
-                //msg = "\r\n";
-                //sendToClient(msg.c_str());
+                //cmdline[strlen(cmdline)-1] = '\0';
+                sendToClient(delim);
                
-                if (!strncmp(cmdline, "\r\n", MAXLINE)) {
+                if (!strncmp(cmdline, delim, MAXLINE)) {
                     break;
                 } else {
                     // writes to command file for shell to read
@@ -100,7 +100,7 @@ void APESServer::execute() {
     
     close(this->cfd);
     this->cfd = -1;
-    fprintf(stdout, "Disconnected!\n");
+    print("Disconnected!");
     return;
 
 }
@@ -108,16 +108,16 @@ void APESServer::execute() {
 void APESServer::shutdown() {
     std::string msg = "Server shutting down!\n";
     sendToClient(msg.c_str());
-    fprintf(stdout, "%s", msg.c_str());
+    print(msg.c_str());
 
     if (this->cfd >= 0) {
         if (close(this->cfd) < 0) {
-            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            print(strerror(errno));
         }
     }
     if (this->sfd >= 0) {
         if (close(this->sfd) < 0) {
-            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            print(strerror(errno));
         }
     }
     return;

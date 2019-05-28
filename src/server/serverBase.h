@@ -15,6 +15,7 @@ class ServerBase {
         virtual void execute();
         int readFromClient(char *cmdline);
         int sendToClient(const char *msg);
+        void print(const char *msg);
 
     public:
         ServerBase();
