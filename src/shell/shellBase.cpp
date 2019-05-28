@@ -6,7 +6,6 @@
 #include <assert.h>
 #include "shellBase.h"
 #include <assert.h>
-#include "../misc/rio.h"
 #include "../misc/flags.h"
 
 
@@ -18,11 +17,9 @@ ShellBase::~ShellBase() {}
 
 void ShellBase::run() {
     char cmdline[MAXLINE];
-    rio_t buf;
     
     while (1) {
-        rio_readinitb(&buf, STDIN_FILENO);
-        rio_readlineb(&buf, cmdline, MAXLINE);
+        read(STDIN_FILENO, cmdline, MAXLINE);
 
         if (feof(stdin)) {
             printf("\n");

@@ -3,7 +3,6 @@
 
 #define MAXCONN 1
 
-
 class ServerBase {
     protected:
         int sfd;

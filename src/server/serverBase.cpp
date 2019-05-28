@@ -11,7 +11,6 @@
 #include <errno.h>
 
 #include "serverBase.h"
-#include "../misc/rio.h"
 #include "../misc/flags.h"
 
 #define EN      1
