@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/types.h> // for AF_INET
 #include <netdb.h> // for ip_ntoa
@@ -197,7 +198,10 @@ int ServerBase::readFromClient(char *cmdline) {
     
     int rc;
     if ((rc = read(this->cfd, cmdline, MAXLINE)) < 0) {
-        if (errno == ECONNRESET) {
+        if (errno == ENOTCONN) {
+            fprintf(stdout, "%s\n", strerror(errno));
+            return -1;
+        } else if (errno == ECONNRESET) {
             fprintf(stdout, "%s\n", strerror(errno));
             return -1;
         } else if (errno == EPIPE) {
@@ -223,7 +227,10 @@ int ServerBase::sendToClient(const char *msg) {
 
     int rc;
     if ((rc = write(this->cfd, msg, strlen(msg)+1)) < 0) {
-        if (errno == ECONNRESET) {
+        if (errno == ENOTCONN) {
+            fprintf(stdout, "%s\n", strerror(errno));
+            return -1;
+        } else if (errno == ECONNRESET) {
             fprintf(stdout, "%s\n", strerror(errno));
             return -1;
         } else if (errno == EPIPE) {

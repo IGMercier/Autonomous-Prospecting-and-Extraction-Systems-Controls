@@ -23,8 +23,8 @@ void APESShell::run() {
             cmdlock.unlock();
             continue;
         }
-        cmdlock.unlock();
 
+        cmdlock.unlock();
 
         evaluate((char *)cmdline.c_str());
     }
