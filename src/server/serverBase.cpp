@@ -24,8 +24,6 @@ ServerBase::ServerBase() {
     this->cfd = -1;
 }
 
-ServerBase::~ServerBase() {}
-
 void ServerBase::createServer(int port) {
     assert(port > 0);
     fprintf(stdout, "Starting Server!\n");
@@ -58,6 +56,41 @@ void ServerBase::createServer(int port) {
         return;
     }
 
+    return;
+}
+
+int ServerBase::createClient() {
+    struct sockaddr_in caddr;
+    socklen_t caddr_size;
+
+    caddr_size = sizeof(struct sockaddr_in);
+
+    // accept() blocks until client connects
+    assert(this->sfd >= 0);
+
+    int rc = accept(this->sfd,
+                    (struct sockaddr *)&caddr,
+                    &caddr_size);
+    if (rc < 0) { return -1; }
+    this->cfd = rc;
+    return 0;
+}
+
+void ServerBase::execute() {
+   // char *c_ip = inet_ntoa(caddr.sin_addr);
+   // std::string ip(c_ip);
+
+    std::string msg = "Server: Connected\n";
+    sendToClient(msg.c_str());
+    while (1) {
+        setServerSockOpts();
+        setClientSockOpts();
+        msg = "in loop\n";
+        sendToClient(msg.c_str());
+    }
+
+    close(this->cfd);
+    this->cfd = -1;
     return;
 }
 
@@ -105,6 +138,17 @@ int ServerBase::setServerSockOpts() {
 
 }
 
+int ServerBase::setClientSockOpts() {
+    int flags = 1;
+    if (setsockopt(this->cfd, SOL_SOCKET, SO_KEEPALIVE,
+                   (const void *)&flags, sizeof(flags)) < 0) {
+        fprintf(stderr, "\t\t\t%s\n", strerror(errno));
+        return -1;
+    }
+    return 0;
+
+}
+
 int ServerBase::checkSockOpts() {
     int optval, optlen;
 
@@ -148,69 +192,6 @@ int ServerBase::checkSockOpts() {
     return fail;
 }
 
-void ServerBase::run() {
-    assert(this->sfd >= 0);
-
-    while (1) {
-        int val = createClient();
-        if (val == -1) {
-            this->cfd = -1;
-            continue;
-        } else if (val == -2) {
-            close(this->cfd);
-            this->cfd = -1;
-            continue;
-        }
-        execute();
-    }
-}
-
-int ServerBase::createClient() {
-    struct sockaddr_in caddr;
-    socklen_t caddr_size;
-
-    caddr_size = sizeof(struct sockaddr_in);
-
-    // accept() blocks until client connects
-    assert(this->sfd >= 0);
-
-    int rc = accept(this->sfd,
-                    (struct sockaddr *)&caddr,
-                    &caddr_size);
-    if (rc < 0) { return -1; }
-    this->cfd = rc;
-    return 0;
-}
-
-int ServerBase::setClientSockOpts() {
-    int flags = 1;
-    if (setsockopt(this->cfd, SOL_SOCKET, SO_KEEPALIVE,
-                   (const void *)&flags, sizeof(flags)) < 0) {
-        fprintf(stderr, "\t\t\t%s\n", strerror(errno));
-        return -1;
-    }
-    return 0;
-
-}
-
-void ServerBase::execute() {
-   // char *c_ip = inet_ntoa(caddr.sin_addr);
-   // std::string ip(c_ip);
-
-    std::string msg = "Server: Connected\n";
-    sendToClient(msg.c_str());
-    while (1) {
-        setServerSockOpts();
-        setClientSockOpts();
-        msg = "in loop\n";
-        sendToClient(msg.c_str());
-    }
-
-    close(this->cfd);
-    this->cfd = -1;
-    return;
-}
-
 int ServerBase::readFromClient(char *cmdline) {
     assert(cmdline != NULL);
     assert(this->cfd >= 0);
@@ -237,12 +218,30 @@ int ServerBase::readFromClient(char *cmdline) {
     return 0;
 }
 
-void ServerBase::sendToClient(const char *msg) {
+int ServerBase::sendToClient(const char *msg) {
     assert(msg != NULL);
     assert(this->cfd >= 0);
 
-    rio_writen(this->cfd, (void *)msg, strlen(msg));
+    int rc;
+    if ((rc = write(this->cfd, msg, strlen(msg)+1)) < 0) {
+        if (errno == ECONNRESET) {
+            fprintf(stdout, "%s\n", strerror(errno));
+            return -1;
+        } else if (errno == EPIPE) {
+            fprintf(stdout, "%s\n", strerror(errno));
+            return -1;
+        } else if (errno == ETIMEDOUT) {
+            fprintf(stdout, "%s\n", strerror(errno));
+            return -1;
+        } else { 
+            fprintf(stdout, "%s\n", strerror(errno));
+            return -1;
+        }
+    } else if (rc > 0) {
+        return 1;
+    }
 
+    return 0;
 }
 
 void ServerBase::shutdown() {
@@ -250,3 +249,5 @@ void ServerBase::shutdown() {
     close(this->sfd);
     exit(0);
 }
+
+ServerBase::~ServerBase() {}

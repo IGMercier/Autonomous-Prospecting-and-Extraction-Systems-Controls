@@ -5,22 +5,22 @@
 
 
 class ServerBase {
-    public:
+    protected:
         int sfd;
         int cfd;
-
-        ServerBase();
         void createServer(int port);
         int createClient();
-        virtual void run();
-        virtual void execute();
         int setServerSockOpts();
         int setClientSockOpts();
         int checkSockOpts();
+        virtual void execute();
         int readFromClient(char *cmdline);
-        void sendToClient(const char *msg);
+        int sendToClient(const char *msg);
+
+    public:
+        ServerBase();
         virtual void shutdown();
-        virtual ~ServerBase();
+        ~ServerBase();
 };
 
 #endif

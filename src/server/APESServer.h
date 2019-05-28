@@ -11,10 +11,10 @@ class APESServer : public ServerBase {
         std::mutex *log_mtx;
         std::deque<std::string> *cmdq;
         std::deque<std::string> *logq;
+        void execute() override;
     public:
         APESServer(sysArgs *args);
-        void run(int port) override;
-        void execute() override;
+        void run(int port);
         void shutdown() override;
         virtual ~APESServer();
 };

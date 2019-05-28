@@ -38,7 +38,7 @@ void APESServer::run(int port) {
         createClient();
         if (this->cfd < 0);
         
-        assert(this->cfd >= 0);
+        //assert(this->cfd >= 0);
         execute();
     }
 }
@@ -64,7 +64,7 @@ void APESServer::execute() {
             if ((rc = readFromClient(cmdline)) > 0) {
                 cmdline[strlen(cmdline)-1] = '\0';
                 //fprintf(stdout, "%s", msg.c_str());
-                msg = "END";
+                msg = "";
                 sendToClient(msg.c_str());
                
                 if (!strncmp(cmdline, "END", MAXLINE)) {
@@ -101,8 +101,7 @@ void APESServer::execute() {
     std::string buf = "standby";
     this->cmdq->push_back(buf);
     cmdlock.unlock();
-
-
+    
     close(this->cfd);
     this->cfd = -1;
     fprintf(stdout, "Disconnected!\n");
