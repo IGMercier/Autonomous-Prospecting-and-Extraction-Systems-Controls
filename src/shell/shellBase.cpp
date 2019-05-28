@@ -5,23 +5,15 @@
 #include <thread>
 #include <assert.h>
 #include "shellBase.h"
-#include "../misc/flags.h"
+#include <assert.h>
 #include "../misc/rio.h"
+#include "../misc/flags.h"
+
 
 static void execute(parse_token *tk, int bg);
 
 using std::thread;
-
-ShellBase::ShellBase(int *readFrom) {
-    if (readFrom == NULL) {
-       // fd_mtx.lock();
-        *(this->readFrom) = STDIN_FILENO;
-       // fd_mtx.unlock();
-    } else {
-        this->readFrom = readFrom;
-    }
-}
-
+ShellBase::ShellBase() {}
 ShellBase::~ShellBase() {}
 
 void ShellBase::run() {
@@ -29,21 +21,15 @@ void ShellBase::run() {
     rio_t buf;
     
     while (1) {
-       // fd_mtx.lock();
-        if (*(this->readFrom) >= 0) {
-            rio_readinitb(&buf, *(this->readFrom));
-            //fd_mtx.unlock();
-            rio_readlineb(&buf, cmdline, MAXLINE);
+        rio_readinitb(&buf, STDIN_FILENO);
+        rio_readlineb(&buf, cmdline, MAXLINE);
 
-            if (feof(stdin)) {
-                printf("\n");
-                fflush(stdout);
-                fflush(stdin);
-            }
-            evaluate(cmdline);
-        } else {
-            //fd_mtx.unlock();
+        if (feof(stdin)) {
+            printf("\n");
+            fflush(stdout);
+            fflush(stdin);
         }
+        evaluate(cmdline);
     }
     return; // kills shell thread in main program
 }
@@ -100,14 +86,19 @@ int ShellBase::builtin_command(parse_token *tk) {
 }
 
 int ShellBase::parseline(char *cmdline, parse_token *tk) {
-    char *delim = " \t\n";
+    std::string sdelim = " \t\n";
+    const char *delim = sdelim.c_str();
     char *argv;
     int bg;
 
     int argc = 0;
     tk->argc = 0;
 
-    while ((argv = strsep(&cmdline, delim)) != NULL) {
+    char *buf = (char *)calloc(MAXLINE, sizeof(char));
+    strncpy(buf, cmdline, MAXLINE);
+
+    while ((argv = strsep(&buf, delim)) != NULL) {
+
         tk->argv[argc] = argv;
         argc++;
         if (argc == MAXARGS) { break; } 
@@ -115,7 +106,10 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
 
     tk->argc = argc;
 
-    if (tk->argc == 0) { return 1; }
+    if (tk->argc == 0) {
+        free(buf);
+        return 1;
+    }
 
     
     if (!strcmp(tk->argv[0], "fg")) {
@@ -128,17 +122,18 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
         tk->bcomm = BUILTIN_NONE;
     }
 
+
     if ((bg = (*(tk->argv[(tk->argc)-1]) == '&')) != 0) {
         tk->argv[--(tk->argc)] = NULL;
     }
 
+    free(buf);
     return bg;
 }
 
-void ShellBase::shell_print(std::string msg) {
+void ShellBase::print(std::string msg) {
     std::string toPrint = "Shell: " + msg;
-
-    rio_writen(*(this->readFrom), (void *)toPrint.c_str(), strlen(toPrint.c_str()));
+    printf("%s\n", msg.c_str());
     return;
 }
 

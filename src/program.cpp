@@ -1,22 +1,14 @@
 #include <thread>
-#include <signal.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "server/APESServer.h"
 #include "shell/APESShell.h"
-#include "misc/flags.h"
 
-static void sigpipe_handler(int sig);
-static void sigint_handler(int sig);
-
-static void serverThread(int *cfd);
-static void shellThread(int *cfd);
+static void serverThread(sysArgs *args, int port);
+static void shellThread(sysArgs *args);
 
 int main(int argc, char** argv) {
-    signal(SIGPIPE, sigpipe_handler);
-    signal(SIGINT, sigint_handler);
-    signal(SIGTSTP, SIG_IGN);
-
     int port;
     if (argc < 2) {
         port = 16778;
@@ -24,18 +16,30 @@ int main(int argc, char** argv) {
         port = atoi(argv[1]);
     }
 
-    int cfd = -1;
+    std::mutex cmd_mtx;
+    std::mutex log_mtx;
 
-    std::thread tServer(serverThread, &cfd);
-    std::thread tShell(shellThread, &cfd);
+    std::deque<std::string> *cmdq = new std::deque<std::string>;
+    std::deque<std::string> *logq = new std::deque<std::string>;
+    cmdq->clear();
+    logq->clear();
 
-    if (tServer.joinable()) {
-        tServer.join();
-    }
+    sysArgs *args = new sysArgs;
+    args->cmd_mtx = &cmd_mtx;
+    args->log_mtx = &log_mtx;
+    args->cmdq = cmdq;
+    args->logq = logq;
 
+    std::thread tServer(serverThread, args, port);
+    tServer.detach();
+    std::thread tShell(shellThread, args);
     if (tShell.joinable()) {
         tShell.join();
     }
+
+    delete cmdq;
+    delete logq;
+    delete args;
 
     // control should never reach here
     return -1;
@@ -46,61 +50,24 @@ int main(int argc, char** argv) {
 /*
     THREAD CALLBACKS
 */
-static void serverThread(int *cfd) {
-    assert(shell_cfd != NULL);
+static void serverThread(sysArgs *args, int port) {
+    assert(args != NULL);
     
-    APESServer server = APESServer();
-    while (server.sfd < 0) {
-        server.serverSetup(port);
-    }
-    assert(server.sfd >= 0);
-    server.run(shell_cfd);
+    APESServer *server = new APESServer(args);
+    server->run(port);
     
     // control should never reach here
+    delete server;
     return;
 }
 
-   
-static void shellThread(int *cfd) {
-    assert(shell_cfd != NULL);
+static void shellThread(sysArgs *args) {
+    assert(args != NULL);
 
-    APESShell shell = APESShell(cfd);
-    shell.run();
+    APESShell *shell = new APESShell(args);
+    shell->run();
 
     // control should never reach here
-    return;
-}
-
-
-/*
-    SIGNAL HANDLERS
-*/
-static void sigpipe_handler(int sig) {
-    int old_errno = errno;
-
-    sigset_t mask, prev;
-    sigprocmask(SIG_BLOCK, &mask, &prev);
-
-    disconnected = 1;
-    //robot.standby();
-
-    sigprocmask(SIG_SETMASK, &prev, NULL);
-    errno = old_errno;
-
-    return;
-}
-
-static void sigint_handler(int sig) {
-    int old_errno = errno;
-
-    sigset_t mask, prev;
-    sigprocmask(SIG_BLOCK, &mask, &prev);
-
-    shutdownSIG = 1;
-    // robot.shutdown();
-
-    sigprocmask(SIG_SETMASK, &prev, NULL);
-    errno = old_errno;
-
+    delete shell;
     return;
 }

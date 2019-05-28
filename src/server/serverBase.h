@@ -3,22 +3,23 @@
 
 #define MAXCONN 1
 
-#include <string>
 
 class ServerBase {
-    public:
-        ServerBase();
+    protected:
         int sfd;
         int cfd;
         void createServer(int port);
+        int createClient();
         int setServerSockOpts();
         int setClientSockOpts();
         int checkSockOpts();
-        void run();
-        int createClient();
+        virtual void execute();
         int readFromClient(char *cmdline);
-        void sendToClient(std::string msg);
-        void shutdown();
+        int sendToClient(const char *msg);
+
+    public:
+        ServerBase();
+        virtual void shutdown();
         ~ServerBase();
 };
 

@@ -1,66 +1,109 @@
-#include "APESServer.h"
 #include <cstdlib>
 #include <cstdio>
+#include <csignal>
 #include <unistd.h>
 #include <cstring>
 #include <assert.h>
 #include <errno.h>
-#include <thread>
-#include "../misc/flags.h"
+#include <netinet/tcp.h>
 
-static void sigpipe_handler(int sig);
-static void connection(APESServer *server);
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 
-APESServer::APESServer(int *fd) {
-    signal(SIGPIPE, sigpipe_handler);
-    this->fd = fd;    
+#include "APESServer.h"
+
+APESServer::APESServer(sysArgs *args) {
+    signal(SIGPIPE, SIG_IGN);
+    assert(args != NULL);
+    assert(args->cmd_mtx != NULL);
+    assert(args->log_mtx != NULL);
+    assert(args->cmdq != NULL);
+    assert(args->logq != NULL);
+
+    this->cmd_mtx = args->cmd_mtx;
+    this->log_mtx = args->log_mtx;
+    this->cmdq = args->cmdq;
+    this->logq = args->logq;
 }
 
-void APESServer::run() {
+void APESServer::run(int port) {
+    while (this->sfd < 0) {
+        createServer(port);
+    }
     assert(this->sfd >= 0);
 
-    while (!shutdownSIG) {
-        int val = createClient();
-        if (val == -1) {
-            this->cfd = -1;
-            continue;
-        } else if (val == -2) {
-            close(this->cfd);
-            this->cfd = -1;
-            continue;
-        }
-
-        std::thread child(connection, this);
-        child.detach();
+    while (1) {
+        createClient();
+        if (this->cfd < 0);
+        
+        //assert(this->cfd >= 0);
+        execute();
     }
-    shutdown();
-    return; // kills server thread in main program
 }
 
-static void connection(APESServer *server) {
-    assert(server != NULL);
-    
-    disconnected = 0;
-
+void APESServer::execute() {
     std::string msg = "Connected!\n";
-    server->sendToClient(msg);
-    fprintf(stdout, msg.c_str());
+    sendToClient(msg.c_str());
+    //msg = "END";
+    //sendToClient(msg.c_str());
+    //fprintf(stdout,"%s",  msg.c_str());
+    
+    char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
+    while (1) {
+        setClientSockOpts();
+        setServerSockOpts();
+        //checkSockOpts();
 
-    while (!disconnected && !shutdownSIG) {
-        server->setClientSockOpts();
-        fprintf(stdout, "\t\t\t%d\n", disconnected);
+        memset(cmdline, 0, MAXLINE);
 
-        fd_mtx.lock();
-        *(server->fd) = server->cfd;
-        fd_mtx.unlock();
+        int fail = 0;
+        while (1) {
+            int rc;
+            if ((rc = readFromClient(cmdline)) > 0) {
+                cmdline[strlen(cmdline)-1] = '\0';
+                //fprintf(stdout, "%s", msg.c_str());
+                msg = "";
+                sendToClient(msg.c_str());
+               
+                if (!strncmp(cmdline, "END", MAXLINE)) {
+                    break;
+                } else {
+                    // writes to command file for shell to read
+                    std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
+                    std::string buf = cmdline;
+                    this->cmdq->push_back(buf);
+                    cmdlock.unlock();
+                }
+
+            } else if (rc < 0) { fail = 1; break; }
+        }
+
+        if (fail) { break; }
+
+
+        std::unique_lock<std::mutex> loglock(*(this->log_mtx));
+        while (!this->logq->empty()) {
+            std::string logline = this->logq->at(0);
+            printf("%s", logline.c_str());
+            sendToClient(logline.c_str());
+            this->logq->pop_front();;
+        }
+        loglock.unlock();
     }
 
-    close(server->cfd);
-    server->cfd = -1;
+    free(cmdline);
 
-    fd_mtx.lock();
-    *(server->fd) = -1;
-    fd_mutex.unlock();
+    // if disconnected, clears command queue and inserts standby command
+    std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
+    this->cmdq->clear();
+    std::string buf = "standby";
+    this->cmdq->push_back(buf);
+    cmdlock.unlock();
+    
+    close(this->cfd);
+    this->cfd = -1;
     fprintf(stdout, "Disconnected!\n");
     return;
 
@@ -68,7 +111,7 @@ static void connection(APESServer *server) {
 
 void APESServer::shutdown() {
     std::string msg = "Server shutting down!\n";
-    sendToClient(msg);
+    sendToClient(msg.c_str());
     fprintf(stdout, "%s", msg.c_str());
 
     if (this->cfd >= 0) {
@@ -87,17 +130,3 @@ void APESServer::shutdown() {
 APESServer::~APESServer() {
 }
 
-/* REMOVE AFTER TESTING */
-static void sigpipe_handler(int sig) {
-    int old_errno = errno;
-    sigset_t mask, prev;
-    sigprocmask(SIG_BLOCK, &mask, &prev);
-
-    fprintf(stdout, "IN SIG HANDLER\n");
-
-    disconnected = 1;
-
-    sigprocmask(SIG_SETMASK, &prev, NULL);
-    errno = old_errno;
-    return;
-}
