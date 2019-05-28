@@ -105,7 +105,42 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
         ctk->command = WOB;
     } else if (!strcmp(ltk->argv[0], "motor")) {
         if (!strcmp(ltk->argv[1], "drive")) {
-            ctk->command = MOTOR_DRIVE;
+
+            if (ltk->argv[2] != NULL) {
+                ctk->command = MOTOR_DRIVE;
+                int rc = atoi(ltk->argv[2]); // dir
+
+                if (rc == 0) {
+                    ctk->command = NONE;
+                } else {
+                    ctk->argv[(ctk->argc)++] = rc;
+                    if (ltk->argv[3] != NULL) {
+                        rc = atoi(ltk->argv[3]); // speed
+                    
+                        if (rc == 0) {
+                            ctk->command = NONE;
+                        } else {
+                            ctk->argv[(ctk->argc)++] = rc;
+
+                            if (ltk->argv[4] != NULL) {
+                                rc = atoi(ltk->argv[4]); // time
+
+                                if (rc == 0) {
+                                    ctk->command = NONE;
+                                } else {
+                                    ctk->argv[(ctk->argc)++] = rc;
+                                }
+                            }
+                        }
+                    } else {
+                        ctk->command = NONE;
+                    }
+                }
+
+            } else {
+                ctk->command = NONE;
+            }
+
         } else if (!strcmp(ltk->argv[1], "stop")) {
             ctk->command = MOTOR_STOP;
         } else {
@@ -119,13 +154,14 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
         } else if (!strcmp(ltk->argv[1], "cycle")) {
             if (ltk->argv[2] != NULL) {
                 ctk->command = DRILL_CYCLE;
-
                 int rc = atoi(ltk->argv[2]);
+
                 if (rc == 0) {
                     ctk->command = NONE;
                 } else {
-                    ctk->param = rc;
+                    ctk->argv[(ctk->argc)++] = rc;
                 }
+
             } else {
                 ctk->command = NONE;
             }
@@ -181,10 +217,12 @@ static void execute(parse_token *ltk, int bg, APESShell *shell) {
             shell->toSend(msg);
             break;
         case AUTO_ON:
+            //this->robot->auto_on();
             msg = "System's auto mode enabled!\n";
             shell->toSend(msg);
             break;
         case AUTO_OFF:
+            //this->robot->auto_off();
             msg = "System's auto mode disabled!\n";
             shell->toSend(msg);
             break;
@@ -209,14 +247,20 @@ static void execute(parse_token *ltk, int bg, APESShell *shell) {
             shell->toSend(msg);
             break;
         case WOB:
+            //this->robot->read_wob();
             msg = "Reading wob!\n";
             shell->toSend(msg);
             break;
         case MOTOR_DRIVE:
+            int dir = ctk->argv[0];
+            int speed = ctk->argv[1];
+            int time = ctk->argv[2];
+            //this->robot->motor_drive(dir, speed, time);
             msg = "System's motor enabled for []!\n";
             shell->toSend(msg);
             break;
         case MOTOR_STOP:
+            //this->robot->motor_stop();
             msg = "System's motor disabled!\n";
             shell->toSend(msg);
             break;

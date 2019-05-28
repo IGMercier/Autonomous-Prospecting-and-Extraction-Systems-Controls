@@ -3,7 +3,7 @@
 This folder contains all the software stuffs
 
 * To setup standalone network:
-    * [Follow these instructions to setup an access point](www.raspberrypi.org/documentation/configuration/wireless/access-point.md)
+    * [Follow these instructions to setup an access point](https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md)
     * Comment out all network configs in /etc/wpa_supplicant/wpa_supplicant.conf
 
 * To run shell only:

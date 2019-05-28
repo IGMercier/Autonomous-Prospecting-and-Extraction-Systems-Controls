@@ -43,7 +43,8 @@ typedef enum job_state {
 typedef struct command_token {
     command_state command;
     job_state jstate;
-    int param;
+    int argv[MAXARGS];
+    int argc;
 } command_token;
 
 #endif
