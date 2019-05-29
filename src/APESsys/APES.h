@@ -35,6 +35,7 @@ class APES {
         Amm* amm;
         WLevel* wlevel;
         Motor* motor;
+        Encoder *encoder;
     public:
         APES();
         ~APES();

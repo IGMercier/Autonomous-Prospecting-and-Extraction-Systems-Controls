@@ -1,8 +1,12 @@
-#include "components.h"
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <wiringPiSPI.h>
+
+#define _USE_MATH_DEFINES
+#include <cmath>
+
+#include "components.h"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -230,4 +234,42 @@ void Motor::motor_stop() {
     if (this->L298N != NULL) {
         this->L298N.attr("stop")();
     }
+}
+
+
+/*
+    ENCODER FUNCTIONS
+*/
+Encoder::Encoder(int fd, int ppr) {
+    this->fd = fd;
+    this->ppr = ppr;
+}
+
+Encoder::~Encoder() {
+
+}
+
+Encoder::getTick() {
+    /*
+        @TODO: this literally does nothing,
+               its just here to show how to read and write
+    */
+    wiringPiI2CWrite(this->fd, -1);
+    wiringPiI2CRead(this->fd);
+}
+
+Encoder::reset() {
+    /*
+        @TODO: this literally does nothing,
+               its just here to show how to read and write
+    */
+    wiringPiI2CWrite(this->fd, -1);
+    wiringPiI2CRead(this->fd);
+
+}
+
+float Encoder::calcVel(int n, int t) {
+    // n = number of pulses
+    // t = sampling time
+    return (float)(2*M_PI*n / (this->ppr * t));
 }

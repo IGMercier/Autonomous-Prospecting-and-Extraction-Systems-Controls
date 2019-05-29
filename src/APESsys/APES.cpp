@@ -44,14 +44,18 @@ int APES::setup(char *filename) {
     // starts python interpreter
     py::initialize_interpreter();
     //@TODO: put the correct pin numbers
+    
     this->wob = new Wob(2, 3);
     this->therm = new Therm(7, 27);
     this->amm = new Amm(5, 6);
     this->wlevel = new WLevel(2, 4);
     this->motor = new Motor(26, 8);
+
+    int fd = wiringPiI2CSetup();
+    this->encoder = new Encoder(fd, 1024); // ppr from datasheet
     
-    wiringPiSPISetup(0, 500000);
-    wiringPiSPISetup(1, 500000);
+    wiringPiSPISetup(0, 500000); // for adc
+    wiringPiSPISetup(1, 500000); // for adc (level)
     return 0;
 }
 

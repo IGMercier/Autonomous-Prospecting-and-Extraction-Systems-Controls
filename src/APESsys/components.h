@@ -57,11 +57,14 @@ class Motor {
 
 class Encoder {
     private:
-        int pinResetInterr;
-        int pinTickInterr;
+        int fd;
+        int ppr; // pulse per revolution
     public:
+        Encoder();
         void reset();
         void getTick();
+        float calcVel(int n, int t);
+        ~Encoder();
 };
 
 #endif
