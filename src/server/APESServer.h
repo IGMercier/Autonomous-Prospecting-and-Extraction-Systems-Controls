@@ -9,6 +9,7 @@ class APESServer : public ServerBase {
     private:
         std::mutex *cmd_mtx;
         std::mutex *log_mtx;
+        std::mutex *data_mtx;
         std::deque<std::string> *cmdq;
         std::deque<std::string> *logq;
         void execute() override;

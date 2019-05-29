@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <vector>
+#include <mutex>
 #include <chrono>
 #include "components.h"
 
@@ -12,7 +13,8 @@ typedef enum {
     THERM_DATA,
     AMM_DATA,
     WLEVEL_DATA,
-    WOB_DATA
+    WOB_DATA,
+    ENCODER_DATA
 } sensor;
 
 typedef struct dataPt {
@@ -28,7 +30,7 @@ typedef struct dataPt {
 class APES {
     private:
         char *filename;
-        std::FILE *file;
+        std::mutex *data_mtx;
         std::vector<dataPt *> dataVector;
         Wob* wob;
         Therm* therm;

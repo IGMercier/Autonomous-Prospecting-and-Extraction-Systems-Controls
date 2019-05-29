@@ -1,5 +1,4 @@
 #include <thread>
-#include <mutex>
 #include <atomic>
 #include <wiringPiSPI.h>
 #include <assert>
@@ -16,17 +15,18 @@ static void amm_thread(APES *robot);
 static void wlevel_thread(APES *robot);
 static void wob_thread(APES *robot);
 
-static std::mutex data_mtx;
-
-APES::APES(char *filename) {
+APES::APES(char *filename, std::mutex *data_mtx) {
     if (filename != NULL) {
         this->filename = filename;
     } else {
         this->filename = "data.csv";
     }
     
-    this->file = fopen(this->filename, "w");
-    fprintf(this->file, "time, sensor, value\n");
+    FILE *file = fopen(this->filename, "w");
+    fprintf(file, "time, sensor, value\n");
+    fclose(file);
+
+    this->data_mtx = data_mtx;
 
     this->wob = NULL;
     this->therm = NULL;
@@ -66,7 +66,7 @@ dataPt* APES::read_temp() {
         data->sensor = THERM_DATA;
         data->dataField.dataF = temp;
         
-        std::unique_lock<std::mutex> datalock(data_mtx);
+        std::unique_lock<std::mutex> datalock(*(this->data_mtx));
         saveData(data);
         datalock.unlock();
 
@@ -98,7 +98,7 @@ dataPt* APES::read_curr() {
         data->sensor = AMM_DATA;
         data->dataField.dataF = curr;
         
-        std::unique_lock<std::mutex> datalock(data_mtx);
+        std::unique_lock<std::mutex> datalock(*(this->data_mtx));
         saveData(data);
         datalock.unlock();
 
@@ -116,7 +116,7 @@ dataPt* APES::read_wlevel() {
         data->sensor = WLEVEL_DATA;
         data->dataField.dataI = level;
         
-        std::unique_lock<std::mutex> datalock(data_mtx);
+        std::unique_lock<std::mutex> datalock(*(this->data_mtx));
         saveData(data);
         datalock.unlock();
 
@@ -134,7 +134,7 @@ dataPt* APES::read_wob() {
         data->sensor = WOB_DATA;
         data->dataField.dataF = force;
 
-        std::unique_lock<std::mutex> datalock(data_mtx);
+        std::unique_lock<std::mutex> datalock(*(this->data_mtx));
         saveData(data);
         datalock.unlock();
 
@@ -211,7 +211,7 @@ void APES::finish() {
     // and deletes everything, so
     // you better actually want to kill
     // the system if you call this func
-    std::unique_lock<std::mutex> datalock(data_mtx);
+    std::unique_lock<std::mutex> datalock(*(this->data_mtx));
     writeDataVector();
     for (unsigned int  = 0; i < this->dataVector.size(); i++) {
         delete this->dataVector.at(i);
@@ -249,37 +249,42 @@ void APES::saveData(dataPt *data) {
 
 void APES::writeDataVector() {
     // assumed that data_mtx is locked
-
+    
+    FILE *file = fopen(this->filename, "a");
     for (unsigned int i = 0; i < this->dataVector.size(); i++) {
         dataPt *data = this->dataVector.at(i);
 
         switch(data->origin) {
             case THERM_DATA:
-                fprintf(this->file, "%s, %li, %f\n",
+                fprintf(file, "%s, %li, %f\n",
                         "therm", data->time.count(), data->dataField.dataF);
                 break;
             case AMM_DATA:
-                fprintf(this->file, "%s, %li, %f\n",
+                fprintf(file, "%s, %li, %f\n",
                         "amm", data->time.count(), data->dataField.dataF);
                 break;
             case WLEVEL_DATA:
-                fprintf(this->file, "%s, %li, %d\n",
+                fprintf(file, "%s, %li, %d\n",
                         "level", data->time.count(), data->dataField.dataI);
                 break;
             case WOB_DATA:
-                fprintf(this->file, "%s, %li, %f\n",
+                fprintf(file, "%s, %li, %f\n",
+                        "wob", data->time.count(), data->dataField.dataF);
+                break;
+            case ENCODER_DATA:
+                fprintf(file, "%s, %li, %f\n",
                         "wob", data->time.count(), data->dataField.dataF);
                 break;
             default:
-                fprintf(this->file, "%s, %li, %f\n",
+                fprintf(file, "%s, %li, %f\n",
                         "none", data->time.count(), data->dataField.dataF);
                 break;
         }
 
         delete data;
     }
-
     this->dataVector.clear();
+    fclose(file);
     return;
 }
 

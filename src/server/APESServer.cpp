@@ -21,11 +21,14 @@ APESServer::APESServer(sysArgs *args) {
     assert(args != NULL);
     assert(args->cmd_mtx != NULL);
     assert(args->log_mtx != NULL);
+    assert(args->data_mtx != NULL);
     assert(args->cmdq != NULL);
     assert(args->logq != NULL);
 
     this->cmd_mtx = args->cmd_mtx;
     this->log_mtx = args->log_mtx;
+    this->data_mtx = args->data_mtx;
+
     this->cmdq = args->cmdq;
     this->logq = args->logq;
 }
@@ -77,6 +80,7 @@ void APESServer::execute() {
 
         if (rc < 0) { break; }
 
+        // reads off whatever the shell has logged
         std::unique_lock<std::mutex> loglock(*(this->log_mtx));
         while (!this->logq->empty()) {
             std::string logline = this->logq->at(0);
@@ -86,6 +90,11 @@ void APESServer::execute() {
         }
         loglock.unlock();
         sendToClient(delim);
+
+        // reads off data file
+        std::unique_lock<std::mutex> datalock(*(this->data_mtx));
+
+        datalock.unlock();
     }
 
     free(cmdline);

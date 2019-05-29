@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
     args->log_mtx = &log_mtx;
     args->cmdq = cmdq;
     args->logq = logq;
+    args->datafile = "data.csv";
 
     std::thread tServer(serverThread, args, port);
     tServer.detach();

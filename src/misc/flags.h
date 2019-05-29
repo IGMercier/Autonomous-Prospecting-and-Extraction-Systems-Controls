@@ -11,7 +11,9 @@
 typedef struct sysArgs {
     std::mutex *cmd_mtx;
     std::mutex *log_mtx;
+    std::mutex *data_mtx;
     std::deque<std::string> *cmdq;
-    std::deque<std::string> *logq; 
+    std::deque<std::string> *logq;
+    std::string datafile;
 } sysArgs;
 #endif
