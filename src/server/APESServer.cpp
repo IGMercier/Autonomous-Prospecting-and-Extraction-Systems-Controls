@@ -61,17 +61,18 @@ void APESServer::execute() {
 
         int rc;
         while ((rc = readFromClient(cmdline)) > 0) {
-                //cmdline[strlen(cmdline)-1] = '\0';
+            //cmdline[strlen(cmdline)-1] = '\0';
+            printf(cmdline);
                
-                if (!strncmp(cmdline, delim, MAXLINE)) {
-                    break;
-                } else {
-                    // writes to command file for shell to read
-                    std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
-                    std::string buf = cmdline;
-                    this->cmdq->push_back(buf);
-                    cmdlock.unlock();
-                }
+            if (!strncmp(cmdline, delim, MAXLINE)) {
+                break;
+            } else {
+                // writes to command file for shell to read
+                std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
+                std::string buf = cmdline;
+                this->cmdq->push_back(buf);
+                cmdlock.unlock();
+            }
         }
 
         if (rc < 0) { break; }

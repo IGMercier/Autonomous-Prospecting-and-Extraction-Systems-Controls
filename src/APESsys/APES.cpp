@@ -18,40 +18,38 @@ static void wob_thread(APES *robot);
 
 static std::mutex data_mtx;
 
-APES::APES() {
-    this->filename = NULL;
-    this->file = NULL;
+APES::APES(char *filename) {
+    if (filename != NULL) {
+        this->filename = filename;
+    } else {
+        this->filename = "data.csv";
+    }
+    
+    this->file = fopen(this->filename, "w");
+    fprintf(this->file, "time, sensor, value\n");
+
     this->wob = NULL;
     this->therm = NULL;
     this->amm = NULL;
     this->wlevel = NULL;
     this->motor = NULL;
+
+
+    // starts python interpreter
+    py::initialize_interpreter();
 }
 
 
 /* object methods */
-int APES::setup(char *filename) {
-
-    if (filename != NULL) {
-        this->filename = filename;
-    } else {
-        char *filename_default = "data.csv";
-        this->filename = filename_default;
-    }
-    this->file = fopen(this->filename, "w");
-    fprintf(this->file, "time, sensor, value\n");
-
-    // starts python interpreter
-    py::initialize_interpreter();
-    //@TODO: put the correct pin numbers
-    
+int APES::setup() {
+    //@TODO: put the correct pin numbers 
     this->wob = new Wob(2, 3);
     this->therm = new Therm(7, 27);
     this->amm = new Amm(5, 6);
     this->wlevel = new WLevel(2, 4);
     this->motor = new Motor(26, 8);
 
-    int fd = wiringPiI2CSetup();
+    int fd = wiringPiI2CSetup(/* fill with device id*/);
     this->encoder = new Encoder(fd, 1024); // ppr from datasheet
     
     wiringPiSPISetup(0, 500000); // for adc
@@ -164,17 +162,22 @@ void APES::auto_on() {
     stop_wob = 0;
 
     std::thread thermt(therm_thread, this);
-    thermt.detach();
-
     std::thread ammt(amm_thread, this);
-    ammt.detach();
-
-    std::thread wlvlt(wlevel_thread, this);
-    wlvlt.detach();
-
+    std::thread wlevelt(wlevel_thread, this);
     std::thread wobt(wob_thread, this);
-    wobt.detach();
 
+    if (thermt.joinable()) {
+        thermt.join();
+    }
+    if (ammt.joinable()) {
+        ammt.join();
+    }
+    if (wlevelt.joinable()) {
+        wlevelt.join();
+    }
+    if (wobt.joinable()) {
+        wobt.join();
+    }
     return;
 }
 
