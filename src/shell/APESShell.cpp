@@ -4,6 +4,7 @@
 #include <string>
 #include <unistd.h>
 #include <assert.h>
+#include <atomic>
 
 #include "APESShell.h"
 //#include "../APESsys/APES.h"
@@ -11,6 +12,11 @@
 
 using std::thread;
 static void execute(parse_token *ltk, int bg, APESShell *shell);
+
+std::atomic_int stop_therm = {0};
+std::atomic_int stop_amm = {0};
+std::atomic_int stop_wlevel = {0};
+std::atomic_int stop_wob = {0};
 
 APESShell::APESShell(sysArgs *args) {
     //this->robot = new APES();
@@ -35,12 +41,12 @@ void APESShell::run() {
 
         cmdlock.unlock();
 
-        evaluate((char *)cmdline.c_str());
+        evaluate(cmdline);
     }
     return; // kills shell thread in main program
 }
 
-void APESShell::evaluate(char *cmdline) {
+void APESShell::evaluate(std::string cmdline) {
     int bg;
     parse_token tk;
     thread child;
@@ -74,103 +80,118 @@ void APESShell::toSend(std::string msg) {
 
 void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
     //printf("\t\t\t%s\n", ltk->argv[0]);
+    int rc;
 
-    if (!strcmp(ltk->argv[0], "start")) {
+    if (ltk->argv[0] == "start") {
         ctk->command = START;
-    } else if (!strcmp(ltk->argv[0], "standby")) {
+        return;
+
+    } else if (ltk->argv[0] == "standby") {
         ctk->command = STANDBY;
-    } else if (!strcmp(ltk->argv[0], "data")) {
+        return;
+
+    } else if (ltk->argv[0] == "data") {
         ctk->command = DATA;
-    } else if (!strcmp(ltk->argv[0], "help")) {
+        return;
+
+    } else if (ltk->argv[0] == "help") {
         ctk->command = HELP;
-    } else if (!strcmp(ltk->argv[0], "quit")) {
+        return;
+
+    } else if (ltk->argv[0] == "quit") {
         ctk->command = QUIT;
-    } else if (!strcmp(ltk->argv[0], "auto")) {
-        if (!strcmp(ltk->argv[1], "on")) {
+        return;
+
+    } else if (ltk->argv[0] == "auto") {
+
+        if (ltk->argv[1] == "on") {
             ctk->command = AUTO_ON;
-        } else if (!strcmp(ltk->argv[1], "off")) {
+            return;
+        } else if (ltk->argv[1] == "off") {
             ctk->command = AUTO_OFF;
-        } else {
-            ctk->command = NONE;
+            return;
         }
-    } else if (!strcmp(ltk->argv[0], "temp")) {
+
+    } else if (ltk->argv[0] == "temp") {
         ctk->command = TEMP;
-    } else if (!strcmp(ltk->argv[0], "dtemp")) {
+        return;
+
+    } else if (ltk->argv[0] == "dtemp") {
         ctk->command = DTEMP;
-    } else if (!strcmp(ltk->argv[0], "curr")) {
+        return;
+
+    } else if (ltk->argv[0] == "curr") {
         ctk->command = CURR;
-    } else if (!strcmp(ltk->argv[0], "wlevel")) {
+        return;
+
+    } else if (ltk->argv[0] == "wlevel") {
         ctk->command = WLEVEL;
-    } else if (!strcmp(ltk->argv[0], "wob")) {
+        return;
+
+    } else if (ltk->argv[0] == "wob") {
         ctk->command = WOB;
-    } else if (!strcmp(ltk->argv[0], "motor")) {
-        if (!strcmp(ltk->argv[1], "drive")) {
+        return;
 
-            if (ltk->argv[2] != NULL) {
-                ctk->command = MOTOR_DRIVE;
-                int rc = atoi(ltk->argv[2]); // dir
+    } else if (ltk->argv[0] == "motor") {
 
-                if (rc == 0) {
-                    ctk->command = NONE;
-                } else {
-                    ctk->argv[(ctk->argc)++] = rc;
-                    if (ltk->argv[3] != NULL) {
-                        rc = atoi(ltk->argv[3]); // speed
-                    
-                        if (rc == 0) {
-                            ctk->command = NONE;
-                        } else {
-                            ctk->argv[(ctk->argc)++] = rc;
+        if (ltk->argv[1] == "drive") {
+            ctk->command = MOTOR_DRIVE;
 
-                            if (ltk->argv[4] != NULL) {
-                                rc = atoi(ltk->argv[4]); // time
-
-                                if (rc == 0) {
-                                    ctk->command = NONE;
-                                } else {
-                                    ctk->argv[(ctk->argc)++] = rc;
-                                }
-                            }
-                        }
-                    } else {
-                        ctk->command = NONE;
-                    }
-                }
-
-            } else {
+            try {
+                rc = std::stoi(ltk->argv[2]); // dir
+            } catch (...) {
                 ctk->command = NONE;
+                return;
             }
+            ctk->argv[(ctk->argc)++] = rc;
 
-        } else if (!strcmp(ltk->argv[1], "stop")) {
+            try {
+                rc = std::stoi(ltk->argv[3]); // speed
+            } catch (...) {
+                ctk->command = NONE;
+                return;
+            }
+            ctk->argv[(ctk->argc)++] = rc;
+
+            try {
+                rc = std::stoi(ltk->argv[4]); // time  
+            } catch (...) {
+                ctk->command = NONE;
+                return;
+            }
+            ctk->argv[(ctk->argc)++] = rc;
+            return;
+
+        } else if (ltk->argv[1] == "stop") {
             ctk->command = MOTOR_STOP;
-        } else {
-            ctk->command = NONE;
+            return;
+
         }
-    } else if (!strcmp(ltk->argv[0], "drill")) {
-        if (!strcmp(ltk->argv[1], "run")) {
+
+    } else if (ltk->argv[0] == "drill") {
+        if (ltk->argv[1] == "run") {
             ctk->command = DRILL_RUN;
-        } else if (!strcmp(ltk->argv[1], "stop")) {
+            return;
+
+        } else if (ltk->argv[1] == "stop") {
             ctk->command = DRILL_STOP;
-        } else if (!strcmp(ltk->argv[1], "cycle")) {
-            if (ltk->argv[2] != NULL) {
-                ctk->command = DRILL_CYCLE;
-                int rc = atoi(ltk->argv[2]);
+            return;
 
-                if (rc == 0) {
-                    ctk->command = NONE;
-                } else {
-                    ctk->argv[(ctk->argc)++] = rc;
-                }
+        } else if (ltk->argv[1] == "cycle") {
+            ctk->command = DRILL_CYCLE;
 
-            } else {
+            try {
+                rc = std::stoi(ltk->argv[2]);
+            } catch (...) {
                 ctk->command = NONE;
+                return;
             }
-        } else {
-            ctk->command = NONE;
+            ctk->argv[(ctk->argc)++] = rc;
+            return;
         }
-    } else {
-        ctk->command = NONE;
     }
+
+    ctk->command = NONE;
 
     return;
 }
@@ -197,85 +218,104 @@ static void execute(parse_token *ltk, int bg, APESShell *shell) {
             msg = "System started!\n";
             shell->toSend(msg);
             break;
+
         case STANDBY:
             //this->robot->standby();
             msg = "System in standby!\n";
             shell->toSend(msg);
             break;
+
         case DATA:
             //this->robot->readData();
             msg = "Reading from data file!\n";
             shell->toSend(msg);
             break;
+
         case HELP:
             msg = "Listing Help Commands!\n";
             shell->toSend(msg);
             break;
+
         case QUIT:
             //this->robot->finish();
             msg = "System shutting down!\n";
             shell->toSend(msg);
             break;
+
         case AUTO_ON:
             //this->robot->auto_on();
             msg = "System's auto mode enabled!\n";
             shell->toSend(msg);
             break;
+
         case AUTO_OFF:
             //this->robot->auto_off();
             msg = "System's auto mode disabled!\n";
             shell->toSend(msg);
             break;
+
         case TEMP:
             //this->robot->read_temp();
             msg = "Reading temp!\n";
             shell->toSend(msg);
             break;
+
         case DTEMP:
             //this->robot->read_dtemp();
             msg = "Reading dtemp!\n";
             shell->toSend(msg);
             break;
+
         case CURR:
             //this->robot->read_curr();
             msg = "Reading curr!\n";
             shell->toSend(msg);
             break;
+
         case WLEVEL:
             //this->robot->read_wlevel();
             msg = "Reading wlevel!\n";
             shell->toSend(msg);
             break;
+
         case WOB:
             //this->robot->read_wob();
             msg = "Reading wob!\n";
             shell->toSend(msg);
             break;
+
         case MOTOR_DRIVE:
-            int dir = ctk->argv[0];
-            int speed = ctk->argv[1];
-            int time = ctk->argv[2];
-            //this->robot->motor_drive(dir, speed, time);
-            msg = "System's motor enabled for []!\n";
-            shell->toSend(msg);
+            {
+                int dir = ctk.argv[0];
+                int speed = ctk.argv[1];
+                int time = ctk.argv[2];
+                //this->robot->motor_drive(dir, speed, time);
+                msg = "System's motor enabled for []!\n";
+                shell->toSend(msg);
+            }
             break;
+
         case MOTOR_STOP:
             //this->robot->motor_stop();
             msg = "System's motor disabled!\n";
             shell->toSend(msg);
             break;
+
         case DRILL_RUN:
             msg = "System's drill enabled!\n";
             shell->toSend(msg);
             break;
+
         case DRILL_STOP:
             msg = "System's drill disabled!\n";
             shell->toSend(msg);
             break;
+
         case DRILL_CYCLE:
             msg = "System's drill duty cycle changed!\n";
             shell->toSend(msg);
             break;
+
         case NONE:
         default:
             msg = "Not a valid command (use 'help' for more info)!\n";

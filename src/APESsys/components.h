@@ -55,4 +55,13 @@ class Motor {
         void motor_stop();
 };
 
+class Encoder {
+    private:
+        int pinResetInterr;
+        int pinTickInterr;
+    public:
+        void reset();
+        void getTick();
+};
+
 #endif

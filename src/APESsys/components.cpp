@@ -59,9 +59,7 @@ float Therm::D_temp() {
     return fTemp - this->iTemp;
 }
 
-Therm::~Therm() {
-
-}
+Therm::~Therm() {}
 
 
 /*
@@ -87,9 +85,7 @@ float Amm::read_curr() {
     return (float)readADC(bus, channel);
 }
 
-Amm::~Amm() {
-
-}
+Amm::~Amm() {}
 
 
 /*
@@ -144,9 +140,7 @@ int WLevel::read_wlevel() {
     return level;
 }
 
-WLevel::~WLevel() {
-
-}
+WLevel::~WLevel() {}
 
 
 /*
@@ -214,7 +208,7 @@ void Motor::motor_drive(bool dir, int speed, int time) {
     // time in milliseconds
     //@TODO: really need to test this!
     if (this->L298N != NULL) {
-        //@TODO: calculate an actual duty cycle from speed
+        //@TODO: calculate an actual duty cycle from speed?
         this->L298N.attr("changeDutyCycle")("dc"_a=speed);
 
         auto start = std::chrono::high_resolution_clock::now();

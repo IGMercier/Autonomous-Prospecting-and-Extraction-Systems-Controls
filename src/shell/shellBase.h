@@ -7,14 +7,14 @@
 
 typedef struct parse_token {
     int argc;
-    char *argv[MAXARGS];
+    std::string argv[MAXARGS];
     builtin bcomm;
 } parse_token;
 
 class ShellBase {
     protected:
-        virtual void evaluate(char *cmdline);
-        int parseline(char *cmdline, parse_token *tk);
+        virtual void evaluate(std::string cmdline);
+        int parseline(std::string cmdline, parse_token *tk);
         int builtin_command(parse_token *tk);
     public:
         ShellBase();

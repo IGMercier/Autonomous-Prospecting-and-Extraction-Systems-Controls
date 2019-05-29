@@ -17,10 +17,6 @@ static void wlevel_thread(APES *robot);
 static void wob_thread(APES *robot);
 
 static std::mutex data_mtx;
-static std::atomic_int stop_therm = 0;
-static std::atomic_int stop_amm = 0;
-static std::atomic_int stop_wlevel = 0;
-static std::atomic_int stop_wob = 0;
 
 APES::APES() {
     this->filename = NULL;
@@ -45,9 +41,6 @@ int APES::setup(char *filename) {
     this->file = fopen(this->filename, "w");
     fprintf(this->file, "time, sensor, value\n");
 
-    // @TODO: do i need this as a pointer??
-    //this.dataArray = new std::vector<dataPt *>;
-    
     // starts python interpreter
     py::initialize_interpreter();
     //@TODO: put the correct pin numbers
@@ -166,7 +159,6 @@ void APES::auto_on() {
     stop_wlevel = 0;
     stop_wob = 0;
 
-    // @TODO: error handling
     std::thread thermt(therm_thread, this);
     thermt.detach();
 

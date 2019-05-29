@@ -16,7 +16,7 @@ class APESShell : public ShellBase {
 
         APESShell(sysArgs *args);
         void run() override;
-        void evaluate(char *cmdline) override;
+        void evaluate(std::string cmdline) override;
         void parsecommand(parse_token *ltk, command_token *ctk);
         void toSend(std::string msg);
         virtual ~APESShell();

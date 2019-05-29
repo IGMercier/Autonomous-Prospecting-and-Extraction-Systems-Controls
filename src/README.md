@@ -11,6 +11,7 @@ This folder contains all the software stuffs
     * Run: ```./shell.out``` in source directory
 
 * To run server only:
+    * Comment out all references to APES.h in APESShell.*
     * Run: ```make server.out``` in source directory
     * Run: ```./server.out <port number>``` in source directory
 

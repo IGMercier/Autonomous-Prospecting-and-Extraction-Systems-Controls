@@ -72,7 +72,6 @@ void APESServer::execute() {
                     this->cmdq->push_back(buf);
                     cmdlock.unlock();
                 }
-            }
         }
 
         if (rc < 0) { break; }

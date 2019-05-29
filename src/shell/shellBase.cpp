@@ -4,8 +4,8 @@
 #include <unistd.h>
 #include <thread>
 #include <assert.h>
+#include <sstream>
 #include "shellBase.h"
-#include <assert.h>
 #include "../misc/flags.h"
 
 
@@ -16,22 +16,23 @@ ShellBase::ShellBase() {}
 ShellBase::~ShellBase() {}
 
 void ShellBase::run() {
-    char cmdline[MAXLINE];
+    char buf[MAXLINE];
     
     while (1) {
-        read(STDIN_FILENO, cmdline, MAXLINE);
+        read(STDIN_FILENO, buf, MAXLINE);
 
         if (feof(stdin)) {
             printf("\n");
             fflush(stdout);
             fflush(stdin);
         }
+        std::string cmdline(buf);
         evaluate(cmdline);
     }
     return; // kills shell thread in main program
 }
 
-void ShellBase::evaluate(char *cmdline) {
+void ShellBase::evaluate(std::string cmdline) {
     int bg;
     parse_token tk;
     thread child;
@@ -82,19 +83,14 @@ int ShellBase::builtin_command(parse_token *tk) {
     }
 }
 
-int ShellBase::parseline(char *cmdline, parse_token *tk) {
-    std::string sdelim = " \t\n";
-    const char *delim = sdelim.c_str();
-    char *argv;
+int ShellBase::parseline(std::string cmdline, parse_token *tk) {
+    std::istringstream f(cmdline);
+    std::string argv;
     int bg;
 
     int argc = 0;
-    tk->argc = 0;
 
-    char *buf = new char[MAXLINE];
-    strncpy(buf, cmdline, MAXLINE);
-
-    while ((argv = strsep(&buf, delim)) != NULL) {
+    while (getline(f, argv, ' ')) {
 
         tk->argv[argc] = argv;
         argc++;
@@ -104,27 +100,25 @@ int ShellBase::parseline(char *cmdline, parse_token *tk) {
     tk->argc = argc;
 
     if (tk->argc == 0) {
-        delete buf;
         return 1;
     }
 
     
-    if (!strcmp(tk->argv[0], "fg")) {
+    if (tk->argv[0] == "fg") {
         tk->bcomm = BUILTIN_FG;
-    } else if (!strcmp(tk->argv[0], "bg")) {
+    } else if (tk->argv[0] == "bg") {
         tk->bcomm = BUILTIN_BG;
-    } else if (!strcmp(tk->argv[0], "jobs")) {
+    } else if (tk->argv[0] == "jobs") {
         tk->bcomm = BUILTIN_JOBS;
     } else {
         tk->bcomm = BUILTIN_NONE;
     }
 
 
-    if ((bg = (*(tk->argv[(tk->argc)-1]) == '&')) != 0) {
-        tk->argv[--(tk->argc)] = NULL;
+    if ((bg = (tk->argv[tk->argc-1] == "&")) != 0) {
+        tk->argv[--(tk->argc)] = "";
     }
 
-    delete buf;
     return bg;
 }
 
@@ -143,8 +137,8 @@ static void execute(parse_token *tk, int bg) {
     }
 
     for (int i = 0; i < tk->argc; i++) {
-        if (tk->argv[i] == NULL) { break; }
-        fprintf(stdout, "%s ", tk->argv[i]);
+        if (tk->argv[i].empty()) { break; }
+        fprintf(stdout, "%s ", tk->argv[i].c_str());
     }
 
     if (bg) {
