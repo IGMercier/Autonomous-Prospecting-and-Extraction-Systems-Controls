@@ -62,7 +62,7 @@ class Encoder {
     public:
         Encoder();
         void reset();
-        void getTick();
+        void getTicks();
         float calcVel(int n, int t);
         ~Encoder();
 };

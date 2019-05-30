@@ -4,7 +4,6 @@
 #include <string>
 #include <unistd.h>
 #include <assert.h>
-#include <atomic>
 
 #include "APESShell.h"
 //#include "../APESsys/APES.h"
@@ -13,10 +12,6 @@
 using std::thread;
 static void execute(parse_token *ltk, int bg, APESShell *shell);
 
-std::atomic_int stop_therm = {0};
-std::atomic_int stop_amm = {0};
-std::atomic_int stop_wlevel = {0};
-std::atomic_int stop_wob = {0};
 
 APESShell::APESShell(sysArgs *args) {
     //this->robot = new APES();

@@ -10,6 +10,15 @@
 #define MAXDATA 1024
 
 typedef enum {
+    AUTO_THERM = 0b1,
+    AUTO_AMM = 0b10,
+    AUTO_WLEVEL = 0b100,
+    AUTO_WOB = 0b1000,
+    AUTO_ALL = 0b10000,
+    AUTO_NONE = 0b100000
+} autoFunc;
+
+typedef enum {
     THERM_DATA,
     AMM_DATA,
     WLEVEL_DATA,
@@ -47,8 +56,9 @@ class APES {
         dataPt* read_curr();
         dataPt* read_wlevel();
         dataPt* read_wob();
-        void auto_on();
-        void auto_off();
+        dataPt* read_encoder();
+        void auto_on(autoFunc which);
+        void auto_off(autoFunc which);
         void motor_drive(bool dir, int speed, int time);
         void motor_stop();
         void readData(const char *filename);

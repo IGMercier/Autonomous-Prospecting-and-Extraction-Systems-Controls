@@ -15,6 +15,11 @@ static void amm_thread(APES *robot);
 static void wlevel_thread(APES *robot);
 static void wob_thread(APES *robot);
 
+std::atomic_int stop_therm = {0};
+std::atomic_int stop_amm = {0};
+std::atomic_int stop_wlevel = {0};
+std::atomic_int stop_wob = {0};
+
 APES::APES(char *filename, std::mutex *data_mtx) {
     if (filename != NULL) {
         this->filename = filename;
@@ -127,13 +132,31 @@ dataPt* APES::read_wlevel() {
 
 dataPt* APES::read_wob() {
     if (this->wob != NULL) {
-        int force = this->wob->read_wob();
+        float force = this->wob->read_wob();
 
         dataPt *data = new dataPt;
         data->time = std::chrono::system_clock::now();
         data->sensor = WOB_DATA;
         data->dataField.dataF = force;
 
+        std::unique_lock<std::mutex> datalock(*(this->data_mtx));
+        saveData(data);
+        datalock.unlock();
+
+        return data;
+    }
+    return NULL;
+}
+
+dataPt* APES::read_encoder() {
+    if (this->encoder != NULL) {
+        int ticks = this->encoder->getTicks();
+
+        dataPt *data = new dataPt;
+        data->time = std::chrono::system_clock::now();
+        data->sensor = ENCODER_DATA;
+        data->dataField.dataI = ticks;
+        
         std::unique_lock<std::mutex> datalock(*(this->data_mtx));
         saveData(data);
         datalock.unlock();
@@ -155,16 +178,33 @@ void APES::motor_stop() {
     }
 }
 
-void APES::auto_on() {
-    stop_therm = 0;
-    stop_amm = 0;
-    stop_wlevel = 0;
-    stop_wob = 0;
+void APES::auto_on(autoFunc which) {
+    std::thread thermt;
+    std::thread ammt;
+    std::thread wlevelt;
+    std::thread wobt;
 
-    std::thread thermt(therm_thread, this);
-    std::thread ammt(amm_thread, this);
-    std::thread wlevelt(wlevel_thread, this);
-    std::thread wobt(wob_thread, this);
+    if (which & AUTO_THERM) {
+        stop_therm = 0;
+        std::thread temp(therm_thread, this);
+        thermt.swap(temp);
+    }
+    if (which & AUTO_AMM) {
+        stop_amm = 0;
+        std::thread temp(amm_thread, this);
+        ammt.swap(temp);
+    }
+    if (which & AUTO_WLEVEL) {
+        stop_wlevel = 0;
+        std::thread temp(wlevel_thread, this);
+        wlevelt.swap(temp);
+    }
+    if (which & AUTO_WOB) {
+        stop_wob = 0;
+        std::thread temp(wob_thread, this);
+        wobt.swap(temp);
+    }
+    
 
     if (thermt.joinable()) {
         thermt.join();
@@ -181,11 +221,19 @@ void APES::auto_on() {
     return;
 }
 
-void APES::auto_off() {
-    stop_therm = 1;
-    stop_amm = 1;
-    stop_wlevel = 1;
-    stop_wob = 1;
+void APES::auto_off(autoFunc which) {
+    if (which & AUTO_THERM) {
+        stop_therm = 1;
+    }
+    if (which & AUTO_AMM) {
+        stop_amm = 1;
+    }
+    if (which & AUTO_WLEVEL) {
+        stop_wlevel = 1;
+    }
+    if (which & AUTO_WOB) {
+        stop_wob = 1;
+    }
     return;
 }
 

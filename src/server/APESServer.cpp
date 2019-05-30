@@ -110,11 +110,13 @@ void APESServer::execute() {
         /*
         // reads off data file
         std::unique_lock<std::mutex> datalock(*(this->data_mtx));
-        std::ifstream data(this->datafile);
-        if (data) {
-            std::string dataline;
-            while (getline(data, dataline)) {
-                sendToClient(dataline.c_str());
+        {
+            std::ifstream data(this->datafile);
+            if (data) {
+                std::string dataline;
+                while (getline(data, dataline)) {
+                    sendToClient(dataline.c_str());
+                }
             }
         }
         datalock.unlock();

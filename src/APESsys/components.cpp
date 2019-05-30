@@ -249,7 +249,7 @@ Encoder::~Encoder() {
 
 }
 
-Encoder::getTick() {
+Encoder::getTicks() {
     /*
         @TODO: this literally does nothing,
                its just here to show how to read and write
@@ -270,6 +270,7 @@ Encoder::reset() {
 
 float Encoder::calcVel(int n, int t) {
     // n = number of pulses
-    // t = sampling time
+    // t = sampling time, should be constant (?)
+    // @TODO: figure out these params
     return (float)(2*M_PI*n / (this->ppr * t));
 }
