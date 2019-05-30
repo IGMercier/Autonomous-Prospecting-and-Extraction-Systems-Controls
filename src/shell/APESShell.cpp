@@ -35,7 +35,8 @@ void APESShell::run() {
         }
         cmdlock.unlock();
 
-        if (cmdline == shutdown_tag) {
+        if (cmdline == "quit") {
+            toSend(shutdown_tag);
             break;
         }
 

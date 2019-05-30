@@ -8,6 +8,8 @@
 static void serverThread(sysArgs *args, int port);
 static void shellThread(sysArgs *args);
 
+std::string shutdown_tag = "<shutdown>";
+
 int main(int argc, char** argv) {
     int port;
     if (argc < 2) {
@@ -34,8 +36,12 @@ int main(int argc, char** argv) {
     args->datafile = "data.csv";
 
     std::thread tServer(serverThread, args, port);
-    tServer.detach();
     std::thread tShell(shellThread, args);
+
+
+    if (tServer.joinable()) {
+        tServer.join();
+    }
     if (tShell.joinable()) {
         tShell.join();
     }

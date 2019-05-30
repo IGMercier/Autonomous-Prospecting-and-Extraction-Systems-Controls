@@ -12,11 +12,12 @@
 #include <sys/types.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <atomic>
 
 #include "APESServer.h"
 
 static char *delim = "\r\n";
-static int shutdown_sig = 0;
+static std::atomic_int shutdown_sig = {0};
 
 APESServer::APESServer(sysArgs *args) {
     signal(SIGPIPE, SIG_IGN);
@@ -82,13 +83,7 @@ void APESServer::execute() {
                 break;
             } else {
                 cmdline[strlen(cmdline)-1] = '\0';
-
-                // remove next 4 lines in real system!
-                //std::unique_lock<std::mutex> loglock(*(this->log_mtx));
-                //std::string buf_ = cmdline;
-                //this->logq->push_back(buf_);
-                //loglock.unlock();
-
+                
                 // writes to command file for shell to read
                 std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
                 std::string buf = cmdline;
@@ -114,14 +109,14 @@ void APESServer::execute() {
             if ((rc = sendToClient(logline.c_str()) < 0)) {
                 break;
             }
-            
-            if ((rc = sendToClient(delim)) < 0) { break; }
 
             this->logq->pop_front();;
         }
         loglock.unlock();
 
         if (rc < 0) { break; }
+        
+        if ((rc = sendToClient(delim)) < 0) { break; }
 
         /*
         // reads off data file
@@ -167,7 +162,7 @@ void APESServer::disconnected() {
 void APESServer::shutdown() {
     std::string msg = "Server shutting down!\n";
     sendToClient(msg.c_str());
-    print(msg.c_str());
+    sendToClient(delim);
 
     if (this->cfd >= 0) {
         if (close(this->cfd) < 0) {
