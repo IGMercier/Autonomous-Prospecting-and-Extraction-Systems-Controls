@@ -5,7 +5,7 @@ This folder contains all the software stuffs
 * TODO (Software):
     * Re: Server/Client
         * [ ] ensure that client reconnects on connection failure
-        * [ ] call shutdown procedure
+        * [x] call shutdown procedure
         * [x] nail down file reading/writing schema
     * Re: Components
         * [ ] figure out pin mapping and bus specification
@@ -17,8 +17,8 @@ This folder contains all the software stuffs
             * make sure wob is calibrated
             * test that the L298N lib works
     * Re: System
-        * [ ] put each sensor thread in 1 func that reads at time interval 
-        * [ ] finish the set of commands that can be done in the background
+        * [x] put each sensor thread in 1 func that reads at time interval 
+        * [x] finish the set of commands that can be done in the background
              and those that can be done in the foreground
         * [ ] specify and finish implenting data logging
             * this is more a client thing since the client can graphically arrange
