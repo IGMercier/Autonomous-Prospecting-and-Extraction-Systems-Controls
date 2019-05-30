@@ -45,16 +45,23 @@ void APESServer::run(int port) {
 
     while (1) {
         createClient();
-        if (this->cfd < 0);
-        
-        //assert(this->cfd >= 0);
+
+        assert(this->cfd >= 0);
         execute();
     }
 }
 
 void APESServer::execute() {
     std::string msg = "Connected!\n";
-    sendToClient(msg.c_str());
+    if (sendToClient(msg.c_str()) < 0) {
+        disconnected();
+        return;
+    }
+
+    if (sendToClient(delim) < 0) {
+        disconnected();
+        return;
+    }
     
     char *cmdline = new char[MAXLINE];
     while (1) {
@@ -65,6 +72,9 @@ void APESServer::execute() {
 
         int rc;
         while ((rc = readFromClient(cmdline)) > 0) {
+            printf("PASSED!\n");
+
+            print(cmdline);
 
             if (!strncmp(cmdline, delim, MAXLINE)) {
                 break;
@@ -114,7 +124,13 @@ void APESServer::execute() {
     }
 
     delete cmdline;
+    disconnected();
 
+    return;
+
+}
+
+void APESServer::disconnected() {
     // if disconnected, clears command queue and inserts standby command
     std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
     this->cmdq->clear();
@@ -125,7 +141,6 @@ void APESServer::execute() {
     close(this->cfd);
     this->cfd = -1;
     print("Disconnected!");
-    return;
 
 }
 

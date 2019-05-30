@@ -38,8 +38,9 @@ void APESShell::run() {
             cmdlock.unlock();
             continue;
         }
-
         cmdlock.unlock();
+        
+        //if (cmdline.empty() || cmdline == "\n") { continue; }
 
         evaluate(cmdline);
     }
