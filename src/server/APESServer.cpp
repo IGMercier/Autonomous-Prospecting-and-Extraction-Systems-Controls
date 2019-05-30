@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <csignal>
+#include <fstream>
 #include <unistd.h>
 #include <cstring>
 #include <assert.h>
@@ -24,6 +25,7 @@ APESServer::APESServer(sysArgs *args) {
     assert(args->data_mtx != NULL);
     assert(args->cmdq != NULL);
     assert(args->logq != NULL);
+    assert(!args->datafile.empty());
 
     this->cmd_mtx = args->cmd_mtx;
     this->log_mtx = args->log_mtx;
@@ -31,6 +33,8 @@ APESServer::APESServer(sysArgs *args) {
 
     this->cmdq = args->cmdq;
     this->logq = args->logq;
+
+    this->datafile = datafile;
 }
 
 void APESServer::run(int port) {
@@ -51,25 +55,22 @@ void APESServer::run(int port) {
 void APESServer::execute() {
     std::string msg = "Connected!\n";
     sendToClient(msg.c_str());
-    //msg = "END";
-    //sendToClient(msg.c_str());
     
-    char *cmdline = (char *)calloc(MAXLINE, sizeof(char));
+    char *cmdline = new char[MAXLINE];
     while (1) {
         setClientSockOpts();
         setServerSockOpts();
-        //checkSockOpts();
 
         memset(cmdline, 0, MAXLINE);
 
         int rc;
         while ((rc = readFromClient(cmdline)) > 0) {
-            //cmdline[strlen(cmdline)-1] = '\0';
-            printf(cmdline);
-               
+
             if (!strncmp(cmdline, delim, MAXLINE)) {
                 break;
             } else {
+                cmdline[strlen(cmdline)-1] = '\0';
+
                 // writes to command file for shell to read
                 std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
                 std::string buf = cmdline;
@@ -85,19 +86,34 @@ void APESServer::execute() {
         while (!this->logq->empty()) {
             std::string logline = this->logq->at(0);
             printf("%s", logline.c_str());
-            sendToClient(logline.c_str());
+
+            if ((rc = sendToClient(logline.c_str()) < 0)) {
+                break;
+            }
+
             this->logq->pop_front();;
         }
         loglock.unlock();
-        sendToClient(delim);
 
+        if (rc < 0) { break; }
+
+        /*
         // reads off data file
         std::unique_lock<std::mutex> datalock(*(this->data_mtx));
-
+        std::ifstream data(this->datafile);
+        if (data) {
+            std::string dataline;
+            while (getline(data, dataline)) {
+                sendToClient(dataline.c_str());
+            }
+        }
         datalock.unlock();
+        */
+
+        if (sendToClient(delim) < 0) { break; }
     }
 
-    free(cmdline);
+    delete cmdline;
 
     // if disconnected, clears command queue and inserts standby command
     std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));

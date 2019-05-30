@@ -7,6 +7,7 @@
 
 class APESServer : public ServerBase {
     private:
+        std::string datafile;
         std::mutex *cmd_mtx;
         std::mutex *log_mtx;
         std::mutex *data_mtx;

@@ -5,7 +5,7 @@ TARGET_SHELL = shell.out
 
 SERVER_FILES = server/APESServer.cpp server/serverBase.cpp
 SHELL_FILES = shell/APESShell.cpp shell/shellBase.cpp
-ALL_FILES = APES.cpp components.cpp $(SERVER_FILES) $(SHELL_FILES)
+ALL_FILES = $(SERVER_FILES) $(SHELL_FILES)
 
 SERVER_TEST = tests/serverTest.cpp
 SHELL_TEST = tests/shellTest.cpp
