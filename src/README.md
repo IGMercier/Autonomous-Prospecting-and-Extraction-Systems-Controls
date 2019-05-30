@@ -17,6 +17,7 @@ This folder contains all the software stuffs
             * make sure wob is calibrated
             * test that the L298N lib works
     * Re: System
+        * [ ] put each sensor thread in 1 func that reads at time interval 
         * [ ] finish the set of commands that can be done in the background
              and those that can be done in the foreground
         * [ ] specify and finish implenting data logging

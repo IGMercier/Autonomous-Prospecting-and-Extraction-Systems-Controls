@@ -10,15 +10,11 @@
 namespace py = pybind11;
 using namespace py::literals;
 
-static void therm_thread(APES *robot);
-static void amm_thread(APES *robot);
-static void wlevel_thread(APES *robot);
-static void wob_thread(APES *robot);
-
 std::atomic_int stop_therm = {0};
 std::atomic_int stop_amm = {0};
 std::atomic_int stop_wlevel = {0};
 std::atomic_int stop_wob = {0};
+std::atomic_int stop_encoder = {0};
 
 APES::APES(char *filename, std::mutex *data_mtx) {
     if (filename != NULL) {
@@ -179,45 +175,47 @@ void APES::motor_stop() {
 }
 
 void APES::auto_on(autoFunc which) {
-    std::thread thermt;
-    std::thread ammt;
-    std::thread wlevelt;
-    std::thread wobt;
 
-    if (which & AUTO_THERM) {
-        stop_therm = 0;
-        std::thread temp(therm_thread, this);
-        thermt.swap(temp);
-    }
-    if (which & AUTO_AMM) {
-        stop_amm = 0;
-        std::thread temp(amm_thread, this);
-        ammt.swap(temp);
-    }
-    if (which & AUTO_WLEVEL) {
-        stop_wlevel = 0;
-        std::thread temp(wlevel_thread, this);
-        wlevelt.swap(temp);
-    }
-    if (which & AUTO_WOB) {
-        stop_wob = 0;
-        std::thread temp(wob_thread, this);
-        wobt.swap(temp);
-    }
-    
+    while (1) {
+        if (which & AUTO_THERM) {
+            if (!stop_therm) {
+                read_temp();
+            }
+        }
+        
+        if (which & AUTO_AMM) {
+            if !(stop_amm) {
+                read_amm();
+            }
+        }
 
-    if (thermt.joinable()) {
-        thermt.join();
+        if (which & AUTO_WLEVEL) {
+            if (!stop_wlevel) {
+                read_wlevel();
+            }
+        }
+
+        if (which & AUTO_WOB) {
+            if (!stop_wob) {
+                read_wob();
+            }
+        }
+        
+        if (which & AUTO_ENCODER) {
+            if (!stop_encoder) {
+                read_encoder();
+            }
+        }
+
+        if (stop_therm && stop_amm &&
+            stop_wlevel && stop_wob &&
+            stop_encoder) {
+            break;
+        }
+
+        usleep(1000);
     }
-    if (ammt.joinable()) {
-        ammt.join();
-    }
-    if (wlevelt.joinable()) {
-        wlevelt.join();
-    }
-    if (wobt.joinable()) {
-        wobt.join();
-    }
+
     return;
 }
 
@@ -334,49 +332,3 @@ void APES::writeDataVector() {
 
 APES::~APES() {
 }
-
-static void therm_thread(APES *robot) {
-    assert(robot != NULL);
-
-    while (!stop_therm) {
-        // @TODO: test this
-        dataPt *data = robot->read_temp();
-    }
-
-    return;
-}
-
-static void amm_thread(APES *robot) {
-    assert(robot != NULL);
-
-    while (!stop_amm) {
-        // @TODO: test this
-        dataPt *data = robot->read_curr();
-    }
-
-    return;
-}
-
-static void wlevel_thread(APES *robot) {
-    assert(robot != NULL);
-
-    while (!stop_wlevel) {
-        // @TODO: test this
-        dataPt *data = robot->read_wlevel();
-    }
-
-    return;
-}
-
-static void wob_thread(APES *robot) {
-    assert(robot != NULL);
-
-    while (!stop_wob) {
-        // @TODO: test this
-        dataPt *data = robot->read_wob();
-    }
-
-    return;
-}
-
-
