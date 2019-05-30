@@ -231,10 +231,6 @@ void APES::finish() {
     py::finalize_interpreter();
 }
 
-void APES::readData(const char *filename) {
-    return;
-}
-
 void APES::saveData(dataPt *data) {
     assert(data != NULL);
     // assumed that data_mtx is locked
@@ -256,28 +252,28 @@ void APES::writeDataVector() {
 
         switch(data->origin) {
             case THERM_DATA:
-                fprintf(file, "%s, %li, %f\n",
-                        "therm", data->time.count(), data->dataField.dataF);
+                fprintf(file, "%li, %s, %f\n",
+                        data->time.count(), "therm", data->dataField.dataF);
                 break;
             case AMM_DATA:
-                fprintf(file, "%s, %li, %f\n",
-                        "amm", data->time.count(), data->dataField.dataF);
+                fprintf(file, "%li, %s, %f\n",
+                        data->time.count(), "amm", data->dataField.dataF);
                 break;
             case WLEVEL_DATA:
-                fprintf(file, "%s, %li, %d\n",
-                        "level", data->time.count(), data->dataField.dataI);
+                fprintf(file, "%li, %s, %d\n",
+                        data->time.count(), "wlevel", data->dataField.dataI);
                 break;
             case WOB_DATA:
-                fprintf(file, "%s, %li, %f\n",
-                        "wob", data->time.count(), data->dataField.dataF);
+                fprintf(file, "%li, %s, %f\n",
+                        data->time.count(), "wob", data->dataField.dataF);
                 break;
             case ENCODER_DATA:
-                fprintf(file, "%s, %li, %f\n",
-                        "wob", data->time.count(), data->dataField.dataF);
+                fprintf(file, "%li, %s, %f\n",
+                        data->time.count(), "encoder", data->dataField.dataF);
                 break;
             default:
-                fprintf(file, "%s, %li, %f\n",
-                        "none", data->time.count(), data->dataField.dataF);
+                fprintf(file, "%li, %s, %f\n",
+                        data->time.count(), "none", data->dataField.dataF);
                 break;
         }
 
