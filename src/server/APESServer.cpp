@@ -72,9 +72,7 @@ void APESServer::execute() {
 
         int rc;
         while ((rc = readFromClient(cmdline)) > 0) {
-            printf("PASSED!\n");
-
-            print(cmdline);
+            //print(cmdline);
 
             if (!strncmp(cmdline, delim, MAXLINE)) {
                 break;
@@ -104,14 +102,19 @@ void APESServer::execute() {
             printf("%s", logline.c_str());
 
             if ((rc = sendToClient(logline.c_str()) < 0)) {
+                print("Error\n");
                 break;
             }
+            
+            if ((rc = sendToClient(delim)) < 0) { break; }
 
             this->logq->pop_front();;
         }
         loglock.unlock();
 
         if (rc < 0) { break; }
+
+        print("PASSED\n");
 
         /*
         // reads off data file
@@ -128,7 +131,6 @@ void APESServer::execute() {
         datalock.unlock();
         */
 
-        if (sendToClient(delim) < 0) { break; }
     }
 
     delete cmdline;

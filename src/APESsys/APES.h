@@ -8,6 +8,7 @@
 #include "components.h"
 
 #define MAXDATA 1024
+#define SLEEP_INTVL 1000
 
 typedef enum {
     AUTO_THERM = 0b1,

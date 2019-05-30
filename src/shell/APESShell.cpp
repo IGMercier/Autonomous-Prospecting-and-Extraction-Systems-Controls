@@ -10,7 +10,8 @@
 #include "../APESsys/commands.h"
 
 using std::thread;
-static void execute(parse_token *ltk, int bg, APESShell *shell);
+static void execute(parse_token *ltk, APESShell *shell);
+static void listCommands(APESShell *shell);
 
 
 APESShell::APESShell(sysArgs *args) {
@@ -53,7 +54,7 @@ void APESShell::evaluate(std::string cmdline) {
 
     if (!builtin_command(&tk)) {
         /* CHILD THREAD */
-        thread temp(execute, &tk, bg, this);
+        thread temp(execute, &tk, this);
         child.swap(temp);
 
         if (bg) { child.detach(); }
@@ -99,7 +100,10 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
         return;
 
     } else if (ltk->argv[0] == "auto") {
-
+        if (!ltk->bg) {
+            ctk->command = NONE;
+            return;
+        }
         if (ltk->argv[1] == "on") {
             ctk->command = AUTO_ON;
             return;
@@ -192,7 +196,7 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
     return;
 }
 
-static void execute(parse_token *ltk, int bg, APESShell *shell) {
+static void execute(parse_token *ltk, APESShell *shell) {
     assert(ltk != NULL);
     assert(shell != NULL);
 
@@ -202,7 +206,7 @@ static void execute(parse_token *ltk, int bg, APESShell *shell) {
     
     command_state command = ctk.command;
     std::string msg;
-    if (bg) {
+    if (ltk->bg) {
         msg = "BG job: ";
         shell->toSend(msg);
     }
@@ -230,6 +234,7 @@ static void execute(parse_token *ltk, int bg, APESShell *shell) {
         case HELP:
             msg = "Listing Help Commands!\n";
             shell->toSend(msg);
+            listCommands(shell);
             break;
 
         case QUIT:
@@ -239,9 +244,15 @@ static void execute(parse_token *ltk, int bg, APESShell *shell) {
             break;
 
         case AUTO_ON:
-            //this->robot->auto_on();
-            msg = "System's auto mode enabled!\n";
-            shell->toSend(msg);
+            {
+                msg = "System's auto mode enabled!\n";
+                shell->toSend(msg);
+                //this->robot->auto_on();
+                //std::thread sensort(shell->robot->auto_on, /*fill this with param*/);
+                //if (sensort.joinable()) {
+                //    sensort.join();
+                //}
+            }
             break;
 
         case AUTO_OFF:
@@ -323,4 +334,62 @@ static void execute(parse_token *ltk, int bg, APESShell *shell) {
 APESShell::~APESShell() {
     //this->robot->finish();
     //delete this->robot;
+}
+
+static void listCommands(APESShell *shell) {
+    std::string msg = "start => setups APES system\n";
+    shell->toSend(msg);
+
+    msg = "standby => turns off actuators and stops auto mode\n";
+    shell->toSend(msg);
+    
+    msg = "data => does something not specified\n";
+    shell->toSend(msg);
+    
+    msg = "help => prints this help message\n";
+    shell->toSend(msg);
+
+    msg = "quit => quits APES, shell, and server systems\n";
+    shell->toSend(msg);
+
+    msg = "auto on & => automatically reads off sensor data\n";
+    shell->toSend(msg);
+
+    msg = "auto off => turns off auto mode\n";
+    shell->toSend(msg);
+
+    msg = "temp => reads off current temp\n";
+    shell->toSend(msg);
+
+    msg = "dtemp => reads off difference in temp since start\n";
+    shell->toSend(msg);
+
+    msg = "curr => reads off current current\n";
+    shell->toSend(msg);
+
+    msg = "wlevel => reads off current water level\n";
+    shell->toSend(msg);
+
+    msg = "wob => reads off current force\n";
+    shell->toSend(msg);
+
+    msg = "encoder => reads off current encoder data\n";
+    shell->toSend(msg);
+
+    msg = "motor drive <dir> <speed> <time> => runs motor\n";
+    shell->toSend(msg);
+
+    msg = "motor stop => stops motor\n";
+    shell->toSend(msg);
+
+    msg = "drill run => runs drill\n";
+    shell->toSend(msg);
+
+    msg = "drill stop => stops drill\n";
+    shell->toSend(msg);
+
+    msg = "drill cycle <dc> => changes drill duty cycle\n";
+    shell->toSend(msg);
+
+    return;
 }

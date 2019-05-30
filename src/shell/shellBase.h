@@ -9,6 +9,7 @@ typedef struct parse_token {
     int argc;
     std::string argv[MAXARGS];
     builtin bcomm;
+    int bg;
 } parse_token;
 
 class ShellBase {

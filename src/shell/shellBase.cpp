@@ -119,6 +119,8 @@ int ShellBase::parseline(std::string cmdline, parse_token *tk) {
         tk->argv[--(tk->argc)] = "";
     }
 
+    tk->bg = bg;
+
     return bg;
 }
 
