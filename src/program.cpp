@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
     sysArgs *args = new sysArgs;
     args->cmd_mtx = &cmd_mtx;
     args->log_mtx = &log_mtx;
-    args->log_mtx = &data_mtx;
+    args->data_mtx = &data_mtx;
     args->cmdq = cmdq;
     args->logq = logq;
     args->datafile = "data.csv";

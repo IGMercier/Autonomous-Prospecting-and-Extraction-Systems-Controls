@@ -81,6 +81,12 @@ void APESServer::execute() {
             } else {
                 cmdline[strlen(cmdline)-1] = '\0';
 
+                // remove next 4 lines in real system!
+                //std::unique_lock<std::mutex> loglock(*(this->log_mtx));
+                //std::string buf_ = cmdline;
+                //this->logq->push_back(buf_);
+                //loglock.unlock();
+
                 // writes to command file for shell to read
                 std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
                 std::string buf = cmdline;

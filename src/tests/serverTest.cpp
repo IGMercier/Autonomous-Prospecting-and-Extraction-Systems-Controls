@@ -18,26 +18,29 @@ int main(int argc, char **argv) {
 
     std::mutex cmd_mtx;
     std::mutex log_mtx;
+    std::mutex data_mtx;
 
-    std::deque<char *> *cmdq = new std::deque<char *>;
-    std::deque<char *> *logq = new std::deque<char *>;
+    std::deque<std::string> *cmdq = new std::deque<std::string>;
+    std::deque<std::string> *logq = new std::deque<std::string>;
+    cmdq->clear();
+    logq->clear();
 
-    std::string msg = "System started!";
+    logq->push_back("Server: heyo\n");
 
-    logq->push_back((char *)msg.c_str());
-    msg = "System standby!";
-    logq->push_back((char *)msg.c_str());
-    msg = "System stop!";
-    logq->push_back((char *)msg.c_str());
+    sysArgs *args = new sysArgs;
+    args->cmd_mtx = &cmd_mtx;
+    args->log_mtx = &log_mtx;
+    args->data_mtx = &data_mtx;
+    args->cmdq = cmdq;
+    args->logq = logq;
+    args->datafile = "data.csv";
 
-    sysArgs args;
-    args.cmd_mtx = &cmd_mtx;
-    args.log_mtx = &log_mtx;
-    args.cmdq = cmdq;
-    args.logq = logq;
+    std::thread t(serverThread, args, port);
+    if (t.joinable()) {t.join(); }
 
-    std::thread t(serverThread, &args, port);
-    t.join();
+    delete cmdq;
+    delete logq;
+    delete args;
 
     return -1;
 }
@@ -45,11 +48,9 @@ int main(int argc, char **argv) {
 static void serverThread(sysArgs *args, int port) {
     APESServer *server = new APESServer(args);
     
-    while (server->sfd < 0) {
-        server->createServer(port);
-    }
-    server->run();
+    server->run(port);
 
-    // control flow should never reach
-    //server->shutdown();
+    // control flow should never reach here
+    delete server;
+    return;
 }
