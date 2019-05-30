@@ -22,7 +22,6 @@ APESShell::APESShell(sysArgs *args) {
     this->logq = args->logq;
 }
 
-
 void APESShell::run() {
     while (1) {
         std::string cmdline;
@@ -35,8 +34,10 @@ void APESShell::run() {
             continue;
         }
         cmdlock.unlock();
-        
-        //if (cmdline.empty() || cmdline == "\n") { continue; }
+
+        if (cmdline == shutdown_tag) {
+            break;
+        }
 
         evaluate(cmdline);
     }
@@ -76,7 +77,6 @@ void APESShell::toSend(std::string msg) {
 }
 
 void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
-    //printf("\t\t\t%s\n", ltk->argv[0]);
     int rc;
 
     if (ltk->argv[0] == "start") {
@@ -232,8 +232,6 @@ static void execute(parse_token *ltk, APESShell *shell) {
             break;
 
         case HELP:
-            msg = "Listing Help Commands!\n";
-            shell->toSend(msg);
             listCommands(shell);
             break;
 
@@ -337,7 +335,10 @@ APESShell::~APESShell() {
 }
 
 static void listCommands(APESShell *shell) {
-    std::string msg = "start => setups APES system\n";
+    std::string msg = "Listing Help Commands!\n";
+    shell->toSend(msg);
+
+    msg = "start => setups APES system\n";
     shell->toSend(msg);
 
     msg = "standby => turns off actuators and stops auto mode\n";

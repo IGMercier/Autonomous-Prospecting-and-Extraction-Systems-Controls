@@ -6,7 +6,7 @@ This folder contains all the software stuffs
     * Re: Server/Client
         * [ ] ensure that client reconnects on connection failure
         * [ ] call shutdown procedure
-        * [ ] nail down file reading/writing schema
+        * [x] nail down file reading/writing schema
     * Re: Components
         * [ ] figure out pin mapping and bus specification
         * [ ] fill out prepped encoder funcs

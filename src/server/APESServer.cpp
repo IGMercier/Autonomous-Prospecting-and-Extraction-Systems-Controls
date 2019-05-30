@@ -16,6 +16,7 @@
 #include "APESServer.h"
 
 static char *delim = "\r\n";
+static int shutdown_sig = 0;
 
 APESServer::APESServer(sysArgs *args) {
     signal(SIGPIPE, SIG_IGN);
@@ -43,12 +44,15 @@ void APESServer::run(int port) {
     }
     assert(this->sfd >= 0);
 
-    while (1) {
+    while (!shutdown_sig) {
         createClient();
 
         assert(this->cfd >= 0);
         execute();
     }
+
+    shutdown();
+    return;
 }
 
 void APESServer::execute() {
@@ -101,8 +105,13 @@ void APESServer::execute() {
             std::string logline = this->logq->at(0);
             printf("%s", logline.c_str());
 
+            if (logline == shutdown_tag) {
+                shutdown_sig = 1;
+                rc = -1;
+                break;
+            }
+
             if ((rc = sendToClient(logline.c_str()) < 0)) {
-                print("Error\n");
                 break;
             }
             
@@ -113,8 +122,6 @@ void APESServer::execute() {
         loglock.unlock();
 
         if (rc < 0) { break; }
-
-        print("PASSED\n");
 
         /*
         // reads off data file
@@ -134,7 +141,10 @@ void APESServer::execute() {
     }
 
     delete cmdline;
-    disconnected();
+
+    if (!shutdown_sig) {
+        disconnected();
+    }
 
     return;
 
@@ -169,7 +179,7 @@ void APESServer::shutdown() {
             print(strerror(errno));
         }
     }
-    return;
+    exit(0);
 }
 
 APESServer::~APESServer() {

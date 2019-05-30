@@ -215,7 +215,7 @@ int ServerBase::sendToClient(const char *msg) {
     assert(this->cfd >= 0);
 
     int rc;
-    if ((rc = write(this->cfd, msg, strlen(msg)+1)) < 0) {
+    if ((rc = write(this->cfd, msg, strlen(msg))) < 0) {
         if (errno == ENOTCONN) {
             print(strerror(errno));
             return -1;

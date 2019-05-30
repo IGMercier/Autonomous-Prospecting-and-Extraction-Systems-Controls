@@ -8,6 +8,8 @@
 #define VERBOSE 1
 #define MAXLINE 1024
 
+std::string shutdown_tag = "<shutdown>";
+
 typedef struct sysArgs {
     std::mutex *cmd_mtx;
     std::mutex *log_mtx;
