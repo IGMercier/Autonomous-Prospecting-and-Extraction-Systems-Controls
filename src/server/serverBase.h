@@ -3,6 +3,8 @@
 
 #define MAXCONN 1
 
+#include <string>
+
 class ServerBase {
     protected:
         int sfd;
@@ -14,8 +16,8 @@ class ServerBase {
         int checkSockOpts();
         virtual void execute();
         int readFromClient(char *cmdline);
-        int sendToClient(const char *msg);
-        void print(const char *msg);
+        int sendToClient(std::string msg);
+        void print(std::string msg);
 
     public:
         ServerBase();
