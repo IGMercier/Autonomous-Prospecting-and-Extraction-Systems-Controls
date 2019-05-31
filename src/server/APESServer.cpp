@@ -16,7 +16,7 @@
 
 #include "APESServer.h"
 
-static char *delim = "\r\n";
+static std::string delim = "<END>";
 static std::atomic_int shutdown_sig = {0};
 
 APESServer::APESServer(sysArgs *args) {
@@ -63,7 +63,7 @@ void APESServer::execute() {
         return;
     }
 
-    if (sendToClient(delim) < 0) {
+    if (sendToClient(delim.c_str()) < 0) {
         disconnected();
         return;
     }
@@ -79,20 +79,22 @@ void APESServer::execute() {
         while ((rc = readFromClient(cmdline)) > 0) {
             //print(cmdline);
 
-            if (!strncmp(cmdline, delim, MAXLINE)) {
+            if (!strncmp(cmdline, delim.c_str(), MAXLINE)) {
+                rc = 1;
                 break;
             } else {
-                cmdline[strlen(cmdline)] = '\0';
+                cmdline[MAXLINE-1] = '\0';
+                std::string buf = cmdline;
                 
                 // writes to command file for shell to read
                 std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
-                std::string buf = cmdline;
                 this->cmdq->push_back(buf);
                 cmdlock.unlock();
             }
         }
+        printf("LEAVING READ: %d\n", rc);
 
-        if (rc == -1) { break; }
+        if (rc < 0) { break; }
 
         // reads off whatever the shell has logged
         std::unique_lock<std::mutex> loglock(*(this->log_mtx));
@@ -106,17 +108,22 @@ void APESServer::execute() {
                 break;
             }
 
-            if ((rc = sendToClient(logline.c_str()) == -1)) {
+            if ((rc = sendToClient(logline.c_str()) < 0)) {
+                rc = -1;
                 break;
             }
             
-            if ((rc = sendToClient(delim)) == -1) { break; }
+            if ((rc = sendToClient(delim.c_str())) < 0) {
+                rc = -1;
+                break;
+            }
 
         }
         this->logq->clear();
         loglock.unlock();
+        if (rc < 0) { break; }
+        printf("LEAVING WRITE: %d\n", rc);
 
-        if (rc == -1) { break; }
 
         /*
         // reads off data file
@@ -162,7 +169,7 @@ void APESServer::disconnected() {
 void APESServer::shutdown() {
     std::string msg = "Server shutting down!\n";
     sendToClient(msg.c_str());
-    sendToClient(delim);
+    sendToClient(delim.c_str());
 
     if (this->cfd >= 0) {
         if (close(this->cfd) < 0) {
