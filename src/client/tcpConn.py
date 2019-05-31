@@ -14,12 +14,14 @@ class Connection():
         self.port = port
         self.writeback = writeSignal
         self.online = onlineState
+        self.active = False
+        self.connected = False
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket_thread = threading.Thread(target=self.start_socket, args=())
         self.socket_thread.start()
 
     def reconnect(self):
-        self.close()
+        # ASSERT: active == False and connected == False
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket_thread = threading.Thread(target=self.start_socket, args=())
         self.socket_thread.start()
@@ -27,7 +29,8 @@ class Connection():
     def start_socket(self):
         self.socket.settimeout(5)
         count = 3
-        self.online.emit(False, True)
+        active, connected = True, False
+        self.online.emit(active, connected)
         while True:
             try:
                 self.socket.connect((self.address, self.port))
@@ -39,9 +42,11 @@ class Connection():
                     count = count - 1
                 else:
                     self.writeback.emit("Too many retries.")
-                    self.online.emit(False, False)
+                    active, connected = False, False
+                    self.online.emit(active, connected)
                     return
-        self.online.emit(True, True)
+        active, connected = True, True
+        self.online.emit(active, connected)
 
         self.socket.settimeout(None)
         self.writeback.emit("Connection Established")
@@ -54,7 +59,8 @@ class Connection():
                     raise Exception("Server returned empty packet (likely shutdown)")
             except Exception as e:
                 self.writeback.emit("Error while reading from socket: {}({})".format(type(e).__name__, e))
-                self.online.emit(False, False)
+                active, connected = False, False
+                self.online.emit(active, connected)
                 break
 
     def socket_write(self, data):
@@ -64,7 +70,6 @@ class Connection():
             self.writeback.emit('<p style="color:#ff0000";>Command "{}" could not be sent: {}({}).</p>'.format(data, type(e).__name__, e))
 
     def close(self):
-        self.online.emit(False, False)
         try:
             self.socket.settimeout(2)
             self.socket.close()
@@ -75,6 +80,8 @@ class Connection():
                 self.socket_thread.join()
         except Exception as e:
             qPrint("Exception when joining read thread: {}({})".format(type(e).__name__, e))
+        active, connected = False, False
+        self.online.emit(active, connected)
 
 
 

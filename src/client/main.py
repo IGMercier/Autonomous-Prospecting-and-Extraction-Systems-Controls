@@ -2,7 +2,7 @@
 import sys, threading
 from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QWidget, QTabWidget, \
                               QVBoxLayout, QToolBar, QFrame, QDialog, QPushButton, QTextEdit, \
-                              QHBoxLayout
+                              QHBoxLayout, QCheckBox
 from PySide2.QtGui  import QTextOption, QTextCursor
 from PySide2.QtCore import Signal, Slot
 from PySide2.QtCore import qDebug as qPrint
@@ -40,7 +40,7 @@ class TabBar(QTabWidget):
 
     def closeConn(self, index):
         if index != 0:
-            self.tabs[index].close()
+            self.tabs[index].close(True)
             self.removeTab(index)
             self.tabs.pop(index)
 
@@ -50,56 +50,69 @@ class ConnTab(QDialog):
     def __init__(self, parent, addr, port):
         super().__init__(parent)
         self.parent = parent
-        self.online = False
+        self.connected = False
+        mainLayout = QVBoxLayout()
         self.connLog = ConsoleLog(self)
         self.writeback.connect(self.connLog.addText)
         self.writeback.emit("Connecting...")
 
         self.onlineState.connect(self.setOnline)
 
-        self.command = QLineEdit()
-        button = QPushButton("Send")
-        self.command.returnPressed.connect(button.click)
-        button.clicked.connect(self.sendCommand)
-        button.setFixedSize(100, 25)
         submit = QHBoxLayout()
+        self.command = QLineEdit(self)
+        self.buttonSend = QPushButton("Send", self)
+        self.command.returnPressed.connect(self.buttonSend.click)
+        self.buttonSend.clicked.connect(self.sendCommand)
+        self.buttonSend.setFixedSize(100, 25)
         submit.addWidget(self.command)
-        submit.addWidget(button)
+        submit.addWidget(self.buttonSend)
         submit.update()
-        self.recon = QPushButton("Reconnect")
-        self.recon.setEnabled(False)
-        self.recon.clicked.connect(self.reconnect)
 
-        mainLayout = QVBoxLayout()
+        recon = QHBoxLayout()
+        self.reconButton = QPushButton("Reconnect", self)
+        self.reconButton.setEnabled(False)
+        self.reconButton.clicked.connect(self.reconnect)
+        self.reconAuto = QCheckBox("Auto", self)
+        recon.addWidget(self.reconButton)
+        recon.addWidget(self.reconAuto)
+
         mainLayout.addWidget(self.connLog)
         mainLayout.addLayout(submit)
-        mainLayout.addWidget(self.recon)
+        mainLayout.addLayout(recon)
         mainLayout.addStretch(1)
         self.setLayout(mainLayout)
 
+        self.override = False
         self.conn = tcpConn.Connection(addr, port, self.writeback, self.onlineState)
 
     def sendCommand(self):
-        if self.online:
+        if self.connected:
             cmd = self.command.text()
-            self.conn.socket_write(cmd + '\n')
             self.writeback.emit('<p style="color:#575757";>> ' + cmd + '</p>')
             self.command.setText("")
+            self.conn.socket_write(cmd + '\n')
 
-    def close(self):
-        if self.online:
-            self.writeback.emit('<p style="color:#ff0000";>Connection Closed.</p>')
+    def close(self, override=False):
+        self.override = override
+        if self.connected:
+            self.writeback.emit('Connection Closed.')
             self.conn.close()
 
     def reconnect(self):
-        self.writeback.emit("Connecting...")
+        self.writeback.emit("Attempting reconnection...")
         self.conn.reconnect()
 
 
-    @Slot(bool)
-    def setOnline(self, online, connected):
-        self.online = online
-        self.recon.setEnabled(not connected)
+    @Slot(bool, bool)
+    def setOnline(self, active, connected):
+        self.connected = connected
+        self.buttonSend.setEnabled(connected)
+        if self.reconAuto.isChecked():
+            self.reconButton.setEnabled(False)
+            if not active and not self.override:
+                self.reconnect()
+        else:
+            self.reconButton.setEnabled(not active)
 
 
 class ConsoleLog(QTextEdit):
