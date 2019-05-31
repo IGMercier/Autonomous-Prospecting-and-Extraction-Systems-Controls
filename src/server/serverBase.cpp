@@ -188,62 +188,62 @@ int ServerBase::readFromClient(char *cmdline) {
     assert(this->cfd >= 0);
     
     int rc;
-    fcntl(this->cfd, F_SETFL, O_NONBLOCK);
-    if ((rc = read(this->cfd, cmdline, sizeof(cmdline)-1)) == -1) {
+    //fcntl(this->cfd, F_SETFL, O_NONBLOCK);
+    if ((rc = read(this->cfd, cmdline, MAXLINE)) == -1) {
         if (errno == EINVAL) {
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
+            //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else if (errno == EAGAIN) {
             //print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
+            //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return 0;
         } else if (errno == EWOULDBLOCK) {
             //print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
+            //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return 0;
         } else if (errno == EBADF) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
+            //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else if (errno == EFAULT) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
+            //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else if (errno == EINTR) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
+            //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else if (errno == EIO) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
+            //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else if (errno == ENOTCONN) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
+            //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else if (errno == ECONNRESET) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
+            //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else if (errno == EPIPE) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
+            //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else if (errno == ETIMEDOUT) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
+            //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else { 
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
+            //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         }
     } else if (rc > 0) {
-        fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
+        //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
         return 1;
     }
-    print(strerror(errno));
-    fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
+    //print(strerror(errno));
+    //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
     return 0;
 }
 
@@ -306,7 +306,7 @@ int ServerBase::sendToClient(const char *msg) {
         //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
         return 1;
     }
-    print(strerror(errno));
+    //print(strerror(errno));
     //fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
     return 0;
 }

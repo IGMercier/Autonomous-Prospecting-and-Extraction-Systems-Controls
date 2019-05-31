@@ -15,6 +15,8 @@ class APESServer : public ServerBase {
         std::deque<std::string> *logq;
         void execute() override;
         void disconnected();
+        void readThread();
+        void writeThread();
     public:
         APESServer(sysArgs *args);
         void run(int port);

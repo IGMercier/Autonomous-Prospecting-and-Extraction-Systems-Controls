@@ -12,12 +12,14 @@
 #include <sys/types.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <thread>
 #include <atomic>
 
 #include "APESServer.h"
 
 static char *delim = "\r\n";
 static std::atomic_int shutdown_sig = {0};
+static std::atomic_int disconnected_sig = {0};
 
 APESServer::APESServer(sysArgs *args) {
     signal(SIGPIPE, SIG_IGN);
@@ -67,32 +69,52 @@ void APESServer::execute() {
         disconnected();
         return;
     }
-    
+
+    std::thread tread(&APESServer::readThread, this);
+    std::thread twrite(&APESServer::writeThread, this);
+    tread.join();
+    twrite.join();
+    return;
+}
+
+void APESServer::readThread() {
     char *cmdline = new char[MAXLINE];
-    while (1) {
+
+    while (!shutdown_sig && !disconnected_sig) {
         setClientSockOpts();
         setServerSockOpts();
 
         memset(cmdline, 0, MAXLINE);
 
         int rc;
-        while ((rc = readFromClient(cmdline)) > 0) {
-            //print(cmdline);
-
-            if (!strncmp(cmdline, delim, MAXLINE)) {
-                break;
-            } else {
-                cmdline[strlen(cmdline)] = '\0';
+        rc = readFromClient(cmdline);
+            //server->print(cmdline);
+        if (!strncmp(cmdline, delim, MAXLINE)) {
+            continue;
+        } else {
+            cmdline[strlen(cmdline)-1] = '\0';
                 
-                // writes to command file for shell to read
-                std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
-                std::string buf = cmdline;
-                this->cmdq->push_back(buf);
-                cmdlock.unlock();
-            }
+            // writes to command file for shell to read
+            std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
+            std::string buf = cmdline;
+            this->cmdq->push_back(buf);
+            cmdlock.unlock();
         }
 
-        if (rc == -1) { break; }
+        if (rc < 0) {
+            disconnected_sig = 1;
+            disconnected();
+            delete cmdline;
+            return;
+        }
+    }
+    delete cmdline;
+    return;
+}
+
+void APESServer::writeThread() {
+    while (!shutdown_sig && !disconnected_sig) {
+        int rc;
 
         // reads off whatever the shell has logged
         std::unique_lock<std::mutex> loglock(*(this->log_mtx));
@@ -102,21 +124,20 @@ void APESServer::execute() {
 
             if (logline == shutdown_tag) {
                 shutdown_sig = 1;
-                rc = -1;
-                break;
+                return;
             }
 
-            if ((rc = sendToClient(logline.c_str()) == -1)) {
-                break;
+            if ((rc = sendToClient(logline.c_str()) < 0)) {
+                disconnected_sig = 1;
+                disconnected();
+                return;
             }
             
-            if ((rc = sendToClient(delim)) == -1) { break; }
+            //if ((rc = server->sendToClient(delim)) < 0) { break; }
 
         }
         this->logq->clear();
         loglock.unlock();
-
-        if (rc == -1) { break; }
 
         /*
         // reads off data file
@@ -134,15 +155,7 @@ void APESServer::execute() {
         */
 
     }
-
-    delete cmdline;
-
-    if (!shutdown_sig) {
-        disconnected();
-    }
-
     return;
-
 }
 
 void APESServer::disconnected() {
