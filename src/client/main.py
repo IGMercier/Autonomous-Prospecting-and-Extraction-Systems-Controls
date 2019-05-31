@@ -46,7 +46,7 @@ class TabBar(QTabWidget):
 
 class ConnTab(QDialog):
     writeback = Signal(str)
-    onlineState = Signal(bool, bool)
+    onlineSignal = Signal(bool, bool)
     def __init__(self, parent, addr, port):
         super().__init__(parent)
         self.parent = parent
@@ -55,8 +55,6 @@ class ConnTab(QDialog):
         self.connLog = ConsoleLog(self)
         self.writeback.connect(self.connLog.addText)
         self.writeback.emit("Connecting...")
-
-        self.onlineState.connect(self.setOnline)
 
         submit = QHBoxLayout()
         self.command = QLineEdit(self)
@@ -82,8 +80,9 @@ class ConnTab(QDialog):
         mainLayout.addStretch(1)
         self.setLayout(mainLayout)
 
-        self.override = False
-        self.conn = tcpConn.Connection(addr, port, self.writeback, self.onlineState)
+        self.onlineSignal.connect(self.setOnline)
+
+        self.conn = tcpConn.Connection(addr, port, self.writeback, self.onlineSignal, self.reconAuto.isChecked)
 
     def sendCommand(self):
         if self.connected:
@@ -92,27 +91,18 @@ class ConnTab(QDialog):
             self.command.setText("")
             self.conn.socket_write(cmd + '\n')
 
-    def close(self, override=False):
-        self.override = override
-        if self.connected:
-            self.writeback.emit('Connection Closed.')
-            self.conn.close()
+    def close(self, override):
+        self.conn.close(override)
 
     def reconnect(self):
-        self.writeback.emit("Attempting reconnection...")
-        self.conn.reconnect()
-
+        if not self.connected:
+            self.conn.reconnect()
 
     @Slot(bool, bool)
     def setOnline(self, active, connected):
         self.connected = connected
         self.buttonSend.setEnabled(connected)
-        if self.reconAuto.isChecked():
-            self.reconButton.setEnabled(False)
-            if not active and not self.override:
-                self.reconnect()
-        else:
-            self.reconButton.setEnabled(not active)
+        self.reconButton.setEnabled(not self.reconAuto.isChecked() and not active)
 
 
 class ConsoleLog(QTextEdit):
