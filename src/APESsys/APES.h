@@ -46,7 +46,8 @@ class APES {
         Therm* therm;
         Amm* amm;
         WLevel* wlevel;
-        Motor* motor;
+        Motor* motor_X;
+        Motor* motor_Y;
         Encoder *encoder;
     public:
         APES();
@@ -60,8 +61,10 @@ class APES {
         dataPt* read_encoder();
         void auto_on(autoFunc which);
         void auto_off(autoFunc which);
-        void motor_drive(bool dir, int speed, int time);
-        void motor_stop();
+        void motor_X_drive(bool dir, int speed, int time);
+        void motor_Y_drive(bool dir, int speed, int time);
+        void motor_X_stop();
+        void motor_Y_stop();
         void readData(const char *filename);
         void saveData(dataPt *data);
         void writeDataVector();

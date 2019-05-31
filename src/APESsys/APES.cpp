@@ -33,7 +33,8 @@ APES::APES(char *filename, std::mutex *data_mtx) {
     this->therm = NULL;
     this->amm = NULL;
     this->wlevel = NULL;
-    this->motor = NULL;
+    this->motor_X = NULL;
+    this->motor_Y = NULL;
 
 
     // starts python interpreter
@@ -48,7 +49,8 @@ int APES::setup() {
     this->therm = new Therm(7, 27);
     this->amm = new Amm(5, 6);
     this->wlevel = new WLevel(2, 4);
-    this->motor = new Motor(26, 8);
+    this->motor_Y = new Motor(26, 8);
+    this->motor_X = new Motor(26, 8);
 
     int fd = wiringPiI2CSetup(/* fill with device id*/);
     this->encoder = new Encoder(fd, 1024); // ppr from datasheet
@@ -162,15 +164,27 @@ dataPt* APES::read_encoder() {
     return NULL;
 }
 
-void APES::motor_drive(bool dir, int speed, int time) {
-    if (this->motor != NULL) {
-        this->motor->motor_drive(dir, speed, time);
+void APES::motor_X_drive(bool dir, int speed, int time) {
+    if (this->motor_X != NULL) {
+        this->motor_X->motor_drive(dir, speed, time);
     }
 }
 
-void APES::motor_stop() {
-    if (this->motor != NULL) {
-        this->motor->motor_stop();
+void APES::motor_Y_drive(bool dir, int speed, int time) {
+    if (this->motor_Y != NULL) {
+        this->motor_Y->motor_drive(dir, speed, time);
+    }
+}
+
+void APES::motor_X_stop() {
+    if (this->motor_X != NULL) {
+        this->motor_X->motor_stop();
+    }
+}
+
+void APES::motor_Y_stop() {
+    if (this->motor_Y != NULL) {
+        this->motor_Y->motor_stop();
     }
 }
 
@@ -239,7 +253,8 @@ void APES::auto_off(autoFunc which) {
 
 void APES::standby() {
     // ensure that everything is off
-    motor_stop();
+    motor_X_stop();
+    motor_Y_stop();
     stop_therm = 1;
     stop_amm = 1;
     stop_wlevel = 1;
@@ -253,7 +268,8 @@ void APES::finish() {
     stop_wlevel = 1;
     stop_wob = 1;
 
-    motor_stop();
+    motor_Y_stop();
+    motor_X_stop();
 
     // kills the python interpreter
     // and deletes everything, so

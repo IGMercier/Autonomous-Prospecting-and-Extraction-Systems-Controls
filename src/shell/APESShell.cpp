@@ -13,7 +13,6 @@ using std::thread;
 static void execute(parse_token *ltk, APESShell *shell);
 static void listCommands(APESShell *shell);
 
-
 APESShell::APESShell(sysArgs *args) {
     //this->robot = new APES();
     this->cmd_mtx = args->cmd_mtx;
@@ -79,6 +78,7 @@ void APESShell::toSend(std::string msg) {
 
 void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
     int rc;
+    ctk->argc = 0;
 
     if (ltk->argv[0] == "start") {
         ctk->command = START;
@@ -144,7 +144,7 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
                 ctk->command = NONE;
                 return;
             }
-            ctk->argv[(ctk->argc)++] = rc;
+            ctk->argv[(ctk->argc)++].dataI = rc;
 
             try {
                 rc = std::stoi(ltk->argv[3]); // speed
@@ -152,7 +152,7 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
                 ctk->command = NONE;
                 return;
             }
-            ctk->argv[(ctk->argc)++] = rc;
+            ctk->argv[(ctk->argc)++].dataI = rc;
 
             try {
                 rc = std::stoi(ltk->argv[4]); // time  
@@ -160,7 +160,7 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
                 ctk->command = NONE;
                 return;
             }
-            ctk->argv[(ctk->argc)++] = rc;
+            ctk->argv[(ctk->argc)++].dataI = rc;
             return;
 
         } else if (ltk->argv[1] == "stop") {
@@ -182,12 +182,29 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
             ctk->command = DRILL_CYCLE;
 
             try {
-                rc = std::stoi(ltk->argv[2]);
+                rc = std::stoi(ltk->argv[2]); // duty cycle
             } catch (...) {
                 ctk->command = NONE;
                 return;
             }
-            ctk->argv[(ctk->argc)++] = rc;
+            ctk->argv[(ctk->argc)++].dataI = rc;
+
+            try {
+                rc = std::stoi(ltk->argv[3]); // on_period
+            } catch (...) {
+                ctk->command = NONE;
+                return;
+            }
+            ctk->argv[(ctk->argc)++].dataI = rc;
+
+            float rcf;
+            try {
+                rcf = std::stof(ltk->argv[4]); // freq
+            } catch (...) {
+                ctk->command = NONE;
+                return;
+            }
+            ctk->argv[(ctk->argc)++].dataF = rcf;
             return;
         }
     }
@@ -292,11 +309,11 @@ static void execute(parse_token *ltk, APESShell *shell) {
 
         case MOTOR_DRIVE:
             {
-                int dir = ctk.argv[0];
-                int speed = ctk.argv[1];
-                int time = ctk.argv[2];
+                int dir = ctk.argv[0].dataI;
+                int speed = ctk.argv[1].dataI;
+                int time = ctk.argv[2].dataI;
                 //this->robot->motor_drive(dir, speed, time);
-                msg = "System's motor enabled for []!\n";
+                msg = "System's motor enabled for " + std::to_string(time) + " us!\n";
                 shell->toSend(msg);
             }
             break;
@@ -318,8 +335,14 @@ static void execute(parse_token *ltk, APESShell *shell) {
             break;
 
         case DRILL_CYCLE:
-            msg = "System's drill duty cycle changed!\n";
-            shell->toSend(msg);
+            {
+                int dc = ctk.argv[0].dataI;
+                int on_period = ctk.argv[1].dataI;
+                float freq = ctk.argv[2].dataF;
+                //shell->robot->drill_cycle(dc, on_period, freq);
+                msg = "System's drill duty cycle changed!\n";
+                shell->toSend(msg);
+            }
             break;
 
         case NONE:
