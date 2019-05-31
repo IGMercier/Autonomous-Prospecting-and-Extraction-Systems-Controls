@@ -189,13 +189,13 @@ Wob::~Wob() {
 /*
     MOTOR FUNCTIONS
 */
-Motor::Motor(int pinA, int pinB, int en) {
+Motor::Motor(int pinA, int en) {
     // this assumes the pybind interpreter has been initialized
     // in  APES::setup()!
     py::object l298n = py::module::import("libraries.l298npy.l298n").attr("L298N");
     assert(l298n != NULL);
 
-    this->L298N = l298n(pinA, pinB, en);
+    this->L298N = l298n(pinA, en);
     fprintf(stdout, "Initialized Motor!\n");
 }
 

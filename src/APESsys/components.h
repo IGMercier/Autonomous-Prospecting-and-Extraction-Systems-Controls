@@ -49,7 +49,7 @@ class Motor {
     private:
         pybind11::object L298N;
     public:
-        Motor(int pinA, int pinB, int en);
+        Motor(int pinA, int en);
         ~Motor();
         void motor_drive(bool dir, int speed, int time);
         void motor_stop();
