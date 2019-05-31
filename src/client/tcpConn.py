@@ -6,68 +6,75 @@ from time import sleep
 
 BUFFER_SIZE = 1024
 
+messages = 0
+
 class Connection():
-    def __init__(self, address, port, writeback):
+    def __init__(self, address, port, writeSignal, onlineState):
         self.address = address
         self.port = port
-        self.writeback = writeback
-        self.online = False
-        self.readThread = None
+        self.writeback = writeSignal
+        self.online = onlineState
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket_thread = threading.Thread(target=self.start_socket, args=())
+        self.socket_thread.start()
+
+    def reconnect(self):
+        self.close()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket_thread = threading.Thread(target=self.start_socket, args=())
         self.socket_thread.start()
 
     def start_socket(self):
-        print("Attempting connection")
         self.socket.settimeout(5)
         count = 3
-        connected = False
-        while not connected:
+        self.online.emit(False, True)
+        while True:
             try:
                 self.socket.connect((self.address, self.port))
-                connected = True
+                break
             except Exception as e:
-                self.writeback.addText("Error establishing connection: {}".format(e))
+                self.writeback.emit("Error establishing connection: {}".format(e))
                 if count > 0:
-                    self.writeback.addText("Retrying ({})...".format(count))
+                    self.writeback.emit("Retrying ({})...".format(count))
                     count = count - 1
                 else:
-                    self.writeback.addText("Too many retries.")
+                    self.writeback.emit("Too many retries.")
+                    self.online.emit(False, False)
                     return
-        self.online = True
+        self.online.emit(True, True)
 
         self.socket.settimeout(None)
-        self.writeback.addText("Connection Established")
-        while self.online:
+        self.writeback.emit("Connection Established")
+        while True:
             try:
                 buffer = self.socket.recv(BUFFER_SIZE)
-                #qPrint("Reading {}:{}".format(len(buffer), id(buffer)))
                 if len(buffer) > 0:
-                    self.writeback.addText(buffer.decode("utf-8"))
+                    self.writeback.emit(buffer.decode("utf-8"))
                 else:
                     raise Exception("Server returned empty packet (likely shutdown)")
             except Exception as e:
-                self.writeback.addText("Error while reading from socket: {}".format(e))
-                qPrint("Closing")
-                self.online = False
+                self.writeback.emit("Error while reading from socket: {}({})".format(type(e).__name__, e))
+                self.online.emit(False, False)
+                break
 
     def socket_write(self, data):
         try:
             self.socket.send(data.encode('utf-8'))
         except Exception as e:
-            self.writeback.addText('<p style="color:#ff0000";>Command "{}" could not be sent: {}.</p>'.format(data, e))
+            self.writeback.emit('<p style="color:#ff0000";>Command "{}" could not be sent: {}({}).</p>'.format(data, type(e).__name__, e))
 
-    def close_external(self):
-        self.online = False
+    def close(self):
+        self.online.emit(False, False)
         try:
+            self.socket.settimeout(2)
             self.socket.close()
         except Exception as e:
-            qPrint("Exception when closing socket: {}".format(e))
+            qPrint("Exception when closing socket: {}({})".format(type(e).__name__, e))
         try:
-            if self.readThread != None:
-                self.readThread.join()
+            if self.socket_thread != None:
+                self.socket_thread.join()
         except Exception as e:
-            qPrint("Exception when joining read thread: {}".format(e))
+            qPrint("Exception when joining read thread: {}({})".format(type(e).__name__, e))
 
 
 

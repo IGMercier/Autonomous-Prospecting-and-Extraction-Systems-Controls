@@ -4,11 +4,9 @@ from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QWid
                               QVBoxLayout, QToolBar, QFrame, QDialog, QPushButton, QTextEdit, \
                               QHBoxLayout
 from PySide2.QtGui  import QTextOption, QTextCursor
-from PySide2.QtCore import Signal
+from PySide2.QtCore import Signal, Slot
 from PySide2.QtCore import qDebug as qPrint
 import tcpConn
-
-conn = 0
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -33,10 +31,11 @@ class TabBar(QTabWidget):
         self.setTabsClosable(True)
         self.tabCloseRequested.connect(self.closeConn)
 
-    def newConnection(self, name, addr, port):
+    @Slot(str, str)
+    def newConnection(self, addr, port):
         newConn = ConnTab(self, addr, int(port))
         self.tabs.append(newConn)
-        self.addTab(newConn, name)
+        self.addTab(newConn, "{}:{}".format(addr, port))
         self.setCurrentWidget(newConn)
 
     def closeConn(self, index):
@@ -46,14 +45,17 @@ class TabBar(QTabWidget):
             self.tabs.pop(index)
 
 class ConnTab(QDialog):
+    writeback = Signal(str)
+    onlineState = Signal(bool, bool)
     def __init__(self, parent, addr, port):
         super().__init__(parent)
         self.parent = parent
         self.online = False
-        self.connLog = QTextEdit()
-        self.connLog.setReadOnly(True)
-        self.connLog.setPlainText("Connecting...\n")
-        self.connLog.setWordWrapMode(QTextOption.NoWrap)
+        self.connLog = ConsoleLog(self)
+        self.writeback.connect(self.connLog.addText)
+        self.writeback.emit("Connecting...")
+
+        self.onlineState.connect(self.setOnline)
 
         self.command = QLineEdit()
         button = QPushButton("Send")
@@ -64,45 +66,63 @@ class ConnTab(QDialog):
         submit.addWidget(self.command)
         submit.addWidget(button)
         submit.update()
+        self.recon = QPushButton("Reconnect")
+        self.recon.setEnabled(False)
+        self.recon.clicked.connect(self.reconnect)
 
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(self.connLog)
         mainLayout.addLayout(submit)
+        mainLayout.addWidget(self.recon)
         mainLayout.addStretch(1)
         self.setLayout(mainLayout)
 
-        self.writeMutex = threading.Lock()
-        self.conn = tcpConn.Connection(addr, port, self)
+        self.conn = tcpConn.Connection(addr, port, self.writeback, self.onlineState)
 
     def sendCommand(self):
-        if self.conn.online:
+        if self.online:
             cmd = self.command.text()
             self.conn.socket_write(cmd + '\n')
-            self.addText('<p style="color:#575757";>> ' + cmd + '</p>')
+            self.writeback.emit('<p style="color:#575757";>> ' + cmd + '</p>')
             self.command.setText("")
 
+    def close(self):
+        if self.online:
+            self.writeback.emit('<p style="color:#ff0000";>Connection Closed.</p>')
+            self.conn.close()
+
+    def reconnect(self):
+        self.writeback.emit("Connecting...")
+        self.conn.reconnect()
+
+
+    @Slot(bool)
+    def setOnline(self, online, connected):
+        self.online = online
+        self.recon.setEnabled(not connected)
+
+
+class ConsoleLog(QTextEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setReadOnly(True)
+        self.setWordWrapMode(QTextOption.NoWrap)
+        self.writeMutex = threading.Lock()
+
+    @Slot(str)
     def addText(self, text):
         self.writeMutex.acquire()
-        self.connLog.moveCursor(QTextCursor.End)
-        self.connLog.insertHtml(text + '<br>')
-        self.connLog.moveCursor(QTextCursor.End)
+        self.moveCursor(QTextCursor.End)
+        self.insertHtml(text + '<br>')
+        self.moveCursor(QTextCursor.End)
         self.writeMutex.release()
 
-    def close(self):
-        if self.conn.online:
-            self.addText('<p style="color:#ff0000";>Connection Closed.</p>')
-            self.conn.close_external()
-
 class StartTab(QDialog):
-    newConnection = Signal(str, str, str)
+    newConnection = Signal(str, str)
     def __init__(self, parent=None):
         global conn
         super().__init__(parent)
         self.parent = parent
-        conn = conn + 1
-        current = conn
-        connLabel = QLabel("Name:")
-        self.connEdit = QLineEdit("Connection {}".format(conn))
         addrLabel = QLabel("Address:")
         self.addrEdit = QLineEdit("192.168.1.18")
         portLabel = QLabel("Port:")
@@ -115,8 +135,6 @@ class StartTab(QDialog):
             self.newConnection.connect(parent.newConnection)
 
         mainLayout = QVBoxLayout()
-        mainLayout.addWidget(connLabel)
-        mainLayout.addWidget(self.connEdit)
         mainLayout.addWidget(addrLabel)
         mainLayout.addWidget(self.addrEdit)
         mainLayout.addWidget(portLabel)
@@ -126,10 +144,7 @@ class StartTab(QDialog):
         self.setLayout(mainLayout)
 
     def submit(self):
-        global conn
-        self.newConnection.emit(self.connEdit.text(), self.addrEdit.text(), self.portEdit.text())
-        conn = conn + 1
-        self.connEdit.setText("Connection {}".format(conn))
+        self.newConnection.emit(self.addrEdit.text(), self.portEdit.text())
 
 
 if __name__ == "__main__":
