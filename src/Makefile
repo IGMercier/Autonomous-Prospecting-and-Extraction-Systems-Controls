@@ -11,7 +11,7 @@ SERVER_TEST = tests/serverTest.cpp
 SHELL_TEST = tests/shellTest.cpp
 ALL_TEST = program.cpp
 
-CFLAGS = -g -Wall -fvisibility=hidden -std=c++14 -O3
+CFLAGS = -g -Wall -fvisibility=hidden -std=c++14
 INCL = -I/usr/include/python3.5m -I/libraries/pybind11/include/
 PYFLAGS = `python3-config --cflags` $(INCL) `python3-config --ldflags`
 LIBS = -lwiringPi -pthread -lstdc++

@@ -336,61 +336,61 @@ APESShell::~APESShell() {
 }
 
 static void listCommands(APESShell *shell) {
-    std::string msg = "Listing Help Commands!\n";
+    std::string msg = "Listing Help Commands!";
     shell->toSend(msg);
 
-    msg = "start => setups APES system\n";
+    msg = "start => setups APES system";
     shell->toSend(msg);
 
-    msg = "standby => turns off actuators and stops auto mode\n";
+    msg = "standby => turns off actuators and stops auto mode";
     shell->toSend(msg);
     
-    msg = "data => does something not specified\n";
+    msg = "data => does something not specified";
     shell->toSend(msg);
     
-    msg = "help => prints this help message\n";
+    msg = "help => prints this help message";
     shell->toSend(msg);
 
-    msg = "quit => quits APES, shell, and server systems\n";
+    msg = "quit => quits APES, shell, and server systems";
     shell->toSend(msg);
 
-    msg = "auto on & => automatically reads off sensor data\n";
+    msg = "auto on & => automatically reads off sensor data";
     shell->toSend(msg);
 
-    msg = "auto off => turns off auto mode\n";
+    msg = "auto off => turns off auto mode";
     shell->toSend(msg);
 
-    msg = "temp => reads off current temp\n";
+    msg = "temp => reads off current temp";
     shell->toSend(msg);
 
-    msg = "dtemp => reads off difference in temp since start\n";
+    msg = "dtemp => reads off difference in temp since start";
     shell->toSend(msg);
 
-    msg = "curr => reads off current current\n";
+    msg = "curr => reads off current current";
     shell->toSend(msg);
 
-    msg = "wlevel => reads off current water level\n";
+    msg = "wlevel => reads off current water level";
     shell->toSend(msg);
 
-    msg = "wob => reads off current force\n";
+    msg = "wob => reads off current force";
     shell->toSend(msg);
 
-    msg = "encoder => reads off current encoder data\n";
+    msg = "encoder => reads off current encoder data";
     shell->toSend(msg);
 
-    msg = "motor drive <dir> <speed> <time> => runs motor\n";
+    msg = "motor drive <dir> <speed> <time> => runs motor";
     shell->toSend(msg);
 
-    msg = "motor stop => stops motor\n";
+    msg = "motor stop => stops motor";
     shell->toSend(msg);
 
-    msg = "drill run => runs drill\n";
+    msg = "drill run => runs drill";
     shell->toSend(msg);
 
-    msg = "drill stop => stops drill\n";
+    msg = "drill stop => stops drill";
     shell->toSend(msg);
 
-    msg = "drill cycle <dc> => changes drill duty cycle\n";
+    msg = "drill cycle <dc> => changes drill duty cycle";
     shell->toSend(msg);
 
     return;

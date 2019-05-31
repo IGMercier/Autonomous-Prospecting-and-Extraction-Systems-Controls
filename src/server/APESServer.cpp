@@ -57,7 +57,7 @@ void APESServer::run(int port) {
 }
 
 void APESServer::execute() {
-    std::string msg = "Connected!\n";
+    std::string msg = "Connected!";
     if (sendToClient(msg.c_str()) < 0) {
         disconnected();
         return;
@@ -82,7 +82,7 @@ void APESServer::execute() {
             if (!strncmp(cmdline, delim, MAXLINE)) {
                 break;
             } else {
-                cmdline[strlen(cmdline)-1] = '\0';
+                cmdline[strlen(cmdline)] = '\0';
                 
                 // writes to command file for shell to read
                 std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
@@ -92,13 +92,13 @@ void APESServer::execute() {
             }
         }
 
-        if (rc < 0) { break; }
+        if (rc == -1) { break; }
 
         // reads off whatever the shell has logged
         std::unique_lock<std::mutex> loglock(*(this->log_mtx));
-        while (!this->logq->empty()) {
-            std::string logline = this->logq->at(0);
-            printf("%s", logline.c_str());
+        for (unsigned int i = 0; i < this->logq->size(); i++) {
+            std::string logline = this->logq->at(i);
+            print(logline.c_str());
 
             if (logline == shutdown_tag) {
                 shutdown_sig = 1;
@@ -106,17 +106,17 @@ void APESServer::execute() {
                 break;
             }
 
-            if ((rc = sendToClient(logline.c_str()) < 0)) {
+            if ((rc = sendToClient(logline.c_str()) == -1)) {
                 break;
             }
+            
+            if ((rc = sendToClient(delim)) == -1) { break; }
 
-            this->logq->pop_front();;
         }
+        this->logq->clear();
         loglock.unlock();
 
-        if (rc < 0) { break; }
-        
-        if ((rc = sendToClient(delim)) < 0) { break; }
+        if (rc == -1) { break; }
 
         /*
         // reads off data file
