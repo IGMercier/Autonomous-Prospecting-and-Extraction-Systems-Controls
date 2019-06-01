@@ -61,7 +61,7 @@ void APESServer::run(int port) {
 
 void APESServer::execute() {
     char *cmdline = new char[MAXLINE];
-    while (this->cfd > 0) {
+    while (this->cfd > 0 && !shutdown_sig) {
 
         int rc;
         memset(cmdline, 0, MAXLINE);
@@ -153,7 +153,6 @@ void APESServer::disconnected() {
 void APESServer::shutdown() {
     std::string msg = "Server shutting down!\n";
     sendToClient(msg);
-    sendToClient(delim);
 
     if (this->cfd >= 0) {
         if (close(this->cfd) < 0) {
