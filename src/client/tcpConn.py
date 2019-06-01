@@ -76,14 +76,14 @@ class Connection():
         except Exception as e:
             self.writeback.emit('<p style="color:#ff0000";>Command "{}" could not be sent: {}({}).</p>'.format(data, type(e).__name__, e))
 
-    def close(self, noReconnect):
-        self.override = noReconnect
+    def close(self, override=False):
+        self.override = override
         try:
             self.socket.settimeout(2)
             self.socket.close()
         except Exception as e:
             qPrint("Exception when closing socket: {}({})".format(type(e).__name__, e))
-        if noReconnect:
+        if override:
             try:
                 if self.socket_thread != None:
                     self.socket_thread.join()
