@@ -37,25 +37,27 @@ int readADC(int bus, int channel) {
 /*
     THERMOMETER FUNCTIONS
 */
-Therm::Therm(int bus_addr, float max_T) {
-    if ((bus_addr > 7) || (bus_addr < 0)) {
-        fprintf(stderr, "ERROR: thermometer bus address takes values 0-7!\n");
+Therm::Therm(int bus, int chan) {
+    if ((bus > 1) || (bus < 0)) {
+        fprintf(stderr, "ERROR: thermometer bus address must be 0 or 1!\n");
+        return;
+    }
+
+    if ((chan > 7) || (chan  < 0)) {
+        fprintf(stderr, "ERROR: thermometer channel address takes values 0-7!\n");
         fprintf(stderr, "ERROR: thermometer instatiation failed!\n");
         return;
     }
 
-    this->bus_addr = bus_addr;
-    this->max_T = max_T;
+
+    this->bus = bus;
+    this->chan = chan;
     this->iTemp = 0; //read_temp();
     fprintf(stdout, "Initialized Therm!\n");
 }
 
 float Therm::read_temp() {
-    int bus, channel;
-
-    // @TODO: how is bus_addr specified???
-
-    return (float)readADC(bus, channel);
+    return (float)readADC(this->bus, this->chan);
 }
 
 float Therm::D_temp() {
@@ -69,24 +71,25 @@ Therm::~Therm() {}
 /*
     AMMETER FUNCTIONS
 */
-Amm::Amm(int bus_addr, float max_I) {
-    if ((bus_addr > 7) || (bus_addr < 0)) {
-        fprintf(stderr, "ERROR: ammeter bus address takes values 0-7!\n");
+Amm::Amm(int bus, int chan) {
+    if ((bus > 1) || (bus < 0)) {
+        fprintf(stderr, "ERROR: ammeter bus address must be 0 or 1!\n");
+        return;
+    }
+
+    if ((chan > 7) || (chan  < 0)) {
+        fprintf(stderr, "ERROR: ammeter channel address takes values 0-7!\n");
         fprintf(stderr, "ERROR: ammeter instatiation failed!\n");
         return;
     }
 
-    this->bus_addr = bus_addr;
-    this->max_I = max_I;
+    this->bus = bus;
+    this->chan = chan;
     fprintf(stdout, "Initialized Amm!\n");
 }
 
 float Amm::read_curr() {
-    int bus, channel;
-
-    // @TODO: how is bus_addr specified???
-
-    return (float)readADC(bus, channel);
+    return (float)readADC(this->bus, this->chan);
 }
 
 Amm::~Amm() {}
@@ -95,19 +98,23 @@ Amm::~Amm() {}
 /*
     WATER LEVEL FUNCTIONS
 */
-WLevel::WLevel(int bus_start, int bus_end) {
-    if ((bus_start > 7) || (bus_start < 0)) {
+WLevel::WLevel(int bus, int chan_start, int chan_end) {
+    if ((bus > 1) || (bus < 0)) {
+        fprintf(stderr, "ERROR: level bus address must be 0 or 1!\n");
+        return;
+    }
+    if ((chan_start > 7) || (chan_start < 0)) {
         fprintf(stderr, "ERROR: level bus_start address takes values 0-7!\n");
         fprintf(stderr, "ERROR: level instatiation failed!\n");
         return;
     }
-    if ((bus_end > 7) || (bus_end < 0)) {
+    if ((chan_end > 7) || (chan_end < 0)) {
         fprintf(stderr, "ERROR: level bus_end address takes values 0-7!\n");
         fprintf(stderr, "ERROR: level instatiation failed!\n");
         return;
     }
 
-    // requires that bus_start <= bus_end
+    // requires that chan_start <= chan_end
     if (bus_start > bus_end) {
         fprintf(stderr, "ERROR: level requires that bus_start address");
         fprintf(stderr, " <= bus_end address\n");
@@ -115,9 +122,9 @@ WLevel::WLevel(int bus_start, int bus_end) {
         return;
     }
 
-
-    this->bus_start = bus_start;
-    this->bus_end = bus_end;
+    this->bus = bus;
+    this->chan_start = chan_start;
+    this->chan_end = chan_end;
     fprintf(stdout, "Initialized WLevel!\n");
 }
 
@@ -129,12 +136,10 @@ int WLevel::read_wlevel() {
         and channel 7 is the highest level
     */
 
-    // @TODO: how is bus specified???
-    int bus;
     int level = 0;
-    int channel = this->bus_start;
-    for ( ; channel < this->bus_end; channel++) {
-        if (readADC(bus, channel) == 1) {
+    int channel = this->chan_start;
+    for ( ; channel < this->chan_end; channel++) {
+        if (readADC(this->bus, channel) == 1) {
             //@TODO: should this be == 0 since
             // the reading might aren't a binary {0, 1}?
             level = channel;
@@ -192,7 +197,7 @@ Wob::~Wob() {
 Motor::Motor(int pinA, int en) {
     // this assumes the pybind interpreter has been initialized
     // in  APES::setup()!
-    py::object l298n = py::module::import("libraries.l298npy.l298n").attr("L298N");
+    py::object l298n = py::module::import("libraries/l298npy/l298n").attr("L298N");
     assert(l298n != NULL);
 
     this->L298N = l298n(pinA, en);
