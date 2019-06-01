@@ -1,7 +1,6 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
-#include <string>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/types.h> // for AF_INET
@@ -36,8 +35,9 @@ void ServerBase::createServer(int port) {
         this->sfd = -1;
         return;
     }
-
-    if (setServerSockOpts() < 0) { print("WHUT"); }
+   
+    setClientSockOpts();
+    setServerSockOpts();
 
     memset(&saddr, 0, sizeof(saddr));
     saddr.sin_family = AF_INET;
@@ -83,12 +83,12 @@ void ServerBase::execute() {
    // std::string ip(c_ip);
 
     std::string msg = "Server: Connected\n";
-    sendToClient(msg.c_str());
+    sendToClient(msg);
     while (1) {
         setServerSockOpts();
         setClientSockOpts();
         msg = "in loop\n";
-        sendToClient(msg.c_str());
+        sendToClient(msg);
     }
 
     close(this->cfd);
@@ -105,14 +105,14 @@ int ServerBase::setServerSockOpts() {
     flags = EN; // enables address reuse
     if (setsockopt(this->sfd, SOL_SOCKET, SO_REUSEADDR,
                    (const void*)&flags, sizeof(flags)) < 0) {
-        print(strerror(errno));
+        //print(strerror(errno));
         return -1;
     }
 
     flags = 1;
     if (setsockopt(this->sfd, SOL_SOCKET, SO_KEEPALIVE,
                    (const void*)&flags, sizeof(flags)) < 0) {
-        print(strerror(errno));
+        //print(strerror(errno));
         return -1;
     }
     
@@ -120,19 +120,19 @@ int ServerBase::setServerSockOpts() {
     flags = IDLE; // heartbeat frequency
     if (setsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPIDLE,
                    (const void*)&flags, sizeof(flags)) < 0) {
-        print(strerror(errno));
+        //print(strerror(errno));
         return -1;
     }
     flags = CNT; // defines number of missed heartbeats as dropped client
     if (setsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPCNT,
                    (const void*)&flags, sizeof(flags)) < 0) {
-        print(strerror(errno));
+        //print(strerror(errno));
         return -1;
     }
     flags = INTVL; // heatbeat freq when client isn't responding
     if (setsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPINTVL,
                    (const void*)&flags, sizeof(flags)) < 0) {
-        print(strerror(errno));
+        //print(strerror(errno));
         return -1;
     }
 
@@ -144,7 +144,7 @@ int ServerBase::setClientSockOpts() {
     int flags = 1;
     if (setsockopt(this->cfd, SOL_SOCKET, SO_KEEPALIVE,
                    (const void *)&flags, sizeof(flags)) < 0) {
-        print(strerror(errno));
+        //print(strerror(errno));
         return -1;
     }
     return 0;
@@ -158,25 +158,25 @@ int ServerBase::checkSockOpts() {
 
     getsockopt(this->sfd, SOL_SOCKET, SO_REUSEADDR, &optval,(unsigned int*)&optlen);
     if (optval != 1) {
-        print(strerror(errno));
+        //print(strerror(errno));
         fail = -1;
     }
 
     getsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPIDLE, &optval, (unsigned int*)&optlen);
     if (optval != IDLE) {
-        print(strerror(errno));
+        //print(strerror(errno));
         fail = -1;
     }
 
     getsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPCNT, &optval, (unsigned int*)&optlen);
     if (optval != CNT) {
-        print(strerror(errno));
+        //print(strerror(errno));
         fail = -1;
     }
 
     getsockopt(this->sfd, IPPROTO_TCP, TCP_KEEPINTVL, &optval, (unsigned int*)&optlen);
     if (optval != INTVL) {
-        print(strerror(errno));
+        //print(strerror(errno));
         fail = -1;
     }
 
@@ -188,124 +188,102 @@ int ServerBase::readFromClient(char *cmdline) {
     assert(this->cfd >= 0);
     
     int rc;
-    fcntl(this->cfd, F_SETFL, O_NONBLOCK);
     if ((rc = read(this->cfd, cmdline, MAXLINE)) < 0) {
         if (errno == EAGAIN) {
-            //print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
-            return 0;
+            print(strerror(errno));
+            return -1;
         } else if (errno == EWOULDBLOCK) {
-            //print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
-            return 0;
+            print(strerror(errno));
+            return -1;
         } else if (errno == EBADF) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else if (errno == EFAULT) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else if (errno == EINTR) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else if (errno == EIO) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else if (errno == ENOTCONN) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else if (errno == ECONNRESET) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else if (errno == EPIPE) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else if (errno == ETIMEDOUT) {
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         } else { 
             print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
             return -1;
         }
     } else if (rc > 0) {
-        fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
         return 1;
     }
-    fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
     return 0;
 }
 
-int ServerBase::sendToClient(const char *msg) {
-    assert(msg != NULL);
+int ServerBase::sendToClient(std::string msg) {
+    assert(!msg.empty());
     assert(this->cfd >= 0);
 
-    int rc;
-    fcntl(this->cfd, F_SETFL, O_NONBLOCK);
-    if ((rc = write(this->cfd, msg, strlen(msg))) < 0) {
-        if (errno == EAGAIN) {
-            //print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
-            return 0;
-        } else if (errno == EWOULDBLOCK) {
-            //print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
-            return 0;
-        } else if (errno == EBADF) {
-            print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
-            return -1;
-        } else if (errno == EFAULT) {
-            print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
-            return -1;
-        } else if (errno == EINTR) {
-            print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
-            return -1;
-        } else if (errno == EIO) {
-            print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
-            return -1;
-        } else if (errno == ENOTCONN) {
-            print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
-            return -1;
-        } else if (errno == ECONNRESET) {
-            print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
-            return -1;
-        } else if (errno == EPIPE) {
-            print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
-            return -1;
-        } else if (errno == ETIMEDOUT) {
-            print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
-            return -1;
-        } else { 
-            print(strerror(errno));
-            fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
-            return -1;
-        }
-    } else if (rc > 0) {
-        fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
-        return 1;
+    int len = msg.length();
+    const char *tmp = msg.c_str();
+
+    while (len > 0) {
+        int rc = write(this->cfd, tmp, len);
+	if (rc < 0) {
+            if (errno == EAGAIN) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == EWOULDBLOCK) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == EBADF) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == EFAULT) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == EINTR) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == EIO) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == ENOTCONN) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == ECONNRESET) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == EPIPE) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == ETIMEDOUT) {
+                print(strerror(errno));
+                return -1;
+            } else { 
+                print(strerror(errno));
+                return -1;
+            }
+	}
+        tmp += rc;
+	len -= rc;
     }
-    fcntl(this->cfd, F_SETFL, ~O_NONBLOCK);
     return 0;
 }
 
-void ServerBase::print(const char *msg) {
+void ServerBase::print(std::string msg) {
+    const char *tmp = msg.c_str();
     if (VERBOSE) {
-        printf("\t\t\t\t%s\n", msg);
+        printf("\t\t\t\t%s\n", tmp);
     }
 }
 
