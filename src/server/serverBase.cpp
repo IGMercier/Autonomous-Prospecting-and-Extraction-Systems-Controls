@@ -235,7 +235,7 @@ int ServerBase::sendToClient(std::string msg) {
     const char *tmp = msg.c_str();
 
     int rc;
-    if ((rc = write(this->cfd, tmp, strlen(tmp)+1)) < 0) {
+    if ((rc = write(this->cfd, tmp, strlen(tmp))) < 0) {
         if (errno == EAGAIN) {
             print(strerror(errno));
             return -1;

@@ -85,7 +85,7 @@ void APESServer::execute() {
                 return;
             }
 
-            sendToClient(delim);
+            //sendToClient(delim);
 
             printf("%s", cmdline);
 
