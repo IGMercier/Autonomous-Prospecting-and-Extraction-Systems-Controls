@@ -1,0 +1,18 @@
+Device		Function	Board Pin
+Solenoid0	Hot tank	29
+Solenoid1	Cold tank	31
+DcHeater0	Drill Rod	32
+DcHeater1	Drill Rod	33
+Stepperstp	stepper 	36
+steppersdir	stepper		35
+steppertim	stepper		38
+enc0		springLoadspd	40
+enc1		springLoaddir	37
+DAT		WOB		22
+CLK		WOB		13
+SPEED		Pump		12
+PDIR		Pump		15
+DrillEn		Drill		11
+DrillSpd	Drill		7
+Relay0		AC Heater	16
+Relay1		AC Heater	18
