@@ -48,20 +48,19 @@ void APESServer::run(int port) {
    setClientSockOpts();
    setServerSockOpts();
 
-    while (!shutdown_sig) {
+    while (!shutdown_sig.load()) {
         createClient();
 
         assert(this->cfd >= 0);
         execute();
     }
 
-    shutdown();
     return;
 }
 
 void APESServer::execute() {
     char *cmdline = new char[MAXLINE];
-    while (this->cfd > 0 && !shutdown_sig) {
+    while (this->cfd > 0 && !shutdown_sig.load()) {
 
         int rc;
         memset(cmdline, 0, MAXLINE);
@@ -74,7 +73,7 @@ void APESServer::execute() {
         }
         std::string buf = cmdline;
 
-        printf("Received: \"%s\" (%d) as \"%s\" (%d)\n", cmdline, strlen(cmdline), buf.c_str(), buf.length());
+        printf("%s\n", cmdline);
         
         // writes to command file for shell to read
         std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
@@ -85,7 +84,7 @@ void APESServer::execute() {
     
     delete cmdline;
 
-    if (!shutdown_sig) {
+    if (!shutdown_sig.load()) {
         disconnected();
     }
 
@@ -103,10 +102,10 @@ void APESServer::write() {
             unsigned int logs = this->logq->size();
             for (unsigned int i = 0; i < logs; i++) {
                 std::string logline = this->logq->at(i);
-                printf("%s", logline.c_str());
     
                 if (logline == shutdown_tag) {
-                    shutdown_sig = 1;
+                    shutdown_sig.store(1);
+		    shutdown();
                     return;
                 }
     
@@ -142,6 +141,7 @@ void APESServer::disconnected() {
     this->cmdq->clear();
     std::string buf = "standby";
     this->cmdq->push_back(buf);
+    this->cmdq->push_back(shutdown_tag);
     cmdlock.unlock();
     
     close(this->cfd);
@@ -151,9 +151,6 @@ void APESServer::disconnected() {
 }
 
 void APESServer::shutdown() {
-    std::string msg = "Server shutting down!\n";
-    sendToClient(msg);
-
     if (this->cfd >= 0) {
         if (close(this->cfd) < 0) {
             //print(strerror(errno));
