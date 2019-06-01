@@ -37,7 +37,7 @@ void APESShell::run() {
 
         if (cmdline == "quit") {
             std::unique_lock<std::mutex> loglock(*(this->log_mtx));
-            this->logq->push_back(shutdown_tag);
+            toSend(shutdown_tag);
             loglock.unlock();
             break;
         }
@@ -71,6 +71,12 @@ void APESShell::evaluate(std::string cmdline) {
         }
     }
     return;
+}
+
+void APESShell::toSend(std::string msg) {
+	std::unique_lock<std::mutex> loglock(*(this->log_mtx));
+	this->logq->push_back(msg);
+	loglock.unlock();
 }
 
 void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
@@ -203,10 +209,9 @@ static void execute(parse_token *ltk, APESShell *shell) {
     
     command_state command = ctk.command;
     std::string msg;
-    std::unique_lock<std::mutex> loglock(*(shell->log_mtx));
     if (ltk->bg) {
         msg = "BG job: ";
-        shell->logq->push_back(msg);
+        shell->toSend(msg);
     }
 
     switch (command) {
@@ -214,19 +219,19 @@ static void execute(parse_token *ltk, APESShell *shell) {
             //this->robot->setup();
             //this->robot->standby();
             msg = "System started!\n";
-            shell->logq->push_back(msg);
+            shell->toSend(msg);
             break;
 
         case STANDBY:
             //this->robot->standby();
             msg = "System in standby!\n";
-            shell->logq->push_back(msg);
+            shell->toSend(msg);
             break;
 
         case DATA:
             //this->robot->readData();
             msg = "Reading from data file!\n";
-            shell->logq->push_back(msg);
+            shell->toSend(msg);
             break;
 
         case HELP:
@@ -236,13 +241,13 @@ static void execute(parse_token *ltk, APESShell *shell) {
         case QUIT:
             //this->robot->finish();
             msg = "System shutting down!\n";
-            shell->logq->push_back(msg);
+            shell->toSend(msg);
             break;
 
         case AUTO_ON:
             {
                 msg = "System's auto mode enabled!\n";
-                shell->logq->push_back(msg);
+                shell->toSend(msg);
                 //this->robot->auto_on();
                 //std::thread sensort(shell->robot->auto_on, /*fill this with param*/);
                 //if (sensort.joinable()) {
@@ -254,37 +259,37 @@ static void execute(parse_token *ltk, APESShell *shell) {
         case AUTO_OFF:
             //this->robot->auto_off();
             msg = "System's auto mode disabled!\n";
-            shell->logq->push_back(msg);
+            shell->toSend(msg);
             break;
 
         case TEMP:
             //this->robot->read_temp();
             msg = "Reading temp!\n";
-            shell->logq->push_back(msg);
+            shell->toSend(msg);
             break;
 
         case DTEMP:
             //this->robot->read_dtemp();
             msg = "Reading dtemp!\n";
-            shell->logq->push_back(msg);
+            shell->toSend(msg);
             break;
 
         case CURR:
             //this->robot->read_curr();
             msg = "Reading curr!\n";
-            shell->logq->push_back(msg);
+            shell->toSend(msg);
             break;
 
         case WLEVEL:
             //this->robot->read_wlevel();
             msg = "Reading wlevel!\n";
-            shell->logq->push_back(msg);
+            shell->toSend(msg);
             break;
 
         case WOB:
             //this->robot->read_wob();
             msg = "Reading wob!\n";
-            shell->logq->push_back(msg);
+            shell->toSend(msg);
             break;
 
         case MOTOR_DRIVE:
@@ -294,38 +299,37 @@ static void execute(parse_token *ltk, APESShell *shell) {
                 int time = ctk.argv[2];
                 //this->robot->motor_drive(dir, speed, time);
                 msg = "System's motor enabled for []!\n";
-                shell->logq->push_back(msg);
+                shell->toSend(msg);
             }
             break;
 
         case MOTOR_STOP:
             //this->robot->motor_stop();
             msg = "System's motor disabled!\n";
-            shell->logq->push_back(msg);
+            shell->toSend(msg);
             break;
 
         case DRILL_RUN:
             msg = "System's drill enabled!\n";
-            shell->logq->push_back(msg);
+            shell->toSend(msg);
             break;
 
         case DRILL_STOP:
             msg = "System's drill disabled!\n";
-            shell->logq->push_back(msg);
+            shell->toSend(msg);
             break;
 
         case DRILL_CYCLE:
             msg = "System's drill duty cycle changed!\n";
-            shell->logq->push_back(msg);
+            shell->toSend(msg);
             break;
 
         case NONE:
         default:
             msg = "Not a valid command (use 'help' for more info)!\n";
-            shell->logq->push_back(msg);
+            shell->toSend(msg);
             break;
     }
-    loglock.unlock();
 }
 
 APESShell::~APESShell() {
@@ -335,61 +339,61 @@ APESShell::~APESShell() {
 
 static void listCommands(APESShell *shell) {
     std::string msg = "Listing Help Commands!\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "start => setups APES system\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "standby => turns off actuators and stops auto mode\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
     
     msg = "data => does something not specified\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
     
     msg = "help => prints this help message\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "quit => quits APES, shell, and server systems\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "auto on & => automatically reads off sensor data\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "auto off => turns off auto mode\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "temp => reads off current temp\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "dtemp => reads off difference in temp since start\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "curr => reads off current current\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "wlevel => reads off current water level\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "wob => reads off current force\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "encoder => reads off current encoder data\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "motor drive <dir> <speed> <time> => runs motor\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "motor stop => stops motor\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "drill run => runs drill\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "drill stop => stops drill\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     msg = "drill cycle <dc> => changes drill duty cycle\n";
-    shell->logq->push_back(msg);
+    shell->toSend(msg);
 
     return;
 }

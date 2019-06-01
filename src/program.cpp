@@ -5,8 +5,9 @@
 #include "server/APESServer.h"
 #include "shell/APESShell.h"
 
-static void serverThread(sysArgs *args, int port);
-static void shellThread(sysArgs *args);
+static void serverThread(APESServer *server, int port);
+static void serverWriteThread(APESServer *server);
+static void shellThread(APESShell *shell);
 
 std::string shutdown_tag = "<shutdown>";
 
@@ -35,17 +36,26 @@ int main(int argc, char** argv) {
     args->logq = logq;
     args->datafile = "data.csv";
 
-    std::thread tServer(serverThread, args, port);
-    std::thread tShell(shellThread, args);
+    APESServer *server = new APESServer(args);
+    APESShell *shell = new APESShell(args);
+    
+    std::thread tServer(serverThread, server, port);
+    std::thread tServerWrite(serverWriteThread, server);
+    std::thread tShell(shellThread, shell);
 
 
     if (tServer.joinable()) {
+        tServer.join();
+    }
+    if (tServerWrite.joinable()) {
         tServer.join();
     }
     if (tShell.joinable()) {
         tShell.join();
     }
 
+    delete server;
+    delete shell;
     delete cmdq;
     delete logq;
     delete args;
@@ -55,28 +65,33 @@ int main(int argc, char** argv) {
 
 }
 
-
 /*
     THREAD CALLBACKS
 */
-static void serverThread(sysArgs *args, int port) {
+static void serverThread(APESServer *server, int port) {
     assert(args != NULL);
-    
-    APESServer *server = new APESServer(args);
+        
     server->run(port);
-    
+	        
     // control should never reach here
-    delete server;
     return;
 }
 
-static void shellThread(sysArgs *args) {
+static void serverWriteThread(APESServer *server) {
+    assert(args != NULL);
+        
+    server->write();
+	        
+    // control should never reach here
+    return;
+}
+
+		
+static void shellThread(APESShell *shell) {
     assert(args != NULL);
 
-    APESShell *shell = new APESShell(args);
     shell->run();
 
     // control should never reach here
-    delete shell;
     return;
 }
