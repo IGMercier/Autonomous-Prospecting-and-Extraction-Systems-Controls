@@ -232,46 +232,49 @@ int ServerBase::sendToClient(std::string msg) {
     assert(!msg.empty());
     assert(this->cfd >= 0);
 
+    int len = msg.length();
     const char *tmp = msg.c_str();
 
-    int rc;
-    if ((rc = write(this->cfd, tmp, strlen(tmp))) < 0) {
-        if (errno == EAGAIN) {
-            print(strerror(errno));
-            return -1;
-        } else if (errno == EWOULDBLOCK) {
-            print(strerror(errno));
-            return -1;
-        } else if (errno == EBADF) {
-            print(strerror(errno));
-            return -1;
-        } else if (errno == EFAULT) {
-            print(strerror(errno));
-            return -1;
-        } else if (errno == EINTR) {
-            print(strerror(errno));
-            return -1;
-        } else if (errno == EIO) {
-            print(strerror(errno));
-            return -1;
-        } else if (errno == ENOTCONN) {
-            print(strerror(errno));
-            return -1;
-        } else if (errno == ECONNRESET) {
-            print(strerror(errno));
-            return -1;
-        } else if (errno == EPIPE) {
-            print(strerror(errno));
-            return -1;
-        } else if (errno == ETIMEDOUT) {
-            print(strerror(errno));
-            return -1;
-        } else { 
-            print(strerror(errno));
-            return -1;
-        }
-    } else if (rc > 0) {
-        return 1;
+    while (len > 0) {
+        int rc = write(this->cfd, tmp, msg.length()); // shouldn't this be len
+	    if (rc < 0) {
+            if (errno == EAGAIN) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == EWOULDBLOCK) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == EBADF) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == EFAULT) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == EINTR) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == EIO) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == ENOTCONN) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == ECONNRESET) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == EPIPE) {
+                print(strerror(errno));
+                return -1;
+            } else if (errno == ETIMEDOUT) {
+                print(strerror(errno));
+                return -1;
+            } else { 
+                print(strerror(errno));
+                return -1;
+            }
+	    }
+        tmp += rc;
+	    len -= rc;
     }
     return 0;
 }
