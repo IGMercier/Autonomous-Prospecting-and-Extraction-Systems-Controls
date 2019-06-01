@@ -18,6 +18,7 @@ class APESServer : public ServerBase {
     public:
         APESServer(sysArgs *args);
         void run(int port);
+        void write();
         void shutdown() override;
         virtual ~APESServer();
 };

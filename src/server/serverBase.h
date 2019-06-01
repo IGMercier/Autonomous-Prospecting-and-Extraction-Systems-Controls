@@ -8,7 +8,7 @@
 class ServerBase {
     protected:
         int sfd;
-        int cfd;
+        volatile int cfd;
         void createServer(int port);
         int createClient();
         int setServerSockOpts();

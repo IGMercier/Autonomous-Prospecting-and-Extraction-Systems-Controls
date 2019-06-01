@@ -35,8 +35,9 @@ void ServerBase::createServer(int port) {
         this->sfd = -1;
         return;
     }
-
-    if (setServerSockOpts() < 0) { print("WHUT"); }
+   
+    setClientSockOpts();
+    setServerSockOpts();
 
     memset(&saddr, 0, sizeof(saddr));
     saddr.sin_family = AF_INET;
@@ -236,7 +237,7 @@ int ServerBase::sendToClient(std::string msg) {
     const char *tmp = msg.c_str();
 
     while (len > 0) {
-        int rc = write(this->cfd, tmp, msg.length()); // shouldn't this be len
+        int rc = write(this->cfd, tmp, len);
 	    if (rc < 0) {
             if (errno == EAGAIN) {
                 print(strerror(errno));
