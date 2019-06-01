@@ -75,43 +75,31 @@ void APESServer::execute() {
 
 
         int rc;
-        while (1) {
-            memset(cmdline, 0, MAXLINE);
+        memset(cmdline, 0, MAXLINE);
 
-            rc = readFromClient(cmdline);
-            if (rc < 0) {
-                delete cmdline;
-                disconnected();
-                return;
-            }
-
-            sendToClient(delim);
-
-            printf("%s", cmdline);
-
-            if (!strncmp(cmdline, delim.c_str(), strlen(delim.c_str()))) {
-                rc = 0;
-                break;
-            } else {
-                cmdline[strlen(cmdline)-1] = '\0';
-                std::string buf = cmdline;
-                
-                // writes to command file for shell to read
-                std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
-                this->cmdq->push_back(buf);
-                cmdlock.unlock();
-            }
-        }
-
+        rc = readFromClient(cmdline);
         if (rc < 0) {
             delete cmdline;
             disconnected();
             return;
         }
+        std::string buf = cmdline;
+
+        printf("Received: \"%s\" (%d) as \"%s\" (%d)\n", cmdline, strlen(cmdline), buf.c_str(), buf.length());
+        
+        // writes to command file for shell to read
+        std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
+        this->cmdq->push_back(buf);
+        cmdlock.unlock();
 
         // reads off whatever the shell has logged
         std::unique_lock<std::mutex> loglock(*(this->log_mtx));
-        for (unsigned int i = 0; i < this->logq->size(); i++) {
+	while (this->logq->empty()) {
+	    loglock.unlock();
+	    loglock.lock();
+	}
+	unsigned int logs = this->logq->size();
+	for (unsigned int i = 0; i < logs; i++) {
             std::string logline = this->logq->at(i);
             printf("%s", logline.c_str());
 
