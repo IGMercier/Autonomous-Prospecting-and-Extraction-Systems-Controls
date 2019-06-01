@@ -45,11 +45,11 @@ APES::APES(char *filename, std::mutex *data_mtx) {
 /* object methods */
 int APES::setup() {
     //@TODO: put the correct pin numbers 
-    this->wob = new Wob(2, 3);
-    this->therm = new Therm(7, 27);
-    this->amm = new Amm(5, 6);
-    this->wlevel = new WLevel(2, 4);
-    this->motor_Y = new Motor(26, 8);
+    this->wob = new Wob(WOB_DATA_PIN, WOB_CLOCK_PIN);
+    this->therm = new Therm(THERM_BUS, THERM_CHAN);
+    this->amm = new Amm(AMM_BUS, AMM_CHAN);
+    this->wlevel = new WLevel(WLEVEL_BUS, WLEVEL_CHAN_START, WLEVEL_CHAN_END);
+    this->motor_Y = new Motor(PUMP_DIR_PIN, PUMP_SPEED_PIN);
     this->motor_X = new Motor(26, 8);
 
     int fd = wiringPiI2CSetup(/* fill with device id*/);

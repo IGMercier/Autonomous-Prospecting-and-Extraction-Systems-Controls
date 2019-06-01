@@ -10,6 +10,33 @@
 #define MAXDATA 1024
 #define SLEEP_INTVL 1000
 
+// component pins
+#define SOLENOID_0_PIN      29
+#define SOLENOID_1_PIN      31
+#define DC_HEATER_0_PIN     32
+#define DC_HEATER_1_PIN     33
+#define STEPPER_STP_PIN     36
+#define STEPPER_DIR_PIN     35
+//#define STEPPER_TIME_PIN  38
+#define ENCODER_0_PIN       40
+#define ENCODER_1_PIN       37
+#define WOB_DATA_PIN        22
+#define WOB_CLOCK_PIN       13
+#define PUMP_SPEED_PIN      12
+#define PUMP_DIR_PIN        15
+#define DRILL_EN_PIN        11
+#define DRILL_SPEED_PIN     7
+#define RELAY_0_PIN         16
+#define RELAY_1_PIN         18
+
+#define THERM_CHAN          1
+#define THERM_BUS           1
+#define AMM_CHAN            2
+#define AMM_BUS             1
+#define WLEVEL_CHAN_START   0    
+#define WLEVEL_CHAN_END     7
+#define WLEVEL_BUS          0
+
 typedef enum {
     AUTO_THERM = 0b1,
     AUTO_AMM = 0b10,

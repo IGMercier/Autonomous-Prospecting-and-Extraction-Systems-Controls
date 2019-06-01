@@ -6,11 +6,11 @@
 
 class Therm {
     private:
-        int bus_addr;
-        float max_T;
+        int bus;
+        int chan;
         float iTemp;
     public:
-        Therm(int bus_addr, float max_T);
+        Therm(int bus, int chan);
         ~Therm();
         float read_temp();
         float D_temp();
@@ -18,20 +18,21 @@ class Therm {
 
 class Amm {
     private:
-        int bus_addr;
-        float max_I;
+        int bus;
+        int chan;
     public:
-        Amm(int bus_addr, float max_I);
+        Amm(int bus, int chan);
         ~Amm();
         float read_curr();
 };
 
 class WLevel {
     private:
-        int bus_start;
-        int bus_end;
+        int bus;
+        int chan_start;
+        int chan_end;
     public:
-        WLevel(int bus_start, int bus_end/*, int sample_freq*/);
+        WLevel(int bus, int chan_start, int chan_end);
         ~WLevel();
         int read_wlevel();
 };
