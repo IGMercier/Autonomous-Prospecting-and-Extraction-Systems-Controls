@@ -5959,40 +5959,6 @@ Details see: &lt;a href="http://katalog.we-online.de/en/led/WL-SMRW?m"&gt;http:/
 </deviceset>
 </devicesets>
 </library>
-<library name="supply1" urn="urn:adsk.eagle:library:371">
-<description>&lt;b&gt;Supply Symbols&lt;/b&gt;&lt;p&gt;
- GND, VCC, 0V, +5V, -5V, etc.&lt;p&gt;
- Please keep in mind, that these devices are necessary for the
- automatic wiring of the supply signals.&lt;p&gt;
- The pin name defined in the symbol is identical to the net which is to be wired automatically.&lt;p&gt;
- In this library the device names are the same as the pin names of the symbols, therefore the correct signal names appear next to the supply symbols in the schematic.&lt;p&gt;
- &lt;author&gt;Created by librarian@cadsoft.de&lt;/author&gt;</description>
-<packages>
-</packages>
-<symbols>
-<symbol name="+5V" urn="urn:adsk.eagle:symbol:26929/1" library_version="1">
-<wire x1="1.27" y1="-1.905" x2="0" y2="0" width="0.254" layer="94"/>
-<wire x1="0" y1="0" x2="-1.27" y2="-1.905" width="0.254" layer="94"/>
-<text x="-2.54" y="-5.08" size="1.778" layer="96" rot="R90">&gt;VALUE</text>
-<pin name="+5V" x="0" y="-2.54" visible="off" length="short" direction="sup" rot="R90"/>
-</symbol>
-</symbols>
-<devicesets>
-<deviceset name="+5V" urn="urn:adsk.eagle:component:26963/1" prefix="P+" library_version="1">
-<description>&lt;b&gt;SUPPLY SYMBOL&lt;/b&gt;</description>
-<gates>
-<gate name="1" symbol="+5V" x="0" y="0"/>
-</gates>
-<devices>
-<device name="">
-<technologies>
-<technology name=""/>
-</technologies>
-</device>
-</devices>
-</deviceset>
-</devicesets>
-</library>
 <library name="rectifier" urn="urn:adsk.eagle:library:336">
 <description>&lt;b&gt;Rectifiers&lt;/b&gt;&lt;p&gt;
 General Instrument, Semikron, Diotec, Fagor&lt;p&gt;
@@ -7428,7 +7394,7 @@ source: http://www.mew-europe.com/..  en_ds_61610_0000.pdf</description>
 <part name="OK3" library="optocoupler" library_urn="urn:adsk.eagle:library:320" deviceset="SFH620" device="A" package3d_urn="urn:adsk.eagle:package:21938/1"/>
 <part name="R19" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="0.3OHM" device="-0805-1/8W-1%" package3d_urn="urn:adsk.eagle:package:39651/1" value="2370"/>
 <part name="R20" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="0.3OHM" device="-0805-1/8W-1%" package3d_urn="urn:adsk.eagle:package:39651/1" value="30"/>
-<part name="R21" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="0.3OHM" device="-0805-1/8W-1%" package3d_urn="urn:adsk.eagle:package:39651/1" value="100"/>
+<part name="R21" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="0.3OHM" device="-0805-1/8W-1%" package3d_urn="urn:adsk.eagle:package:39651/1" value="100K"/>
 <part name="SUPPLY15" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY16" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="3.3V" device=""/>
 <part name="R22" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="0.3OHM" device="-0805-1/8W-1%" package3d_urn="urn:adsk.eagle:package:39651/1" value="100"/>
@@ -7489,8 +7455,6 @@ source: http://www.mew-europe.com/..  en_ds_61610_0000.pdf</description>
 <part name="R5" library="SparkFun-Resistors" deviceset="10KOHM1/10W1%(0603)" device="0603" value="10K"/>
 <part name="GND3" library="SparkFun" deviceset="GND" device=""/>
 <part name="R6" library="SparkFun-Resistors" deviceset="10KOHM1/10W1%(0603)" device="0603" value="10K"/>
-<part name="P+14" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="+5V" device=""/>
-<part name="P+15" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="+5V" device=""/>
 <part name="HEATER2" library="con-jst-vh" deviceset="B2P-VH" device=""/>
 <part name="HEATER3" library="con-jst-vh" deviceset="B2P-VH" device=""/>
 <part name="R9" library="SparkFun-Resistors" library_urn="urn:adsk.eagle:library:532" deviceset="0.3OHM" device="-0805-1/8W-1%" package3d_urn="urn:adsk.eagle:package:39651/1" value="100"/>
@@ -7512,6 +7476,8 @@ source: http://www.mew-europe.com/..  en_ds_61610_0000.pdf</description>
 <part name="P+6" library="SparkFun" deviceset="VCC" device="" value="HV"/>
 <part name="-12V_SUPPLY" library="con-jst-vh" deviceset="B2P-VH" device=""/>
 <part name="SUPPLY22" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
+<part name="P+11" library="SparkFun" deviceset="VCC" device="" value="HV"/>
+<part name="P+12" library="SparkFun" deviceset="VCC" device="" value="HV"/>
 </parts>
 <sheets>
 <sheet>
@@ -7886,12 +7852,6 @@ source: http://www.mew-europe.com/..  en_ds_61610_0000.pdf</description>
 <attribute name="NAME" x="85.344" y="-6.604" size="1.778" layer="95" rot="MR90"/>
 <attribute name="VALUE" x="85.344" y="-2.032" size="1.778" layer="96" rot="MR90"/>
 </instance>
-<instance part="P+14" gate="1" x="40.64" y="0" smashed="yes" rot="MR0">
-<attribute name="VALUE" x="43.18" y="-5.08" size="1.778" layer="96" rot="MR90"/>
-</instance>
-<instance part="P+15" gate="1" x="40.64" y="-12.7" smashed="yes" rot="MR0">
-<attribute name="VALUE" x="43.18" y="-17.78" size="1.778" layer="96" rot="MR90"/>
-</instance>
 <instance part="HEATER2" gate="G$1" x="2.54" y="-5.08" smashed="yes" rot="R180">
 <attribute name="NAME" x="-3.81" y="1.905" size="1.778" layer="95" rot="R270"/>
 </instance>
@@ -7958,6 +7918,12 @@ source: http://www.mew-europe.com/..  en_ds_61610_0000.pdf</description>
 </instance>
 <instance part="SUPPLY22" gate="GND" x="63.5" y="116.84" smashed="yes" rot="MR0">
 <attribute name="VALUE" x="65.405" y="113.665" size="1.778" layer="96" rot="MR0"/>
+</instance>
+<instance part="P+11" gate="1" x="45.72" y="-5.08" smashed="yes" rot="MR0">
+<attribute name="VALUE" x="46.736" y="-1.524" size="1.778" layer="96" rot="MR0"/>
+</instance>
+<instance part="P+12" gate="1" x="43.18" y="-17.78" smashed="yes" rot="MR0">
+<attribute name="VALUE" x="44.196" y="-14.224" size="1.778" layer="96" rot="MR0"/>
 </instance>
 </instances>
 <busses>
@@ -8629,6 +8595,27 @@ source: http://www.mew-europe.com/..  en_ds_61610_0000.pdf</description>
 <pinref part="P+1" gate="1" pin="VCC"/>
 <junction x="-5.08" y="50.8"/>
 </segment>
+<segment>
+<pinref part="K1" gate="A" pin="K"/>
+<wire x1="40.64" y1="-5.08" x2="45.72" y2="-5.08" width="0.1524" layer="91"/>
+<pinref part="P+11" gate="1" pin="VCC"/>
+<label x="45.72" y="-5.08" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="P+10" gate="1" pin="VCC"/>
+<pinref part="U3" gate="G$1" pin="CL1"/>
+<wire x1="93.98" y1="-15.24" x2="91.44" y2="-15.24" width="0.1524" layer="91"/>
+<junction x="93.98" y="-15.24"/>
+<wire x1="91.44" y1="-15.24" x2="91.44" y2="-20.32" width="0.1524" layer="91"/>
+<pinref part="U3" gate="G$1" pin="CL2"/>
+<wire x1="91.44" y1="-20.32" x2="93.98" y2="-20.32" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<wire x1="40.64" y1="-17.78" x2="43.18" y2="-17.78" width="0.1524" layer="91"/>
+<pinref part="P+12" gate="1" pin="VCC"/>
+<label x="43.18" y="-17.78" size="1.778" layer="95"/>
+<pinref part="K2" gate="A" pin="K"/>
+</segment>
 </net>
 <net name="N$3" class="0">
 <segment>
@@ -8920,18 +8907,6 @@ source: http://www.mew-europe.com/..  en_ds_61610_0000.pdf</description>
 <junction x="180.34" y="139.7"/>
 </segment>
 </net>
-<net name="+5V" class="0">
-<segment>
-<pinref part="P+14" gate="1" pin="+5V"/>
-<wire x1="40.64" y1="-2.54" x2="40.64" y2="-5.08" width="0.1524" layer="91"/>
-<pinref part="K1" gate="A" pin="K"/>
-</segment>
-<segment>
-<pinref part="P+15" gate="1" pin="+5V"/>
-<wire x1="40.64" y1="-15.24" x2="40.64" y2="-17.78" width="0.1524" layer="91"/>
-<pinref part="K2" gate="A" pin="K"/>
-</segment>
-</net>
 <net name="RELAY0" class="0">
 <segment>
 <pinref part="D2" gate="G$1" pin="+"/>
@@ -9138,24 +9113,25 @@ source: http://www.mew-europe.com/..  en_ds_61610_0000.pdf</description>
 </net>
 <net name="OUT2N2" class="0">
 <segment>
-<wire x1="83.82" y1="-7.62" x2="83.82" y2="-22.86" width="0.1524" layer="91"/>
-<wire x1="83.82" y1="-22.86" x2="83.82" y2="-30.48" width="0.1524" layer="91"/>
-<wire x1="83.82" y1="-30.48" x2="73.66" y2="-30.48" width="0.1524" layer="91"/>
+<wire x1="83.82" y1="-7.62" x2="83.82" y2="-17.78" width="0.1524" layer="91"/>
 <pinref part="R6" gate="G$1" pin="1"/>
-<pinref part="Q4" gate="NMOS" pin="G"/>
 <pinref part="U3" gate="G$1" pin="EM2"/>
+<wire x1="83.82" y1="-17.78" x2="83.82" y2="-22.86" width="0.1524" layer="91"/>
 <wire x1="93.98" y1="-22.86" x2="83.82" y2="-22.86" width="0.1524" layer="91"/>
-<junction x="83.82" y="-22.86"/>
+<pinref part="Q5" gate="NMOS" pin="G"/>
+<wire x1="63.5" y1="-17.78" x2="83.82" y2="-17.78" width="0.1524" layer="91"/>
+<junction x="83.82" y="-17.78"/>
 </segment>
 </net>
 <net name="OUT1N2" class="0">
 <segment>
 <wire x1="88.9" y1="-7.62" x2="88.9" y2="-17.78" width="0.1524" layer="91"/>
-<wire x1="88.9" y1="-17.78" x2="63.5" y2="-17.78" width="0.1524" layer="91"/>
 <pinref part="R5" gate="G$1" pin="1"/>
-<pinref part="Q5" gate="NMOS" pin="G"/>
 <pinref part="U3" gate="G$1" pin="EM1"/>
 <wire x1="93.98" y1="-17.78" x2="88.9" y2="-17.78" width="0.1524" layer="91"/>
+<wire x1="88.9" y1="-30.48" x2="73.66" y2="-30.48" width="0.1524" layer="91"/>
+<pinref part="Q4" gate="NMOS" pin="G"/>
+<wire x1="88.9" y1="-17.78" x2="88.9" y2="-30.48" width="0.1524" layer="91"/>
 <junction x="88.9" y="-17.78"/>
 </segment>
 </net>
@@ -9197,17 +9173,6 @@ source: http://www.mew-europe.com/..  en_ds_61610_0000.pdf</description>
 <segment>
 <pinref part="K1" gate="A" pin="A"/>
 <pinref part="R9" gate="G$1" pin="2"/>
-</segment>
-</net>
-<net name="VCC" class="0">
-<segment>
-<pinref part="P+10" gate="1" pin="VCC"/>
-<pinref part="U3" gate="G$1" pin="CL1"/>
-<wire x1="93.98" y1="-15.24" x2="91.44" y2="-15.24" width="0.1524" layer="91"/>
-<junction x="93.98" y="-15.24"/>
-<wire x1="91.44" y1="-15.24" x2="91.44" y2="-20.32" width="0.1524" layer="91"/>
-<pinref part="U3" gate="G$1" pin="CL2"/>
-<wire x1="91.44" y1="-20.32" x2="93.98" y2="-20.32" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="-12V" class="0">

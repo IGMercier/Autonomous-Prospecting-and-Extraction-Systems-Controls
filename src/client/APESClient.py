@@ -1,24 +1,23 @@
 # This Python file uses the following encoding: utf-8
 import sys, threading
+import tcpConn
 from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QWidget, QTabWidget, \
                               QVBoxLayout, QToolBar, QFrame, QDialog, QPushButton, QTextEdit, \
-                              QHBoxLayout, QCheckBox
+                              QHBoxLayout, QCheckBox, QSizePolicy
 from PySide2.QtGui  import QTextOption, QTextCursor
 from PySide2.QtCore import Signal, Slot
 from PySide2.QtCore import qDebug as qPrint
-import tcpConn
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self)
         self.tabBar = TabBar(self)
         self.setCentralWidget(self.tabBar)
-        self.setWindowTitle("Tab Testing")
+        self.setWindowTitle("APES Client")
 
     def closeEvent(self, event):
         for i in range(1, len(self.tabBar.tabs)):
             self.tabBar.closeConn(i)
-            print("Tab {} closed".format(i))
         event.accept()
 
 
@@ -40,13 +39,13 @@ class TabBar(QTabWidget):
 
     def closeConn(self, index):
         if index != 0:
-            self.tabs[index].close(True)
+            self.tabs[index].close(override=True)
             self.removeTab(index)
             self.tabs.pop(index)
 
 class ConnTab(QDialog):
     writeback = Signal(str)
-    onlineState = Signal(bool, bool)
+    onlineSignal = Signal(bool, bool)
     def __init__(self, parent, addr, port):
         super().__init__(parent)
         self.parent = parent
@@ -55,8 +54,6 @@ class ConnTab(QDialog):
         self.connLog = ConsoleLog(self)
         self.writeback.connect(self.connLog.addText)
         self.writeback.emit("Connecting...")
-
-        self.onlineState.connect(self.setOnline)
 
         submit = QHBoxLayout()
         self.command = QLineEdit(self)
@@ -79,40 +76,32 @@ class ConnTab(QDialog):
         mainLayout.addWidget(self.connLog)
         mainLayout.addLayout(submit)
         mainLayout.addLayout(recon)
-        mainLayout.addStretch(1)
         self.setLayout(mainLayout)
 
-        self.override = False
-        self.conn = tcpConn.Connection(addr, port, self.writeback, self.onlineState)
+        self.onlineSignal.connect(self.setOnline)
+
+        self.conn = tcpConn.Connection(addr, port, self.writeback, self.onlineSignal, self.reconAuto.isChecked)
 
     def sendCommand(self):
         if self.connected:
             cmd = self.command.text()
-            self.writeback.emit('<p style="color:#575757";>> ' + cmd + '</p>')
-            self.command.setText("")
-            self.conn.socket_write(cmd + '\n')
+            if cmd != "":
+                self.writeback.emit('<font color="#575757">> ' + cmd + '</font>')
+                self.command.setText("")
+                self.conn.socket_write(cmd)
 
-    def close(self, override=False):
-        self.override = override
-        if self.connected:
-            self.writeback.emit('Connection Closed.')
-            self.conn.close()
+    def close(self, override):
+        self.conn.close(override)
 
     def reconnect(self):
-        self.writeback.emit("Attempting reconnection...")
-        self.conn.reconnect()
-
+        if not self.connected:
+            self.conn.reconnect()
 
     @Slot(bool, bool)
     def setOnline(self, active, connected):
         self.connected = connected
         self.buttonSend.setEnabled(connected)
-        if self.reconAuto.isChecked():
-            self.reconButton.setEnabled(False)
-            if not active and not self.override:
-                self.reconnect()
-        else:
-            self.reconButton.setEnabled(not active)
+        self.reconButton.setEnabled(not self.reconAuto.isChecked() and not active)
 
 
 class ConsoleLog(QTextEdit):
@@ -126,7 +115,7 @@ class ConsoleLog(QTextEdit):
     def addText(self, text):
         self.writeMutex.acquire()
         self.moveCursor(QTextCursor.End)
-        self.insertHtml(text + '<br>')
+        self.insertHtml(text.replace('\n', '<br>') + '<br>')
         self.moveCursor(QTextCursor.End)
         self.writeMutex.release()
 

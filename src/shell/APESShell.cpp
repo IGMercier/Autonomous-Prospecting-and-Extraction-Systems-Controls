@@ -34,11 +34,8 @@ void APESShell::run() {
             continue;
         }
         cmdlock.unlock();
-
-        if (cmdline == "quit") {
-            toSend(shutdown_tag);
+        if (cmdline == shutdown_tag)
             break;
-        }
 
         evaluate(cmdline);
     }
@@ -72,9 +69,9 @@ void APESShell::evaluate(std::string cmdline) {
 }
 
 void APESShell::toSend(std::string msg) {
-    std::unique_lock<std::mutex> loglock(*(this->log_mtx));
-    this->logq->push_back(msg);
-    loglock.unlock();
+	std::unique_lock<std::mutex> loglock(*(this->log_mtx));
+	this->logq->push_back(msg);
+	loglock.unlock();
 }
 
 void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
@@ -233,13 +230,14 @@ static void execute(parse_token *ltk, APESShell *shell) {
             break;
 
         case HELP:
-            listCommands(shell);
+	    listCommands(shell);
             break;
 
         case QUIT:
             //this->robot->finish();
             msg = "System shutting down!\n";
             shell->toSend(msg);
+            shell->toSend(shutdown_tag);
             break;
 
         case AUTO_ON:

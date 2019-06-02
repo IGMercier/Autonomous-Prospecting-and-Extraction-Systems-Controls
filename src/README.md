@@ -4,7 +4,7 @@ This folder contains all the software stuffs
 
 * TODO (Software):
     * Re: Server/Client
-        * [ ] ensure that client reconnects on connection failure
+        * [x] ensure that client reconnects on connection failure
         * [x] call shutdown procedure
         * [x] nail down file reading/writing schema
     * Re: Components
