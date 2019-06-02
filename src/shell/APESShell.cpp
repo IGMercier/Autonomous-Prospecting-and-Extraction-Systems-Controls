@@ -10,8 +10,6 @@
 #include "../APESsys/commands.h"
 
 using std::thread;
-static void execute(parse_token *ltk, APESShell *shell);
-static void listCommands(APESShell *shell);
 
 APESShell::APESShell(sysArgs *args) {
     assert(args != NULL);
@@ -58,7 +56,7 @@ void APESShell::evaluate(std::string cmdline) {
 
     if (!builtin_command(&tk)) {
         /* CHILD THREAD */
-        thread temp(execute, &tk, this);
+        thread temp(&APESShell::execute, this, &tk);
         child.swap(temp);
 
         if (bg) { child.detach(); }
@@ -313,19 +311,18 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
     return;
 }
 
-static void execute(parse_token *ltk, APESShell *shell) {
+void APESShell::execute(parse_token *ltk) {
     assert(ltk != NULL);
-    assert(shell != NULL);
 
     command_token ctk;
 
-    shell->parsecommand(ltk, &ctk);
+    parsecommand(ltk, &ctk);
     
     command_state command = ctk.command;
     std::string msg;
     if (ltk->bg) {
         msg = "BG job: ";
-        shell->toSend(msg);
+        toSend(msg);
     }
 
     switch (command) {
@@ -333,36 +330,36 @@ static void execute(parse_token *ltk, APESShell *shell) {
             //this->robot->setup();
             //this->robot->standby();
             msg = "System started!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
 
         case STANDBY:
             //this->robot->standby();
             msg = "System in standby!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
 
         case DATA:
             //this->robot->readData();
             msg = "Reading from data file!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
 
         case HELP:
-	        listCommands(shell);
+	        listCommands();
             break;
 
         case QUIT:
             //this->robot->finish();
             msg = "System shutting down!\n";
-            shell->toSend(msg);
-            shell->toSend(shutdown_tag);
+            toSend(msg);
+            toSend(shutdown_tag);
             break;
 
         case AUTO_ON:
             {
                 msg = "System's auto mode enabled!\n";
-                shell->toSend(msg);
+                toSend(msg);
                 //this->robot->auto_on();
                 //std::thread sensort(shell->robot->auto_on, /*fill this with param*/);
                 //if (sensort.joinable()) {
@@ -374,110 +371,110 @@ static void execute(parse_token *ltk, APESShell *shell) {
         case AUTO_OFF:
             //this->robot->auto_off();
             msg = "System's auto mode disabled!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
 
         case SOL_0_OPEN:
             //this->robot->sol_0_open();
             msg = "System's solenoid 0 opened!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
 
         case SOL_0_CLOSE:
             //this->robot->sol_0_close();
             msg = "System's solenoid 0 closed!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
         
         case SOL_1_OPEN:
             //this->robot->sol_1_open();
             msg = "System's solenoid 1 opened!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
 
         case SOL_1_CLOSE:
             //this->robot->sol_1_close();
             msg = "System's solenoid 1 closed!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
         
         case HEATER_0_ON:
             //this->robot->heater_0_on();
             msg = "System's dc heater 0 on!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
         
         case HEATER_0_OFF:
             //this->robot->heater_0_off();
             msg = "System's dc heater 0 off!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
         
         case HEATER_1_ON:
             //this->robot->heater_1_on();
             msg = "System's dc heater 1 on!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
         
         case HEATER_1_OFF:
             //this->robot->heater_1_off();
             msg = "System's dc heater 1 off!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
 
         case RELAY_0_ON:
             //this->robot->relay_0_on();
             msg = "System's relay 0 on!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
         
         case RELAY_0_OFF:
             //this->robot->relay_0_off();
             msg = "System's relay 0 off!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
         
         case RELAY_1_ON:
             //this->robot->relay_1_on();
             msg = "System's relay 1 on!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
         
         case RELAY_1_OFF:
             //this->robot->relay_1_off();
             msg = "System's relay 1 off!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
             
 
         case TEMP:
             //this->robot->read_temp();
             msg = "Reading temp!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
 
         case DTEMP:
             //this->robot->read_dtemp();
             msg = "Reading dtemp!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
 
         case CURR:
             //this->robot->read_curr();
             msg = "Reading curr!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
 
         case WLEVEL:
             //this->robot->read_wlevel();
             msg = "Reading wlevel!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
 
         case WOB:
             //this->robot->read_wob();
             msg = "Reading wob!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
 
         case MOTOR_Z_DRIVE:
@@ -487,14 +484,14 @@ static void execute(parse_token *ltk, APESShell *shell) {
                 int time = ctk.argv[2].dataI;
                 //this->robot->motor_Z_drive(dir, speed, time);
                 msg = "System's Z-axis motor enabled for " + std::to_string(time) + " us!\n";
-                shell->toSend(msg);
+                toSend(msg);
             }
             break;
 
         case MOTOR_Z_STOP:
             //this->robot->motor_Z_stop();
             msg = "System's Z-axis motor disabled!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
         
         case PUMP_DRIVE:
@@ -504,24 +501,24 @@ static void execute(parse_token *ltk, APESShell *shell) {
                 int time = ctk.argv[2].dataI;
                 //this->robot->pump_drive(dir, speed, time);
                 msg = "System's pump enabled for " + std::to_string(time) + " us!\n";
-                shell->toSend(msg);
+                toSend(msg);
             }
             break;
 
         case PUMP_STOP:
             //this->robot->pump_stop();
             msg = "System's pump disabled!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
 
         case DRILL_RUN:
             msg = "System's drill enabled!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
 
         case DRILL_STOP:
             msg = "System's drill disabled!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
 
         case DRILL_CYCLE:
@@ -529,16 +526,16 @@ static void execute(parse_token *ltk, APESShell *shell) {
                 int dc = ctk.argv[0].dataI;
                 int on_period = ctk.argv[1].dataI;
                 float freq = ctk.argv[2].dataF;
-                //shell->robot->drill_cycle(dc, on_period, freq);
+                //this->robot->drill_cycle(dc, on_period, freq);
                 msg = "System's drill duty cycle changed!\n";
-                shell->toSend(msg);
+                toSend(msg);
             }
             break;
 
         case NONE:
         default:
             msg = "Not a valid command (use 'help' for more info)!\n";
-            shell->toSend(msg);
+            toSend(msg);
             break;
     }
 }
@@ -548,63 +545,63 @@ APESShell::~APESShell() {
     //delete this->robot;
 }
 
-static void listCommands(APESShell *shell) {
+void APESShell::listCommands(APESShell *shell) {
     std::string msg = "Listing Help Commands!";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "start => setups APES system";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "standby => turns off actuators and stops auto mode";
-    shell->toSend(msg);
+    toSend(msg);
     
     msg = "data => does something not specified";
-    shell->toSend(msg);
+    toSend(msg);
     
     msg = "help => prints this help message";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "quit => quits APES, shell, and server systems";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "auto on & => automatically reads off sensor data";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "auto off => turns off auto mode";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "temp => reads off current temp";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "dtemp => reads off difference in temp since start";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "curr => reads off current current";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "wlevel => reads off current water level";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "wob => reads off current force";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "encoder => reads off current encoder data";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "motor drive <dir> <speed> <time> => runs motor";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "motor stop => stops motor";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "drill run => runs drill";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "drill stop => stops drill";
-    shell->toSend(msg);
+    toSend(msg);
 
     msg = "drill cycle <dc> => changes drill duty cycle";
-    shell->toSend(msg);
+    toSend(msg);
 
     return;
 }
