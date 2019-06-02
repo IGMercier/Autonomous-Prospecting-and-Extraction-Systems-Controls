@@ -1,21 +1,24 @@
 #ifndef _COMPONENTS_H_
 #define _COMPONENTS_H_
 
-#include "libraries/pybind11/include/pybind11/embed.h"
+#include "../libraries/pybind11/include/pybind11/embed.h"
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
 #include <wiringPiI2C.h>
 
+#define PWM_RANGE 200
+
 class Therm {
     private:
-        int bus, chan
-	float iTemp;
-	int read_raw();
+        int bus;
+        int chan;
+	    float iTemp;
+	    int read_raw();
     public:
         Therm(int bus, int chan);
         ~Therm();
         float read_temp();
-	float D_temp();
+	    float D_temp();
 };
 
 class Amm {
@@ -53,7 +56,7 @@ class Encoder {
         int fd;
         int ppr; // pulse per revolution
     public:
-        Encoder();
+        Encoder(int fd, int ppr);
         void reset();
         unsigned int getPulse();
         float calcVel(int n, int t);
@@ -66,7 +69,7 @@ class Drill {
         int pwm;
     public:
         Drill(int en, int pwm);
-        void drill_run(int dc);
+        void drill_run(int dc, float freq);
         void drill_stop();
         void drill_cycle(int dc, int on_period, float freq);
         ~Drill();

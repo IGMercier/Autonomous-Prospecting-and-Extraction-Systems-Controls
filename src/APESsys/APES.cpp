@@ -41,6 +41,7 @@ APES::APES(char *filename, std::mutex *data_mtx) {
     this->wlevel = NULL;
     this->motor_Z = NULL;
     this->pump = NULL;
+    this->encoder = NULL;
 
     // starts python interpreter
     py::initialize_interpreter();
@@ -63,11 +64,13 @@ int APES::setup() {
     this->motor_Z = new Motor(STEPPER_DIR_PIN, STEPPER_STP_PIN);
     this->pump = new Motor(PUMP_DIR_PIN, PUMP_SPEED_PIN);
 
-    int fd = wiringPiI2CSetup(/* fill with device id*/);
+    int fd = wiringPiI2CSetup(ENCODER_ADDR);
     this->encoder = new Encoder(fd, 1024); // ppr from datasheet
     
     wiringPiSPISetup(0, 500000); // for adc
     wiringPiSPISetup(1, 500000); // for adc (level)
+    wiringPiSetupPhys();
+    pwmSetMode(PWM_MODE_MS);
     return 0;
 }
 
@@ -175,9 +178,9 @@ dataPt* APES::read_encoder() {
     return NULL;
 }
 
-void APES::drill_run(int dc) {
+void APES::drill_run(int dc, float freq) {
     if (this->drill != NULL) {
-        this->drill->drill_run(dc);
+        this->drill->drill_run(dc, freq);
     }
 }
 

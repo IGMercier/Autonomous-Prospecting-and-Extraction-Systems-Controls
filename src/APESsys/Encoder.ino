@@ -1,9 +1,9 @@
 #include <TinyWireS.h>
 //#include <assert.h>
 
-#define PIN_A 1
-#define PIN_B 2
-#define ADDR  0x4
+#define PIN_A 4
+#define PIN_B 3
+#define ADDR  0x20
 
 volatile unsigned long pulse;
 unsigned long i = 0;

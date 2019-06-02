@@ -116,7 +116,7 @@ WLevel::WLevel(int bus, int chan_start, int chan_end) {
     }
 
     // requires that chan_start <= chan_end
-    if (bus_start > bus_end) {
+    if (chan_start > chan_end) {
         fprintf(stderr, "ERROR: level requires that bus_start address");
         fprintf(stderr, " <= bus_end address\n");
         fprintf(stderr, "ERROR: level instatiation failed!\n");
@@ -200,9 +200,7 @@ Encoder::Encoder(int fd, int ppr) {
     this->ppr = ppr;
 }
 
-Encoder::~Encoder() {
-
-}
+Encoder::~Encoder() {}
 
 unsigned int Encoder::getPulse() {
     return (unsigned int)wiringPiI2CRead(this->fd);
@@ -226,15 +224,18 @@ float Encoder::calcVel(int n, int t) {
 Drill::Drill(int en, int pwm) {
     this->en = en;
     this->pwm = pwm;
-    pinMode(this->en, INPUT);
+    pinMode(this->en, OUTPUT);
     pinMode(this->pwm, PWM_OUTPUT);
     digitalWrite(this->en, LOW);
     pwmWrite(this->en, 0);
 }
 
-void Drill::drill_run(int dc) {
+void Drill::drill_run(int dc, float freq) {
+    float pwmClock = 19.2e6 / freq / PWM_RANGE;
+    pwmSetRange(PWM_RANGE);
+    pwmSetClock(pwmClock);
     digitalWrite(this->en, HIGH);
-    pwmWrite(this->pwm, dc);
+    pwmWrite(this->pwm, (dc*1024/100));
 }
 
 void Drill::drill_stop() {
@@ -252,7 +253,7 @@ void Drill::drill_cycle(int dc, int on_period, float freq) {
         std::chrono::milliseconds elapsed_dc{0};
 
         while ((elapsed_dc.count() < time) && (elapsed.count() < on_period)) {
-            drill_run(dc);
+            drill_run(dc, float freq);
             auto stop_dc = std::chrono::high_resolution_clock::now();
             elapsed_dc = std::chrono::duration_cast<std::chrono::milliseconds>(stop_dc - start_dc);
 
@@ -348,11 +349,11 @@ DCHeater::DCHeater(int pin) {
     digitalWrite(this->pin, LOW);
 }
 
-DCHeater::turnOn() {
+void DCHeater::turnOn() {
     digitalWrite(this->pin, HIGH);
 }
 
-DCHeater::turnOff() {
+void DCHeater::turnOff() {
     digitalWrite(this->pin, LOW);
 }
 
@@ -368,11 +369,11 @@ Relay::Relay(int pin) {
     digitalWrite(this->pin, LOW);
 }
 
-Relay::turnOn() {
+void Relay::turnOn() {
     digitalWrite(this->pin, HIGH);
 }
 
-Relay::turnOff() {
+void Relay::turnOff() {
     digitalWrite(this->pin, LOW);
 }
 

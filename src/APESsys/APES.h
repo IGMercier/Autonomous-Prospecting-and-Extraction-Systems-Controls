@@ -18,8 +18,6 @@
 #define STEPPER_STP_PIN     36
 #define STEPPER_DIR_PIN     35
 //#define STEPPER_TIME_PIN  38
-#define ENCODER_0_PIN       40
-#define ENCODER_1_PIN       37
 #define WOB_DATA_PIN        22
 #define WOB_CLOCK_PIN       13
 #define PUMP_SPEED_PIN      12
@@ -36,6 +34,7 @@
 #define WLEVEL_CHAN_START   0    
 #define WLEVEL_CHAN_END     7
 #define WLEVEL_BUS          0
+#define ENCODER_ADDR        0x20 
 
 typedef enum {
     AUTO_THERM = 0b1,
@@ -97,7 +96,7 @@ class APES {
         dataPt* read_encoder();
         void auto_on(autoFunc which);
         void auto_off(autoFunc which);
-        void drill_run(int dc);
+        void drill_run(int dc, float freq);
         void drill_stop();
         void drill_cycle(int dc, int on_period, float freq);
         void motor_Z_drive(bool dir, int speed, int time);
