@@ -545,7 +545,7 @@ APESShell::~APESShell() {
     //delete this->robot;
 }
 
-void APESShell::listCommands(APESShell *shell) {
+void APESShell::listCommands() {
     std::string msg = "Listing Help Commands!";
     toSend(msg);
 
