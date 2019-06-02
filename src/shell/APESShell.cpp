@@ -103,6 +103,66 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
         ctk->command = QUIT;
         return;
 
+    } else if (ltk->argv[0] == "sol") {
+        if (ltk->argv[1] == "0") {
+            if (ltk->argv[2] == "open") {
+                ctk->command = SOL_0_OPEN;
+                return;
+            } else if (ltk->argv[2] == "close") {
+                ctk->command = SOL_0_CLOSE;
+                return;
+            }
+
+        } else if (ltk->argv[1] == "1") {
+            if (ltk->argv[2] == "open") {
+                ctk->command = SOL_1_OPEN;
+                return;
+            } else if (ltk->argv[2] == "close") {
+                ctk->command = SOL_1_CLOSE;
+                return;
+            }
+
+        }
+    } else if (ltk->argv[0] == "heater") {
+        if (ltk->argv[1] == "0") {
+            if (ltk->argv[2] == "on") {
+                ctk->command = HEATER_0_ON;
+                return;
+            } else if (ltk->argv[2] == "off") {
+                ctk->command = HEATER_0_OFF;
+                return;
+            }
+
+        } else if (ltk->argv[1] == "1") {
+            if (ltk->argv[2] == "on") {
+                ctk->command = HEATER_1_ON;
+                return;
+            } else if (ltk->argv[2] == "off") {
+                ctk->command = HEATER_1_OFF;
+                return;
+            }
+
+        }
+    } else if (ltk->argv[0] == "relay") {
+        if (ltk->argv[1] == "0") {
+            if (ltk->argv[2] == "on") {
+                ctk->command = RELAY_0_ON;
+                return;
+            } else if (ltk->argv[2] == "off") {
+                ctk->command = RELAY_0_OFF;
+                return;
+            }
+
+        } else if (ltk->argv[1] == "1") {
+            if (ltk->argv[2] == "on") {
+                ctk->command = RELAY_1_ON;
+                return;
+            } else if (ltk->argv[2] == "off") {
+                ctk->command = RELAY_1_OFF;
+                return;
+            }
+
+        }
     } else if (ltk->argv[0] == "auto") {
         if (!ltk->bg) {
             ctk->command = NONE;
@@ -139,7 +199,7 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
     } else if (ltk->argv[0] == "motor") {
 
         if (ltk->argv[1] == "drive") {
-            ctk->command = MOTOR_DRIVE;
+            ctk->command = MOTOR_Z_DRIVE;
 
             try {
                 rc = std::stoi(ltk->argv[2]); // dir
@@ -167,7 +227,43 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
             return;
 
         } else if (ltk->argv[1] == "stop") {
-            ctk->command = MOTOR_STOP;
+            ctk->command = MOTOR_Z_STOP;
+            return;
+
+        }
+
+    } else if (ltk->argv[0] == "pump") {
+
+        if (ltk->argv[1] == "drive") {
+            ctk->command = PUMP_DRIVE;
+
+            try {
+                rc = std::stoi(ltk->argv[2]); // dir
+            } catch (...) {
+                ctk->command = NONE;
+                return;
+            }
+            ctk->argv[(ctk->argc)++].dataI = rc;
+
+            try {
+                rc = std::stoi(ltk->argv[3]); // speed
+            } catch (...) {
+                ctk->command = NONE;
+                return;
+            }
+            ctk->argv[(ctk->argc)++].dataI = rc;
+
+            try {
+                rc = std::stoi(ltk->argv[4]); // time  
+            } catch (...) {
+                ctk->command = NONE;
+                return;
+            }
+            ctk->argv[(ctk->argc)++].dataI = rc;
+            return;
+
+        } else if (ltk->argv[1] == "stop") {
+            ctk->command = PUMP_STOP;
             return;
 
         }
@@ -281,6 +377,79 @@ static void execute(parse_token *ltk, APESShell *shell) {
             shell->toSend(msg);
             break;
 
+        case SOL_0_OPEN:
+            //this->robot->sol_0_open();
+            msg = "System's solenoid 0 opened!\n";
+            shell->toSend(msg);
+            break;
+
+        case SOL_0_CLOSE:
+            //this->robot->sol_0_close();
+            msg = "System's solenoid 0 closed!\n";
+            shell->toSend(msg);
+            break;
+        
+        case SOL_1_OPEN:
+            //this->robot->sol_1_open();
+            msg = "System's solenoid 1 opened!\n";
+            shell->toSend(msg);
+            break;
+
+        case SOL_1_CLOSE:
+            //this->robot->sol_1_close();
+            msg = "System's solenoid 1 closed!\n";
+            shell->toSend(msg);
+            break;
+        
+        case HEATER_0_ON:
+            //this->robot->heater_0_on();
+            msg = "System's dc heater 0 on!\n";
+            shell->toSend(msg);
+            break;
+        
+        case HEATER_0_OFF:
+            //this->robot->heater_0_off();
+            msg = "System's dc heater 0 off!\n";
+            shell->toSend(msg);
+            break;
+        
+        case HEATER_1_ON:
+            //this->robot->heater_1_on();
+            msg = "System's dc heater 1 on!\n";
+            shell->toSend(msg);
+            break;
+        
+        case HEATER_1_OFF:
+            //this->robot->heater_1_off();
+            msg = "System's dc heater 1 off!\n";
+            shell->toSend(msg);
+            break;
+
+        case RELAY_0_ON:
+            //this->robot->relay_0_on();
+            msg = "System's relay 0 on!\n";
+            shell->toSend(msg);
+            break;
+        
+        case RELAY_0_OFF:
+            //this->robot->relay_0_off();
+            msg = "System's relay 0 off!\n";
+            shell->toSend(msg);
+            break;
+        
+        case RELAY_1_ON:
+            //this->robot->relay_1_on();
+            msg = "System's relay 1 on!\n";
+            shell->toSend(msg);
+            break;
+        
+        case RELAY_1_OFF:
+            //this->robot->relay_1_off();
+            msg = "System's relay 1 off!\n";
+            shell->toSend(msg);
+            break;
+            
+
         case TEMP:
             //this->robot->read_temp();
             msg = "Reading temp!\n";
@@ -311,20 +480,37 @@ static void execute(parse_token *ltk, APESShell *shell) {
             shell->toSend(msg);
             break;
 
-        case MOTOR_DRIVE:
+        case MOTOR_Z_DRIVE:
             {
                 int dir = ctk.argv[0].dataI;
                 int speed = ctk.argv[1].dataI;
                 int time = ctk.argv[2].dataI;
-                //this->robot->motor_drive(dir, speed, time);
-                msg = "System's motor enabled for " + std::to_string(time) + " us!\n";
+                //this->robot->motor_Z_drive(dir, speed, time);
+                msg = "System's Z-axis motor enabled for " + std::to_string(time) + " us!\n";
                 shell->toSend(msg);
             }
             break;
 
-        case MOTOR_STOP:
-            //this->robot->motor_stop();
-            msg = "System's motor disabled!\n";
+        case MOTOR_Z_STOP:
+            //this->robot->motor_Z_stop();
+            msg = "System's Z-axis motor disabled!\n";
+            shell->toSend(msg);
+            break;
+        
+        case PUMP_DRIVE:
+            {
+                int dir = ctk.argv[0].dataI;
+                int speed = ctk.argv[1].dataI;
+                int time = ctk.argv[2].dataI;
+                //this->robot->pump_drive(dir, speed, time);
+                msg = "System's pump enabled for " + std::to_string(time) + " us!\n";
+                shell->toSend(msg);
+            }
+            break;
+
+        case PUMP_STOP:
+            //this->robot->pump_stop();
+            msg = "System's pump disabled!\n";
             shell->toSend(msg);
             break;
 
