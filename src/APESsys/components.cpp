@@ -203,19 +203,10 @@ Encoder::~Encoder() {
 }
 
 unsigned int Encoder::getPulse() {
-    /*
-        @TODO: this literally does nothing,
-               its just here to show how to read and write
-    */
-    wiringPiI2CWrite(this->fd, 1);
     return (unsigned int)wiringPiI2CRead(this->fd);
 }
 
 void Encoder::reset() {
-    /*
-        @TODO: this literally does nothing,
-               its just here to show how to read and write
-    */
     wiringPiI2CWrite(this->fd, 0);
 }
 
@@ -249,8 +240,25 @@ void Drill::drill_stop() {
     pwmWrite(this->pwm, 0);
 }
 
-void Drill::drill_cycle() {
-    // @TODO: what the heck?
+void Drill::drill_cycle(int dc, int on_period, float freq) {
+    float time = dc / freq;
+    
+    auto start = std::chrono::high_resolution_clock::now();
+    std::chrono::milliseconds elapsed{0};
+    while (elapsed.count() < on_period) {
+        auto start_dc = std::chrono::high_resolution_clock::now();
+        std::chrono::milliseconds elapsed_dc{0};
+
+        while ((elapsed_dc.count() < time) && (elapsed.count() < on_period)) {
+            drill_run(dc);
+            auto stop_dc = std::chrono::high_resolution_clock::now();
+            elapsed_dc = std::chrono::duration_cast<std::chrono::milliseconds>(stop_dc - start_dc);
+
+            auto stop = std::chrono::high_resolution_clock::now();
+            elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+        }
+        drill_stop();
+    }
 }
 
 Drill::~Drill() {}
