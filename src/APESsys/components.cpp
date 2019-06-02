@@ -7,6 +7,9 @@
 
 #include "components.h"
 
+#define THERM_RATE 0.259
+#define THERM_OFFSET -37.0
+
 namespace py = pybind11;
 using namespace py::literals;
 
@@ -39,15 +42,15 @@ int readADC(int bus, int channel) {
 Therm::Therm(int bus, int chan) {
     if ((bus > 1) || (bus < 0)) {
         fprintf(stderr, "ERROR: thermometer bus address must be 0 or 1!\n");
+        fprintf(stderr, "ERROR: thermometer instantiation failed!\n");
         return;
     }
 
     if ((chan > 7) || (chan  < 0)) {
         fprintf(stderr, "ERROR: thermometer channel address takes values 0-7!\n");
-        fprintf(stderr, "ERROR: thermometer instatiation failed!\n");
+        fprintf(stderr, "ERROR: thermometer instantiation failed!\n");
         return;
     }
-
 
     this->bus = bus;
     this->chan = chan;
@@ -56,12 +59,11 @@ Therm::Therm(int bus, int chan) {
 }
 
 float Therm::read_temp() {
-    return (float)readADC(this->bus, this->chan);
+    return THERM_RATE * (float)readADC(this->bus, this->chan) + THERM_OFFSET;
 }
 
 float Therm::D_temp() {
-    float fTemp = read_temp();
-    return fTemp - this->iTemp;
+    return read_temp() - this->iTemp;
 }
 
 Therm::~Therm() {}
