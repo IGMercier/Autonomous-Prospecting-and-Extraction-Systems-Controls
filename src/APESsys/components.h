@@ -8,14 +8,14 @@
 
 class Therm {
     private:
-        int bus;
-        int chan;
-        float iTemp;
+        int bus, chan
+	float iTemp;
+	int read_raw();
     public:
         Therm(int bus, int chan);
         ~Therm();
         float read_temp();
-        float D_temp();
+	float D_temp();
 };
 
 class Amm {
