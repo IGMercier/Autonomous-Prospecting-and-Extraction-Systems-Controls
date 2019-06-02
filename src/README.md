@@ -8,10 +8,9 @@ This folder contains all the software stuffs
         * [x] call shutdown procedure
         * [x] nail down file reading/writing schema
     * Re: Components
-        * [ ] figure out pin mapping and bus specification
-        * [ ] fill out prepped encoder funcs
-        * [ ] implement switches?
-        * [ ] implement drill control
+        * [x] figure out pin mapping and bus specification
+        * [x] fill out prepped encoder funcs
+        * [x] implement drill control
             * using the same motor driver?
         * [ ] test each component
             * make sure wob is calibrated
@@ -20,7 +19,7 @@ This folder contains all the software stuffs
         * [x] put each sensor thread in 1 func that reads at time interval 
         * [x] finish the set of commands that can be done in the background
              and those that can be done in the foreground
-        * [ ] specify and finish implenting data logging
+        * [x] specify and finish implenting data logging
             * this is more a client thing since the client can graphically arrange
               data sent by server
             * if sending binary files is compatible with current system, send
