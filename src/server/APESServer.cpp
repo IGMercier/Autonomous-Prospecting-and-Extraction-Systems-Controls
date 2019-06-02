@@ -68,7 +68,6 @@ void APESServer::execute() {
 
         int rc;
         memset(cmdline, 0, MAXLINE);
-
         rc = readFromClient(cmdline);
         if (rc < 0) {
             delete cmdline;
@@ -83,7 +82,6 @@ void APESServer::execute() {
         std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
         this->cmdq->push_back(buf);
         cmdlock.unlock();
-
     }
     
     delete cmdline;
@@ -135,7 +133,7 @@ void APESServer::write() {
             }
             datalock.unlock();
             */
-	}
+	    }
     }
 }
 

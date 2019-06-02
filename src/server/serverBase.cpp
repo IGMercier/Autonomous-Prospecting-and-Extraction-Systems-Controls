@@ -238,7 +238,7 @@ int ServerBase::sendToClient(std::string msg) {
 
     while (len > 0) {
         int rc = write(this->cfd, tmp, len);
-	if (rc < 0) {
+	    if (rc < 0) {
             if (errno == EAGAIN) {
                 print(strerror(errno));
                 return -1;
@@ -273,9 +273,9 @@ int ServerBase::sendToClient(std::string msg) {
                 print(strerror(errno));
                 return -1;
             }
-	}
+	    }
         tmp += rc;
-	len -= rc;
+	    len -= rc;
     }
     return 0;
 }

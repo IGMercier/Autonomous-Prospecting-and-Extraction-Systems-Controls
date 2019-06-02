@@ -33,7 +33,8 @@ APES::APES(char *filename, std::mutex *data_mtx) {
     this->therm = NULL;
     this->amm = NULL;
     this->wlevel = NULL;
-    this->motor = NULL;
+    this->motor_X = NULL;
+    this->motor_Y = NULL;
 
 
     // starts python interpreter
@@ -44,11 +45,12 @@ APES::APES(char *filename, std::mutex *data_mtx) {
 /* object methods */
 int APES::setup() {
     //@TODO: put the correct pin numbers 
-    this->wob = new Wob(2, 3);
-    this->therm = new Therm(7, 27);
-    this->amm = new Amm(5, 6);
-    this->wlevel = new WLevel(2, 4);
-    this->motor = new Motor(26, 8);
+    this->wob = new Wob(WOB_DATA_PIN, WOB_CLOCK_PIN);
+    this->therm = new Therm(THERM_BUS, THERM_CHAN);
+    this->amm = new Amm(AMM_BUS, AMM_CHAN);
+    this->wlevel = new WLevel(WLEVEL_BUS, WLEVEL_CHAN_START, WLEVEL_CHAN_END);
+    this->motor_Y = new Motor(PUMP_DIR_PIN, PUMP_SPEED_PIN);
+    this->motor_X = new Motor(26, 8);
 
     int fd = wiringPiI2CSetup(/* fill with device id*/);
     this->encoder = new Encoder(fd, 1024); // ppr from datasheet
@@ -162,15 +164,27 @@ dataPt* APES::read_encoder() {
     return NULL;
 }
 
-void APES::motor_drive(bool dir, int speed, int time) {
-    if (this->motor != NULL) {
-        this->motor->motor_drive(dir, speed, time);
+void APES::motor_X_drive(bool dir, int speed, int time) {
+    if (this->motor_X != NULL) {
+        this->motor_X->motor_drive(dir, speed, time);
     }
 }
 
-void APES::motor_stop() {
-    if (this->motor != NULL) {
-        this->motor->motor_stop();
+void APES::motor_Y_drive(bool dir, int speed, int time) {
+    if (this->motor_Y != NULL) {
+        this->motor_Y->motor_drive(dir, speed, time);
+    }
+}
+
+void APES::motor_X_stop() {
+    if (this->motor_X != NULL) {
+        this->motor_X->motor_stop();
+    }
+}
+
+void APES::motor_Y_stop() {
+    if (this->motor_Y != NULL) {
+        this->motor_Y->motor_stop();
     }
 }
 
@@ -239,7 +253,8 @@ void APES::auto_off(autoFunc which) {
 
 void APES::standby() {
     // ensure that everything is off
-    motor_stop();
+    motor_X_stop();
+    motor_Y_stop();
     stop_therm = 1;
     stop_amm = 1;
     stop_wlevel = 1;
@@ -253,7 +268,8 @@ void APES::finish() {
     stop_wlevel = 1;
     stop_wob = 1;
 
-    motor_stop();
+    motor_Y_stop();
+    motor_X_stop();
 
     // kills the python interpreter
     // and deletes everything, so

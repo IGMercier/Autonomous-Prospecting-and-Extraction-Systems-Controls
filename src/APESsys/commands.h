@@ -40,10 +40,15 @@ typedef enum job_state {
     BG
 } job_state;
 
+typedef union {
+    int dataI;
+    float dataF;
+} container;
+
 typedef struct command_token {
     command_state command;
     job_state jstate;
-    int argv[MAXARGS];
+    container argv[MAXARGS];
     int argc;
 } command_token;
 
