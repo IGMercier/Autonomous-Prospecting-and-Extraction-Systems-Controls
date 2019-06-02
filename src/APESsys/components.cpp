@@ -1,7 +1,6 @@
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
-#include <wiringPiSPI.h>
 
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -52,7 +51,7 @@ Therm::Therm(int bus, int chan) {
 
     this->bus = bus;
     this->chan = chan;
-    this->iTemp = 0; //read_temp();
+    this->iTemp = read_temp();
     fprintf(stdout, "Initialized Therm!\n");
 }
 
@@ -192,6 +191,72 @@ Wob::~Wob() {
 
 
 /*
+    ENCODER FUNCTIONS
+*/
+Encoder::Encoder(int fd, int ppr) {
+    this->fd = fd;
+    this->ppr = ppr;
+}
+
+Encoder::~Encoder() {
+
+}
+
+unsigned int Encoder::getPulse() {
+    /*
+        @TODO: this literally does nothing,
+               its just here to show how to read and write
+    */
+    wiringPiI2CWrite(this->fd, 1);
+    return (unsigned int)wiringPiI2CRead(this->fd);
+}
+
+void Encoder::reset() {
+    /*
+        @TODO: this literally does nothing,
+               its just here to show how to read and write
+    */
+    wiringPiI2CWrite(this->fd, 0);
+}
+
+float Encoder::calcVel(int n, int t) {
+    // n = number of pulses
+    // t = sampling time, should be constant (?)
+    // @TODO: figure out these params
+    return (float)(2*M_PI*n / (this->ppr * t));
+}
+
+
+/*
+    DRILL FUNCTIONS
+*/
+Drill::Drill(int en, int pwm) {
+    this->en = en;
+    this->pwm = pwm;
+    pinMode(this->en, INPUT);
+    pinMode(this->pwm, PWM_OUTPUT);
+    digitalWrite(this->en, LOW);
+    pwmWrite(this->en, 0);
+}
+
+void Drill::drill_run(int dc) {
+    digitalWrite(this->en, HIGH);
+    pwmWrite(this->pwm, dc);
+}
+
+void Drill::drill_stop() {
+    digitalWrite(this->en, LOW);
+    pwmWrite(this->pwm, 0);
+}
+
+void Drill::drill_cycle() {
+    // @TODO: what the heck?
+}
+
+Drill::~Drill() {}
+
+
+/*
     MOTOR FUNCTIONS
 */
 Motor::Motor(int pinA, int en) {
@@ -243,39 +308,62 @@ void Motor::motor_stop() {
 
 
 /*
-    ENCODER FUNCTIONS
+    SOLENOID FUNCTIONS
 */
-Encoder::Encoder(int fd, int ppr) {
-    this->fd = fd;
-    this->ppr = ppr;
+Solenoid::Solenoid(int pin) {
+    this->pin = pin;
+    pinMode(this->pin, OUTPUT);
+    digitalWrite(this->pin, LOW);
 }
 
-Encoder::~Encoder() {
-
+void Solenoid::openValve() {
+    // assuming HIGH is to open
+    digitalWrite(this->pin, HIGH);
 }
 
-Encoder::getTicks() {
-    /*
-        @TODO: this literally does nothing,
-               its just here to show how to read and write
-    */
-    wiringPiI2CWrite(this->fd, -1);
-    wiringPiI2CRead(this->fd);
+void Solenoid::closeValve() {
+    // assuming LOW is to close
+    digitalWrite(this->pin, LOW);
 }
 
-Encoder::reset() {
-    /*
-        @TODO: this literally does nothing,
-               its just here to show how to read and write
-    */
-    wiringPiI2CWrite(this->fd, -1);
-    wiringPiI2CRead(this->fd);
+Solenoid::~Solenoid() {}
 
+
+/*
+    DCHEATER FUNCTIONS
+*/
+DCHeater::DCHeater(int pin) {
+    this->pin = pin;
+    pinMode(this->pin, OUTPUT);
+    digitalWrite(this->pin, LOW);
 }
 
-float Encoder::calcVel(int n, int t) {
-    // n = number of pulses
-    // t = sampling time, should be constant (?)
-    // @TODO: figure out these params
-    return (float)(2*M_PI*n / (this->ppr * t));
+DCHeater::turnOn() {
+    digitalWrite(this->pin, HIGH);
 }
+
+DCHeater::turnOff() {
+    digitalWrite(this->pin, LOW);
+}
+
+DCHeater::~DCHeater() {}
+
+
+/*
+    RELAY FUNCTIONS
+*/
+Relay::Relay(int pin) {
+    this->pin = pin;
+    pinMode(this->pin, OUTPUT);
+    digitalWrite(this->pin, LOW);
+}
+
+Relay::turnOn() {
+    digitalWrite(this->pin, HIGH);
+}
+
+Relay::turnOff() {
+    digitalWrite(this->pin, LOW);
+}
+
+Relay::~Relay() {}

@@ -2,7 +2,9 @@
 #define _COMPONENTS_H_
 
 #include "libraries/pybind11/include/pybind11/embed.h"
-
+#include <wiringPi.h>
+#include <wiringPiSPI.h>
+#include <wiringPiI2C.h>
 
 class Therm {
     private:
@@ -46,6 +48,30 @@ class Wob {
         float read_wob();
 };
 
+class Encoder {
+    private:
+        int fd;
+        int ppr; // pulse per revolution
+    public:
+        Encoder();
+        void reset();
+        unsigned int getPulse();
+        float calcVel(int n, int t);
+        ~Encoder();
+};
+
+class Drill {
+    private:
+        int en;
+        int pwm;
+    public:
+        Drill(int en, int pwm);
+        void drill_run(int dc);
+        void drill_stop();
+        void drill_cycle(int dc, int on_period, float freq);
+        ~Drill();
+};
+
 class Motor {
     private:
         pybind11::object L298N;
@@ -56,16 +82,34 @@ class Motor {
         void motor_stop();
 };
 
-class Encoder {
+class Solenoid {
     private:
-        int fd;
-        int ppr; // pulse per revolution
+        int pin;
     public:
-        Encoder();
-        void reset();
-        void getTicks();
-        float calcVel(int n, int t);
-        ~Encoder();
+        Solenoid(int pin);
+        void openValve();
+        void closeValve();
+        ~Solenoid();
+};
+
+class DCHeater {
+    private:
+        int pin;
+    public:
+        DCHeater(int pin);
+        void turnOn();
+        void turnOff();
+        ~DCHeater();
+};
+
+class Relay {
+    private:
+        int pin;
+    public:
+        Relay(int pin);
+        void turnOn();
+        void turnOff();
+        ~Relay();
 };
 
 #endif

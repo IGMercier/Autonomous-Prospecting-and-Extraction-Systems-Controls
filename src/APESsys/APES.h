@@ -57,6 +57,7 @@ typedef enum {
 typedef struct dataPt {
     sensor origin;
     union {
+        unsigned int dataUI; 
         int dataI;
         float dataF;
     } dataField;
@@ -69,13 +70,21 @@ class APES {
         char *filename;
         std::mutex *data_mtx;
         std::vector<dataPt *> dataVector;
+        
+        Solenoid* sol_0;
+        Solenoid* sol_1;
+        DCHeater* heater_0;
+        DCHeater* heater_1;
+        Motor* motor_Z;
+        Encoder *encoder;
         Wob* wob;
+        Motor* pump;
+        Drill* drill;
+        Relay* relay_0;
+        Relay* relay_1;
         Therm* therm;
         Amm* amm;
         WLevel* wlevel;
-        Motor* motor_X;
-        Motor* motor_Y;
-        Encoder *encoder;
     public:
         APES();
         ~APES();
@@ -88,10 +97,25 @@ class APES {
         dataPt* read_encoder();
         void auto_on(autoFunc which);
         void auto_off(autoFunc which);
-        void motor_X_drive(bool dir, int speed, int time);
-        void motor_Y_drive(bool dir, int speed, int time);
-        void motor_X_stop();
-        void motor_Y_stop();
+        void drill_run(int dc);
+        void drill_stop();
+        void drill_cycle(int dc, int on_period, float freq);
+        void motor_Z_drive(bool dir, int speed, int time);
+        void motor_Z_stop();
+        void pump_drive(bool dir, int speed, int time);
+        void pump_stop();
+        void sol_0_open();
+        void sol_0_close();
+        void sol_1_open();
+        void sol_1_close();
+        void heater_0_on();
+        void heater_0_off();
+        void heater_1_on();
+        void heater_1_off();
+        void relay_0_on();
+        void relay_0_off();
+        void relay_1_on();
+        void relay_1_off();
         void readData(const char *filename);
         void saveData(dataPt *data);
         void writeDataVector();

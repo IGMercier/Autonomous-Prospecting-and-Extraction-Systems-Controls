@@ -16,11 +16,7 @@
 
 #include "APESServer.h"
 
-<<<<<<< HEAD
-static std::string delim = "<END>";
-=======
 static std::string delim = "\r\n";
->>>>>>> 0a758d23dc5bbd559c7a7adea751933b24e3ceba
 static std::atomic_int shutdown_sig = {0};
 
 APESServer::APESServer(sysArgs *args) {
@@ -48,9 +44,9 @@ void APESServer::run(int port) {
         createServer(port);
     }
     assert(this->sfd >= 0);
-        
-   setClientSockOpts();
-   setServerSockOpts();
+    
+    setClientSockOpts();
+    setServerSockOpts();
 
     while (!shutdown_sig.load()) {
         createClient();
