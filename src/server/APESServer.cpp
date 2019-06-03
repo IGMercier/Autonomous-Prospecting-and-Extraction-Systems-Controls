@@ -140,7 +140,7 @@ void APESServer::disconnected() {
     this->cmdq->clear();
     std::string buf = "standby";
     this->cmdq->push_back(buf);
-    this->cmdq->push_back(shutdown_tag);
+    //this->cmdq->push_back(shutdown_tag);
     cmdlock.unlock();
     
     close(this->cfd);

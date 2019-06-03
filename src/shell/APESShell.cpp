@@ -41,6 +41,7 @@ void APESShell::run() {
 
         evaluate(cmdline);
     }
+    shutdown()
     return; // kills shell thread in main program
 }
 
@@ -356,7 +357,7 @@ void APESShell::execute(parse_token *ltk) {
             break;
 
         case QUIT:
-            this->robot->finish();
+            shutdown();
             msg = "System shutting down!\n";
             toSend(msg);
             toSend(shutdown_tag);
@@ -565,6 +566,15 @@ void APESShell::execute(parse_token *ltk) {
 
 APESShell::~APESShell() {
     if (this->robot != nullptr) {
+        this->robot->standby();
+        this->robot->finish();
+        delete this->robot;
+    }
+}
+
+void APESShell::shutdown() {
+    if (this->robot != nullptr) {
+        this->robot->standby();
         this->robot->finish();
         delete this->robot;
     }
