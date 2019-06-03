@@ -91,11 +91,9 @@ void APESServer::execute() {
 }
 
 void APESServer::write() {
-	
     while (1) {
         while (this->cfd >= 0) { 
             int rc;
-        	
             std::unique_lock<std::mutex> loglock(*(this->log_mtx));
             unsigned int logs = this->logq->size();
             for (unsigned int i = 0; i < logs; i++) {
@@ -103,7 +101,7 @@ void APESServer::write() {
     
                 if (logline == shutdown_tag) {
                     shutdown_sig.store(1);
-		    shutdown();
+                    shutdown();
                     return;
                 }
     
@@ -129,7 +127,7 @@ void APESServer::write() {
             }
             datalock.unlock();
             */
-	    }
+        }
     }
 }
 
@@ -139,7 +137,6 @@ void APESServer::disconnected() {
     this->cmdq->clear();
     std::string buf = "standby";
     this->cmdq->push_back(buf);
-    this->cmdq->push_back(shutdown_tag);
     cmdlock.unlock();
     
     close(this->cfd);
