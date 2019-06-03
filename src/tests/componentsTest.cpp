@@ -16,14 +16,13 @@ int main(int argc, char **argv) {
     Stepper* stepper = new Stepper(36, 35);
     stepper->stepper_drive(1, 50);
 
-    sleep(1);
+    sleep(5);
     
     stepper->stepper_stop();
 
     delete stepper;
 
-
-    //Motor* pump = new Motor();
+    /*
     Relay *relay = new Relay(16);
     relay->turnOn();
     
@@ -31,4 +30,5 @@ int main(int argc, char **argv) {
     relay->turnOff();
 
     delete relay;
+    */
 }
