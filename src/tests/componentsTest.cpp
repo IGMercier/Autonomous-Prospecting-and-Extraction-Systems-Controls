@@ -14,9 +14,9 @@ int main(int argc, char **argv) {
     */
 
     Stepper* stepper = new Stepper(36, 35);
-    stepper->stepper_drive(1, 50, 1000);
+    stepper->stepper_drive(1, 100, 1000);
 
-    sleep(5);
+    sleep(10);
     
     stepper->stepper_stop();
 
