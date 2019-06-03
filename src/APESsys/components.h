@@ -5,6 +5,7 @@
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
 #include <wiringPiI2C.h>
+#include <softPwm.h>
 
 #define PWM_RANGE 200
 #define PWM_MAX_FREQ 19.2e6
@@ -94,7 +95,7 @@ class Pump {
     public:
         Pump(int dir_pin, int pwm_pin);
         ~Pump();
-        void pump_drive(bool dir, int dc, int time);
+        void pump_drive(int dir, int dc);
         void pump_stop();
 };
 
