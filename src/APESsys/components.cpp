@@ -221,26 +221,26 @@ float Encoder::calcVel(int n, int t) {
 /*
     DRILL FUNCTIONS
 */
-Drill::Drill(int en, int pwm) {
-    this->en = en;
-    this->pwm = pwm;
-    pinMode(this->en, OUTPUT);
-    pinMode(this->pwm, PWM_OUTPUT);
-    digitalWrite(this->en, LOW);
-    pwmWrite(this->en, 0);
+Drill::Drill(int en_pin, int pwm_pin) {
+    this->en_pin = en_pin;
+    this->pwm_pin = pwm_pin;
+    pinMode(this->en_pin, OUTPUT);
+    pinMode(this->pwm_pin, PWM_OUTPUT);
+    digitalWrite(this->en_pin, LOW);
+    pwmWrite(this->pwm_pin, LOW);
 }
 
 void Drill::drill_run(int dc, float freq) {
-    float pwmClock = 19.2e6 / freq / PWM_RANGE;
+    float pwmClock = PWM_MAX_FREQ / freq / PWM_RANGE;
     pwmSetRange(PWM_RANGE);
     pwmSetClock(pwmClock);
-    digitalWrite(this->en, HIGH);
-    pwmWrite(this->pwm, (dc*1024/100));
+    digitalWrite(this->en_pin, HIGH);
+    pwmWrite(this->pwm_pin, (dc*1024/100));
 }
 
 void Drill::drill_stop() {
-    digitalWrite(this->en, LOW);
-    pwmWrite(this->pwm, 0);
+    digitalWrite(this->en_pin, LOW);
+    pwmWrite(this->pwm_pin, LOW);
 }
 
 void Drill::drill_cycle(int dc, int on_period, float freq) {
@@ -278,11 +278,11 @@ Stepper::Stepper(int dir_pin, int step_pin) {
     digitalWrite(this->dir_pin, LOW);
 
     pinMode(this->step_pin, PWM_OUTPUT);
-    pwmWrite(this->step_pin, 0);
+    pwmWrite(this->step_pin, LOW);
 }
 
 void Stepper::stepper_drive(int dir, int dc, float freq) {
-    float pwmClock = 19.2e6 / freq / PWM_RANGE;
+    float pwmClock = PWM_MAX_FREQ / freq / PWM_RANGE;
     pwmSetRange(PWM_RANGE);
     pwmSetClock(pwmClock);
 
@@ -291,7 +291,7 @@ void Stepper::stepper_drive(int dir, int dc, float freq) {
 }
 
 void Stepper::stepper_stop() {
-    pwmWrite(this->step_pin, 0);
+    pwmWrite(this->step_pin, LOW);
 }
 
 Stepper::~Stepper() {}
@@ -329,7 +329,7 @@ void Pump::pump_drive(bool dir, int dc, int time) {
 }
 
 void Pump::pump_stop() {
-    pwmWrite(this->pwm_pin, 0);
+    pwmWrite(this->pwm_pin, LOW);
 }
 
 

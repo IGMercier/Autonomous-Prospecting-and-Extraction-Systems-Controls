@@ -7,6 +7,7 @@
 #include <wiringPiI2C.h>
 
 #define PWM_RANGE 200
+#define PWM_MAX_FREQ 19.2e6
 
 class Therm {
     private:
@@ -65,10 +66,10 @@ class Encoder {
 
 class Drill {
     private:
-        int en;
-        int pwm;
+        int en_pin;
+        int pwm_pin;
     public:
-        Drill(int en, int pwm);
+        Drill(int en_pin, int pwm_pin);
         void drill_run(int dc, float freq);
         void drill_stop();
         void drill_cycle(int dc, int on_period, float freq);
