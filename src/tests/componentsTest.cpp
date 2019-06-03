@@ -13,8 +13,8 @@ int main(int argc, char **argv) {
     delete drill;
     */
 
-    /*
-    Stepper* stepper = new Stepper(36, 35);
+   /* 
+    Stepper* stepper = new Stepper(35, 36);
     stepper->stepper_drive(1, 100, 1000);
 
     sleep(10);
@@ -23,7 +23,8 @@ int main(int argc, char **argv) {
 
     delete stepper;
     */
-
+    
+    /*
     int fd = wiringPiI2CSetup(0x20);
     Encoder* encoder = new Encoder(fd, 1024);
     while (1) {
@@ -31,7 +32,14 @@ int main(int argc, char **argv) {
         printf("%u\n", pulse);
         sleep(2);
     }
+    */
+    Pump *pump = new Pump(15, 12);
+    pump->pump_drive(1, 50);
 
+    sleep(2);
+    pump->pump_stop();
+
+    delete pump;
     /*
     Relay *relay = new Relay(16);
     relay->turnOn();
