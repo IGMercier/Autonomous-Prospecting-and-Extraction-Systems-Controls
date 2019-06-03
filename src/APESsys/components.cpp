@@ -268,6 +268,32 @@ Drill::~Drill() {}
 
 
 /*
+    STEPPER FUNCTIONS
+*/
+Stepper::Stepper(int dir_pin, int step_pin) {
+    this->dir_pin = dir_pin;
+    this->step_pin = step_pin;
+    
+    pinMode(this->dir_pin, OUTPUT);
+    digitalWrite(this->dir_pin, LOW);
+
+    pinMode(this->step_pin, PWM_OUTPUT);
+    pwmWrite(this->step_pin, 0);
+}
+
+void Stepper::stepper_drive(int dir, int dc) {
+    digitalWrite(this->dir_pin, dir);
+    pwmWrite(this->step_pin, (dc*1024/100));
+}
+
+void Stepper::stepper_stop() {
+    pwmWrite(this->step_pin, 0);
+}
+
+Stepper::~Stepper() {}
+
+
+/*
     MOTOR FUNCTIONS
 */
 Motor::Motor(int pinA, int en) {

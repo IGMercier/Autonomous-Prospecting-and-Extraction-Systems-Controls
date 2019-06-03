@@ -75,6 +75,17 @@ class Drill {
         ~Drill();
 };
 
+class Stepper {
+    private:
+        int step_pin;
+        int dir_pin;
+    public:
+        Stepper(int step_pin, int dir_pin);
+        stepper_drive(int dir, int dc);
+        stepper_stop();
+        ~Stepper();
+};
+
 class Motor {
     private:
         pybind11::object L298N;

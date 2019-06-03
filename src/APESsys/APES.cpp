@@ -39,7 +39,7 @@ APES::APES(char *filename, std::mutex *data_mtx) {
     this->therm = NULL;
     this->amm = NULL;
     this->wlevel = NULL;
-    this->motor_Z = NULL;
+    this->stepper = NULL;
     this->pump = NULL;
     this->encoder = NULL;
 
@@ -61,7 +61,7 @@ int APES::setup() {
     this->therm = new Therm(THERM_BUS, THERM_CHAN);
     this->amm = new Amm(AMM_BUS, AMM_CHAN);
     this->wlevel = new WLevel(WLEVEL_BUS, WLEVEL_CHAN_START, WLEVEL_CHAN_END);
-    this->motor_Z = new Motor(STEPPER_DIR_PIN, STEPPER_STP_PIN);
+    this->stepper = new Stepper(STEPPER_DIR_PIN, STEPPER_STP_PIN);
     this->pump = new Motor(PUMP_DIR_PIN, PUMP_SPEED_PIN);
 
     int fd = wiringPiI2CSetup(ENCODER_ADDR);
@@ -268,21 +268,29 @@ void APES::relay_1_off() {
     }
 }
 
-void APES::motor_Z_drive(bool dir, int speed, int time) {
-    if (this->motor_Z != NULL) {
-        this->motor_Z->motor_drive(dir, speed, time);
+void APES::stepper_drive(bool dir, int steps, int dc) {
+
+    // @TODO: integer overflow will happen here
+    if (this->stepper != NULL) {
+        unsigned int actual = read_encoder().dataUI;
+        unsigned int desired = steps + actual;
+        while (actual < desired) {
+            this->stepper->stepper_drive(dir, dc);
+            actual = read_encoder().dataUI;
+        }
+        if (actual > desired) { stepper_stop(); }
+    }
+}
+
+void APES::stepper_stop() {
+    if (this->stepper != NULL) {
+        this->stepper->stepper_stop();
     }
 }
 
 void APES::pump_drive(bool dir, int speed, int time) {
     if (this->pump != NULL) {
         this->pump->motor_drive(dir, speed, time);
-    }
-}
-
-void APES::motor_Z_stop() {
-    if (this->motor_Z != NULL) {
-        this->motor_Z->motor_stop();
     }
 }
 

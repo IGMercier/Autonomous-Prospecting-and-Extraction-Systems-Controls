@@ -74,7 +74,7 @@ class APES {
         Solenoid* sol_1;
         DCHeater* heater_0;
         DCHeater* heater_1;
-        Motor* motor_Z;
+        Stepper* stepper;
         Encoder *encoder;
         Wob* wob;
         Motor* pump;
@@ -99,8 +99,8 @@ class APES {
         void drill_run(int dc, float freq);
         void drill_stop();
         void drill_cycle(int dc, int on_period, float freq);
-        void motor_Z_drive(bool dir, int speed, int time);
-        void motor_Z_stop();
+        void stepper_drive(bool dir, int steps, int dc);
+        void stepper_stop();
         void pump_drive(bool dir, int speed, int time);
         void pump_stop();
         void sol_0_open();
