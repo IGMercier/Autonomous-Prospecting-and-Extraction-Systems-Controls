@@ -3,15 +3,18 @@ TARGET_ALL = apes.out
 TARGET_SERVER = server.out
 TARGET_SHELL = shell.out
 TARGET_COMP = comp.out
+TARGET_CURR = curr.out
 
 SERVER_FILES = server/APESServer.cpp server/serverBase.cpp
 SHELL_FILES = shell/APESShell.cpp shell/shellBase.cpp
 COMP_FILES = APESsys/components.cpp
+CURR_FILES = APESsys/components.cpp
 ALL_FILES = $(SERVER_FILES) $(SHELL_FILES)
 
 SERVER_TEST = tests/serverTest.cpp
 SHELL_TEST = tests/shellTest.cpp
 COMP_TEST = tests/componentsTest.cpp
+CURR_TEST = APESsys/curr_test.cpp
 ALL_TEST = program.cpp
 
 CFLAGS = -g -Wall -fvisibility=hidden -std=c++14
@@ -20,6 +23,9 @@ PYFLAGS = `python3-config --cflags` $(INCL) `python3-config --ldflags`
 LIBS = -lwiringPi -pthread -lstdc++
 
 all: $(TARGET_ALL) $(TARGET_SERVER) $(TARGET_SHELL)
+
+$(TARGET_CURR): $(CURR_TEST) $(CURR_FILES)
+	$(CC) -o $(TARGET_CURR) $(CURR_TEST) $(CURR_FILES) $(CFLAGS) $(LIBS) $(PYFLAGS)
 
 $(TARGET_COMP): $(COMP_TEST) $(COMP_FILES)
 	$(CC) -o $(TARGET_COMP) $(COMP_TEST) $(COMP_FILES) $(CFLAGS) $(LIBS) $(PYFLAGS)
