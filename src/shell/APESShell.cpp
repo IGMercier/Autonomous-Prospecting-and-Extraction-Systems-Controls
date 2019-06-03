@@ -6,19 +6,18 @@
 #include <assert.h>
 
 #include "APESShell.h"
-//#include "../APESsys/APES.h"
 #include "../APESsys/commands.h"
 
 using std::thread;
 
 APESShell::APESShell(sysArgs *args) {
-    assert(args != NULL);
-    assert(args->cmd_mtx != NULL);
-    assert(args->log_mtx != NULL);
-    assert(args->cmdq != NULL);
-    assert(args->logq != NULL);
+    assert(args != nullptr);
+    assert(args->cmd_mtx != nullptr);
+    assert(args->log_mtx != nullptr);
+    assert(args->cmdq != nullptr);
+    assert(args->logq != nullptr);
 
-    //this->robot = new APES();
+    this->robot = new APES();
     this->cmd_mtx = args->cmd_mtx;
     this->log_mtx = args->log_mtx;
     this->cmdq = args->cmdq;
@@ -194,10 +193,19 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
         ctk->command = WOB;
         return;
 
-    } else if (ltk->argv[0] == "motor") {
+    } else if (ltk->argv[0] == "encoder") {
+        if (ltk->argv[1] == "reset") {
+            ctk->command = ENCODER_RESET;
+            return;
+        } else {
+            ctk->command = ENCODER;
+            return;
+        }
+
+    } else if (ltk->argv[0] == "stepper") {
 
         if (ltk->argv[1] == "drive") {
-            ctk->command = MOTOR_Z_DRIVE;
+            ctk->command = STEPPER_DRIVE;
 
             try {
                 rc = std::stoi(ltk->argv[2]); // dir
@@ -225,7 +233,7 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
             return;
 
         } else if (ltk->argv[1] == "stop") {
-            ctk->command = MOTOR_Z_STOP;
+            ctk->command = STEPPER_STOP;
             return;
 
         }
@@ -312,7 +320,7 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
 }
 
 void APESShell::execute(parse_token *ltk) {
-    assert(ltk != NULL);
+    assert(ltk != nullptr);
 
     command_token ctk;
 
@@ -327,22 +335,20 @@ void APESShell::execute(parse_token *ltk) {
 
     switch (command) {
         case START:
-            //this->robot->setup();
-            //this->robot->standby();
+            this->robot->setup();
+            this->robot->standby();
             msg = "System started!\n";
             toSend(msg);
             break;
 
         case STANDBY:
-            //this->robot->standby();
+            this->robot->standby();
             msg = "System in standby!\n";
             toSend(msg);
             break;
 
         case DATA:
-            //this->robot->readData();
-            msg = "Reading from data file!\n";
-            toSend(msg);
+            toSend(data_tag);
             break;
 
         case HELP:
@@ -350,7 +356,7 @@ void APESShell::execute(parse_token *ltk) {
             break;
 
         case QUIT:
-            //this->robot->finish();
+            this->robot->finish();
             msg = "System shutting down!\n";
             toSend(msg);
             toSend(shutdown_tag);
@@ -360,7 +366,7 @@ void APESShell::execute(parse_token *ltk) {
             {
                 msg = "System's auto mode enabled!\n";
                 toSend(msg);
-                //this->robot->auto_on();
+                this->robot->auto_on();
                 //std::thread sensort(shell->robot->auto_on, /*fill this with param*/);
                 //if (sensort.joinable()) {
                 //    sensort.join();
@@ -375,122 +381,133 @@ void APESShell::execute(parse_token *ltk) {
             break;
 
         case SOL_0_OPEN:
-            //this->robot->sol_0_open();
+            this->robot->sol_0_open();
             msg = "System's solenoid 0 opened!\n";
             toSend(msg);
             break;
 
         case SOL_0_CLOSE:
-            //this->robot->sol_0_close();
+            this->robot->sol_0_close();
             msg = "System's solenoid 0 closed!\n";
             toSend(msg);
             break;
         
         case SOL_1_OPEN:
-            //this->robot->sol_1_open();
+            this->robot->sol_1_open();
             msg = "System's solenoid 1 opened!\n";
             toSend(msg);
             break;
 
         case SOL_1_CLOSE:
-            //this->robot->sol_1_close();
+            this->robot->sol_1_close();
             msg = "System's solenoid 1 closed!\n";
             toSend(msg);
             break;
         
         case HEATER_0_ON:
-            //this->robot->heater_0_on();
+            this->robot->heater_0_on();
             msg = "System's dc heater 0 on!\n";
             toSend(msg);
             break;
         
         case HEATER_0_OFF:
-            //this->robot->heater_0_off();
+            this->robot->heater_0_off();
             msg = "System's dc heater 0 off!\n";
             toSend(msg);
             break;
         
         case HEATER_1_ON:
-            //this->robot->heater_1_on();
+            this->robot->heater_1_on();
             msg = "System's dc heater 1 on!\n";
             toSend(msg);
             break;
         
         case HEATER_1_OFF:
-            //this->robot->heater_1_off();
+            this->robot->heater_1_off();
             msg = "System's dc heater 1 off!\n";
             toSend(msg);
             break;
 
         case RELAY_0_ON:
-            //this->robot->relay_0_on();
+            this->robot->relay_0_on();
             msg = "System's relay 0 on!\n";
             toSend(msg);
             break;
         
         case RELAY_0_OFF:
-            //this->robot->relay_0_off();
+            this->robot->relay_0_off();
             msg = "System's relay 0 off!\n";
             toSend(msg);
             break;
         
         case RELAY_1_ON:
-            //this->robot->relay_1_on();
+            this->robot->relay_1_on();
             msg = "System's relay 1 on!\n";
             toSend(msg);
             break;
         
         case RELAY_1_OFF:
-            //this->robot->relay_1_off();
+            this->robot->relay_1_off();
             msg = "System's relay 1 off!\n";
             toSend(msg);
             break;
-            
 
         case TEMP:
-            //this->robot->read_temp();
-            msg = "Reading temp!\n";
+            float temp = this->robot->read_temp()->dataField.dataF;
+            msg = "Temp @time: " + std::to_string(temp) + "!\n";
             toSend(msg);
             break;
 
         case DTEMP:
-            //this->robot->read_dtemp();
-            msg = "Reading dtemp!\n";
+            float dtemp = this->robot->read_dtemp()->dataField.dataF;
+            msg = "Dtemp @time: " + std::to_string(dtemp) + "!\n";
             toSend(msg);
             break;
 
         case CURR:
-            //this->robot->read_curr();
-            msg = "Reading curr!\n";
+            float curr = this->robot->read_curr()->dataField.dataF;
+            msg = "Curr @time: " + std::to_string(curr) + "!\n";
             toSend(msg);
             break;
 
         case WLEVEL:
-            //this->robot->read_wlevel();
-            msg = "Reading wlevel!\n";
+            int wlevel = this->robot->read_wlevel()->dataField.dataI;
+            msg = "Wlevel @time: " + std::to_string(wlevel) + "!\n";
             toSend(msg);
             break;
 
         case WOB:
-            //this->robot->read_wob();
-            msg = "Reading wob!\n";
+            float force = this->robot->read_wob()->dataField.dataF;
+            msg = "Force @time: " + std::to_string(force) + "!\n";
             toSend(msg);
             break;
 
-        case MOTOR_Z_DRIVE:
+        case ENCODER:
+            unsigned int pulse = this->robot->read_encoder()->dataField.dataUI;
+            msg = "Pulse @time: " + std::to_string(pulse) + "!\n";
+            toSend(msg);
+            break;
+
+        case ENCODER_RESET:
+            this->robot->reset_encoder();
+            msg = "Encoder reset!\n";
+            toSend(msg);
+            break;
+
+        case STEPPER_DRIVE:
             {
                 int dir = ctk.argv[0].dataI;
                 int speed = ctk.argv[1].dataI;
                 int time = ctk.argv[2].dataI;
-                //this->robot->motor_Z_drive(dir, speed, time);
-                msg = "System's Z-axis motor enabled for " + std::to_string(time) + " us!\n";
+                this->robot->stepper_drive(dir, speed, time);
+                msg = "System's stepper motor enabled for " + std::to_string(time) + " us!\n";
                 toSend(msg);
             }
             break;
 
-        case MOTOR_Z_STOP:
-            //this->robot->motor_Z_stop();
-            msg = "System's Z-axis motor disabled!\n";
+        case STEPPER_STOP:
+            this->robot->stepper_stop();
+            msg = "System's stepper motor disabled!\n";
             toSend(msg);
             break;
         
@@ -499,24 +516,30 @@ void APESShell::execute(parse_token *ltk) {
                 int dir = ctk.argv[0].dataI;
                 int speed = ctk.argv[1].dataI;
                 int time = ctk.argv[2].dataI;
-                //this->robot->pump_drive(dir, speed, time);
+                this->robot->pump_drive(dir, speed, time);
                 msg = "System's pump enabled for " + std::to_string(time) + " us!\n";
                 toSend(msg);
             }
             break;
 
         case PUMP_STOP:
-            //this->robot->pump_stop();
+            this->robot->pump_stop();
             msg = "System's pump disabled!\n";
             toSend(msg);
             break;
 
         case DRILL_RUN:
-            msg = "System's drill enabled!\n";
-            toSend(msg);
+            {
+                int dc = ctk.argv[0].dataI;
+                float freq = ctk.argv[1].dataF;
+                this->robot->drill_run(dc, freq);
+                msg = "System's drill enabled!\n";
+                toSend(msg);
+            }
             break;
 
         case DRILL_STOP:
+            this->robot->drill_stop();
             msg = "System's drill disabled!\n";
             toSend(msg);
             break;
@@ -541,8 +564,10 @@ void APESShell::execute(parse_token *ltk) {
 }
 
 APESShell::~APESShell() {
-    //this->robot->finish();
-    //delete this->robot;
+    if (this->robot != nullptr) {
+        this->robot->finish();
+        delete this->robot;
+    }
 }
 
 void APESShell::listCommands() {

@@ -3,11 +3,13 @@
 
 #include "shellBase.h"
 #include "../misc/flags.h"
-//#include "../APESsys/APES.h"
+#include "../APESsys/APES.h"
 
 #include <string>
 
 class APESShell : public ShellBase {
+    private:
+        APES *robot;
     public:
         std::mutex *cmd_mtx;
         std::mutex *log_mtx;
@@ -21,7 +23,7 @@ class APESShell : public ShellBase {
         void evaluate(std::string cmdline) override;
         void parsecommand(parse_token *ltk, command_token *ctk);
         void toSend(std::string msg);
-	virtual ~APESShell();
+	    virtual ~APESShell();
 
 };
 

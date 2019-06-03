@@ -21,12 +21,12 @@ static std::atomic_int shutdown_sig = {0};
 
 APESServer::APESServer(sysArgs *args) {
     signal(SIGPIPE, SIG_IGN);
-    assert(args != NULL);
-    assert(args->cmd_mtx != NULL);
-    assert(args->log_mtx != NULL);
-    assert(args->data_mtx != NULL);
-    assert(args->cmdq != NULL);
-    assert(args->logq != NULL);
+    assert(args != nullptr);
+    assert(args->cmd_mtx != nullptr);
+    assert(args->log_mtx != nullptr);
+    assert(args->data_mtx != nullptr);
+    assert(args->cmdq != nullptr);
+    assert(args->logq != nullptr);
     assert(!args->datafile.empty());
 
     this->cmd_mtx = args->cmd_mtx;
@@ -103,8 +103,22 @@ void APESServer::write() {
     
                 if (logline == shutdown_tag) {
                     shutdown_sig.store(1);
-		    shutdown();
+    	            shutdown();
                     return;
+                } else if (logline == data_tag) {
+                    // reads off data file
+                    std::unique_lock<std::mutex> datalock(*(this->data_mtx));
+                    {
+                        std::ifstream data(this->datafile);
+                        if (data) {
+                            std::string dataline;
+                            while (getline(data, dataline)) {
+                                sendToClient(dataline);
+                            }
+                        }
+                    }
+                    datalock.unlock();
+                    continue;
                 }
     
                 if ((rc = sendToClient(logline) < 0)) {
@@ -115,20 +129,7 @@ void APESServer::write() {
             this->logq->clear();
             loglock.unlock();
     
-            /*
-            // reads off data file
-            std::unique_lock<std::mutex> datalock(*(this->data_mtx));
-            {
-                std::ifstream data(this->datafile);
-                if (data) {
-                    std::string dataline;
-                    while (getline(data, dataline)) {
-                        sendToClient(dataline.c_str());
-                    }
-                }
-            }
-            datalock.unlock();
-            */
+            
 	    }
     }
 }

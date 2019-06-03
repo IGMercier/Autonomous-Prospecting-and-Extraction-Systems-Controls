@@ -9,6 +9,7 @@
 #define MAXLINE 1024
 
 extern std::string shutdown_tag;
+extern std::string data_tag;
 
 typedef struct sysArgs {
     std::mutex *cmd_mtx;

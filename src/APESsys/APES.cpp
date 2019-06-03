@@ -178,6 +178,12 @@ dataPt* APES::read_encoder() {
     return NULL;
 }
 
+void APES::reset_encoder() {
+    if (this->encoder != NULL) {
+        this->encoder->reset();
+    }
+}
+
 void APES::drill_run(int dc, float freq) {
     if (this->drill != NULL) {
         this->drill->drill_run(dc, freq);

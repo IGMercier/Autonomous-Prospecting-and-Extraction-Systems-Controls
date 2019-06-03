@@ -10,6 +10,7 @@ static void serverWriteThread(APESServer *server);
 static void shellThread(APESShell *shell);
 
 std::string shutdown_tag = "<shutdown>";
+std::string data_tag = "<data>";
 
 int main(int argc, char** argv) {
     int port;
