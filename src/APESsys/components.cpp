@@ -281,7 +281,11 @@ Stepper::Stepper(int dir_pin, int step_pin) {
     pwmWrite(this->step_pin, 0);
 }
 
-void Stepper::stepper_drive(int dir, int dc) {
+void Stepper::stepper_drive(int dir, int dc, float freq) {
+    float pwmClock = 19.2e6 / freq / PWM_RANGE;
+    pwmSetRange(PWM_RANGE);
+    pwmSetClock(pwmClock);
+
     digitalWrite(this->dir_pin, dir);
     pwmWrite(this->step_pin, (dc*1024/100));
 }

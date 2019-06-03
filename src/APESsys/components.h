@@ -81,7 +81,7 @@ class Stepper {
         int dir_pin;
     public:
         Stepper(int step_pin, int dir_pin);
-        void stepper_drive(int dir, int dc);
+        void stepper_drive(int dir, int dc, float freq);
         void stepper_stop();
         ~Stepper();
 };
