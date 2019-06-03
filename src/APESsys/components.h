@@ -81,19 +81,20 @@ class Stepper {
         int dir_pin;
     public:
         Stepper(int step_pin, int dir_pin);
-        stepper_drive(int dir, int dc);
-        stepper_stop();
+        void stepper_drive(int dir, int dc);
+        void stepper_stop();
         ~Stepper();
 };
 
-class Motor {
+class Pump {
     private:
-        pybind11::object L298N;
+        int dir_pin;
+        int pwm_pin;
     public:
-        Motor(int pinA, int en);
-        ~Motor();
-        void motor_drive(bool dir, int speed, int time);
-        void motor_stop();
+        Pump(int dir_pin, int pwm_pin);
+        ~Pump();
+        void pump_drive(bool dir, int dc, int time);
+        void pump_stop();
 };
 
 class Solenoid {

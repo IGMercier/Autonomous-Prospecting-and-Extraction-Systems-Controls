@@ -1,7 +1,7 @@
 #include "../APESsys/components.h"
 
-int main() {
-    wiringPiPhysSetup();
+int main(int argc, char **argv) {
+    wiringPiSetupPhys();
 
     /*
     Drill* drill = new Drill(11, 7);

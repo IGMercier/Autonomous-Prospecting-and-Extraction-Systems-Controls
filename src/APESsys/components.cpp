@@ -253,7 +253,7 @@ void Drill::drill_cycle(int dc, int on_period, float freq) {
         std::chrono::milliseconds elapsed_dc{0};
 
         while ((elapsed_dc.count() < time) && (elapsed.count() < on_period)) {
-            drill_run(dc, float freq);
+            drill_run(dc, freq);
             auto stop_dc = std::chrono::high_resolution_clock::now();
             elapsed_dc = std::chrono::duration_cast<std::chrono::milliseconds>(stop_dc - start_dc);
 
@@ -294,53 +294,38 @@ Stepper::~Stepper() {}
 
 
 /*
-    MOTOR FUNCTIONS
+    PUMP FUNCTIONS
 */
-Motor::Motor(int pinA, int en) {
+Pump::Pump(int dir_pin, int pwm_pin) {
     // this assumes the pybind interpreter has been initialized
     // in  APES::setup()!
-    py::object l298n = py::module::import("libraries/l298npy/l298n").attr("L298N");
-    assert(l298n != NULL);
-
-    this->L298N = l298n(pinA, en);
+    this->dir_pin = dir_pin;
+    this->pwm_pin = pwm_pin;
     fprintf(stdout, "Initialized Motor!\n");
 }
 
-Motor::~Motor() {
-    // this assumes the pybind interpreter will be
-    // finalized in APES::finish()
-    if (this->L298N != NULL) {
-        this->L298N.attr("clean")();
-        this->L298N.release();
-    }
-}
+Pump::~Pump() {}
 
-void Motor::motor_drive(bool dir, int speed, int time) {
+void Pump::pump_drive(bool dir, int dc, int time) {
     // time in milliseconds
     //@TODO: really need to test this!
-    if (this->L298N != NULL) {
-        //@TODO: calculate an actual duty cycle from speed?
-        this->L298N.attr("changeDutyCycle")("dc"_a=speed);
-
-        auto start = std::chrono::high_resolution_clock::now();
-        std::chrono::milliseconds elapsed{0}; 
-        while (elapsed.count() < time){
-            if (dir == 0) {
-                this->L298N.attr("forward")();
-            } else {
-                this->L298N.attr("backward")();
-            }
-
-            auto stop = std::chrono::high_resolution_clock::now();
-            elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+    //@TODO: calculate an actual duty cycle from speed?
+    auto start = std::chrono::high_resolution_clock::now();
+    std::chrono::milliseconds elapsed{0}; 
+    while (elapsed.count() < time){
+        if (dir == 0) {
+            digitalWrite(this->dir_pin, HIGH);
+        } else {
+            digitalWrite(this->dir_pin, LOW);
         }
+        pwmWrite(this->pwm_pin, dc*1024/100);
+        auto stop = std::chrono::high_resolution_clock::now();
+        elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
     }
 }
 
-void Motor::motor_stop() {
-    if (this->L298N != NULL) {
-        this->L298N.attr("stop")();
-    }
+void Pump::pump_stop() {
+    pwmWrite(this->pwm_pin, 0);
 }
 
 

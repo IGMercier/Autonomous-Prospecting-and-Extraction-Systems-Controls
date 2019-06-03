@@ -62,7 +62,7 @@ int APES::setup() {
     this->amm = new Amm(AMM_BUS, AMM_CHAN);
     this->wlevel = new WLevel(WLEVEL_BUS, WLEVEL_CHAN_START, WLEVEL_CHAN_END);
     this->stepper = new Stepper(STEPPER_DIR_PIN, STEPPER_STP_PIN);
-    this->pump = new Motor(PUMP_DIR_PIN, PUMP_SPEED_PIN);
+    this->pump = new Pump(PUMP_DIR_PIN, PUMP_SPEED_PIN);
 
     int fd = wiringPiI2CSetup(ENCODER_ADDR);
     this->encoder = new Encoder(fd, 1024); // ppr from datasheet
@@ -290,13 +290,13 @@ void APES::stepper_stop() {
 
 void APES::pump_drive(bool dir, int speed, int time) {
     if (this->pump != NULL) {
-        this->pump->motor_drive(dir, speed, time);
+        this->pump->pump_drive(dir, speed, time);
     }
 }
 
 void APES::pump_stop() {
     if (this->pump != NULL) {
-        this->pump->motor_stop();
+        this->pump->pump_stop();
     }
 }
 

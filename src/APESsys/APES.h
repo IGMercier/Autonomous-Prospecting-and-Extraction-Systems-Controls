@@ -77,7 +77,7 @@ class APES {
         Stepper* stepper;
         Encoder *encoder;
         Wob* wob;
-        Motor* pump;
+        Pump* pump;
         Drill* drill;
         Relay* relay_0;
         Relay* relay_1;
