@@ -41,12 +41,12 @@ class Connection():
                     active, connected = True, True
                     break
                 except Exception as e:
-                    self.writeback.emit("Error establishing connection: {}".format(e))
+                    self.writeback.emit("Error establishing connection: {}".format(e), "#ff0000")
                     if count > 0:
-                        self.writeback.emit("Retrying ({})...".format(count))
+                        self.writeback.emit("Retrying ({})...".format(count), "")
                         count = count - 1
                     else:
-                        self.writeback.emit("Too many retries.")
+                        self.writeback.emit("Too many retries.", "")
                         active, connected = False, False
                         break
             self.online.emit(active, connected)
@@ -55,7 +55,7 @@ class Connection():
                 continue
 
             self.socket.settimeout(None)
-            self.writeback.emit("Connection Established")
+            self.writeback.emit("Connection Established", "")
             while True:
                 try:
                     buffer = self.socket.recv(BUFFER_SIZE)
@@ -64,7 +64,7 @@ class Connection():
                     else:
                         raise Exception("Server returned empty packet (likely shutdown)")
                 except Exception as e:
-                    self.writeback.emit("Error while reading from socket: {}({})".format(type(e).__name__, e))
+                    self.writeback.emit("Error while reading from socket: {}({})".format(type(e).__name__, e), "#ff0000")
                     active, connected = False, False
                     self.online.emit(active, connected)
                     break
@@ -74,7 +74,7 @@ class Connection():
         try:
             self.socket.send(data.encode('utf-8'))
         except Exception as e:
-            self.writeback.emit('<p style="color:#ff0000";>Command "{}" could not be sent: {}({}).</p>'.format(data, type(e).__name__, e))
+            self.writeback.emit('Command "{}" could not be sent: {}({}).'.format(data, type(e).__name__, e), "#ff0000")
 
     def close(self, override=False):
         self.override = override
