@@ -33,13 +33,30 @@ int main(int argc, char **argv) {
         sleep(2);
     }
     */
+
+    /*
     Pump *pump = new Pump(15, 12);
-    pump->pump_drive(1, 50);
+    ump->pump_drive(1, 50);
 
     sleep(2);
     pump->pump_stop();
 
     delete pump;
+    */
+
+    py::initialize_interpreter();
+
+    Wob *wob = new Wob(25, 27);
+    while (1) {
+        float force = wob->read_wob();
+        printf("Force reading: %d\n", force);
+        sleep(2);
+    }
+
+    delete wob;
+    
+    py::finalize_interpreter();
+
     /*
     Relay *relay = new Relay(16);
     relay->turnOn();

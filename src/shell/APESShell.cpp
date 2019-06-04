@@ -6,7 +6,6 @@
 #include <assert.h>
 
 #include "APESShell.h"
-#include "../APESsys/commands.h"
 
 using std::thread;
 

@@ -163,10 +163,10 @@ Wob::Wob(int pinA, int pinB) {
     assert(hx711 != NULL);
 
     this->HX711 = hx711(pinA, pinB);
-    //this->HX711.attr("set_reading_format")("byte_format"_a="MSB", "bit_format"_a="MSB");
-    //this->HX711.attr("set_reference_unit")(1);
-    //this->HX711.attr("reset")();
-    //this->HX711.attr("tare")();
+    this->HX711.attr("set_reading_format")("byte_format"_a="MSB", "bit_format"_a="MSB");
+    this->HX711.attr("set_reference_unit")(1);
+    this->HX711.attr("reset")();
+    this->HX711.attr("tare")();
     fprintf(stdout, "Initialized Wob!\n");
 }
 
@@ -300,9 +300,9 @@ Stepper::~Stepper() {}
 
 
 /*
-    PUMP FUNCTIONS
+    BASE MOTOR FUNCTIONS
 */
-Pump::Pump(int dir_pin, int pwm_pin) {
+Motor::Motor(int dir_pin, int pwm_pin) {
     // this assumes the pybind interpreter has been initialized
     // in  APES::setup()!
     this->dir_pin = dir_pin;
@@ -312,9 +312,9 @@ Pump::Pump(int dir_pin, int pwm_pin) {
     fprintf(stdout, "Initialized Motor!\n");
 }
 
-Pump::~Pump() {}
+Motor::~Motor() {}
 
-void Pump::pump_drive(int dir, int dc) {
+void Motor::motor_drive(int dir, int dc) {
     if (dir == 0) {
         digitalWrite(this->dir_pin, HIGH);
     } else {
@@ -323,7 +323,7 @@ void Pump::pump_drive(int dir, int dc) {
      softPwmWrite(this->pwm_pin, dc);
 }
 
-void Pump::pump_stop() {
+void Motor::motor_stop() {
     softPwmWrite(this->pwm_pin, 0);
 }
 
