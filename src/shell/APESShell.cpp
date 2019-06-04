@@ -493,7 +493,7 @@ void APESShell::execute(parse_token *ltk) {
                 dataPt *data = this->robot->read_temp();
                 float temp = data->dataField.dataF;
                 int time = data->time.count();
-                msg = "Temp @" + std::to_string(time) + ": " + std::to_string(temp) + "!\n";
+                msg = "<data>" + std::to_string(time) + ", TEMP, " + std::to_string(temp) + "</data>";
                 toSend(msg);
             }
             break;
@@ -503,7 +503,7 @@ void APESShell::execute(parse_token *ltk) {
                 dataPt *data = this->robot->read_dtemp();
                 float dtemp = data->dataField.dataF;
                 int time = data->time.count();
-                msg = "Dtemp @" + std::to_string(time) + ": " + std::to_string(dtemp) + "!\n";
+                msg = "<data>" + std::to_string(time) + ", DTEMP, " + std::to_string(dtemp) + "</data>";
                 toSend(msg);
             }
             break;
@@ -513,7 +513,7 @@ void APESShell::execute(parse_token *ltk) {
                 dataPt *data = this->robot->read_curr();
                 float curr = data->dataField.dataF;
                 int time = data->time.count();
-                msg = "Curr @" + std::to_string(time) + ": " + std::to_string(curr) + "!\n";
+                msg = "<data>" + std::to_string(time) + ", CURR, " + std::to_string(curr) + "</data>";
                 toSend(msg);
             }
             break;
@@ -523,7 +523,7 @@ void APESShell::execute(parse_token *ltk) {
                 dataPt *data = this->robot->read_wlevel();
                 int wlevel = data->dataField.dataI;
                 int time = data->time.count();
-                msg = "Wlevel @" + std::to_string(time) + ": " + std::to_string(wlevel) + "!\n";
+                msg = "<data>" + std::to_string(time) + ", WLEVEL, " + std::to_string(wlevel) + "</data>";
                 toSend(msg);
             }
             break;
@@ -533,7 +533,7 @@ void APESShell::execute(parse_token *ltk) {
                 dataPt *data = this->robot->read_wob();
                 float force = data->dataField.dataF;
                 int time = data->time.count();
-                msg = "Force @" + std::to_string(time) + ": " + std::to_string(force) + "!\n";
+                msg = "<data>" + std::to_string(time) + ", WOB, " + std::to_string(force) + "</data>";
                 toSend(msg);
             }
             break;
@@ -543,7 +543,7 @@ void APESShell::execute(parse_token *ltk) {
                 dataPt *data = this->robot->read_encoder();
                 unsigned int pulse = data->dataField.dataUI;
                 int time = data->time.count();
-                msg = "Pulse @" + std::to_string(time) + ": " + std::to_string(pulse) + "!\n";
+                msg = "<data>" + std::to_string(time) + ", ENCODER, " + std::to_string(pulse) + "</data>";
                 toSend(msg);
             }
             break;

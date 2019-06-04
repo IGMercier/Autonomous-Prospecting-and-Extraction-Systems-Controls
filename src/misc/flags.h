@@ -4,9 +4,17 @@
 #include <mutex>
 #include <deque>
 #include <string>
+#include <assert>
 
 #define VERBOSE 1
+#define ASSERT
 #define MAXLINE 1024
+
+#ifndef ASSERT
+#define dbg_assert(...) assert(__VA_ARGS__)
+#else
+#define dbg_assert(...)
+#endif
 
 extern std::string shutdown_tag;
 extern std::string data_tag;

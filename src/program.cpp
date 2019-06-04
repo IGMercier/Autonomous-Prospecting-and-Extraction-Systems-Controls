@@ -1,6 +1,5 @@
 #include <thread>
 #include <errno.h>
-#include <assert.h>
 
 #include "server/APESServer.h"
 #include "shell/APESShell.h"

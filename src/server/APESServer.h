@@ -8,11 +8,11 @@
 class APESServer : public ServerBase {
     private:
         std::string datafile;
-        std::mutex *cmd_mtx = nullptr;
-        std::mutex *log_mtx = nullptr;
-        std::mutex *data_mtx = nullptr;
-        std::deque<std::string> *cmdq = nullptr;
-        std::deque<std::string> *logq = nullptr;
+        std::mutex *cmd_mtx;
+        std::mutex *log_mtx;
+        std::mutex *data_mtx;
+        std::deque<std::string> *cmdq;
+        std::deque<std::string> *logq;
         void execute() override;
         void disconnected();
     public:

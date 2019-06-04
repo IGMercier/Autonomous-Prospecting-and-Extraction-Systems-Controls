@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     Wob *wob = new Wob(22, 12);
     while (1) {
         float force = wob->read_wob();
-        printf("Force reading: %d\n", force);
+        printf("Force reading: %f\n", force);
         sleep(2);
     }
 
