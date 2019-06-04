@@ -1,7 +1,16 @@
 #include "../APESsys/components.h"
 
+#include <csignal>
+
+static volatile int off;
+
+static void sig_handler(int sig);
+
 int main(int argc, char **argv) {
     wiringPiSetupPhys();
+    signal(SIGINT, sig_handler);
+
+    off = 0;
 
     /*
     Drill* drill = new Drill(11, 7);
@@ -47,7 +56,7 @@ int main(int argc, char **argv) {
     py::initialize_interpreter();
 
     Wob *wob = new Wob(22, 12);
-    while (1) {
+    while (!off) {
         float force = wob->read_wob();
         printf("Force reading: %f\n", force);
         sleep(2);
@@ -66,4 +75,8 @@ int main(int argc, char **argv) {
 
     delete relay;
     */
+}
+
+static void sig_handler(int sig) {
+    off = 1;
 }
