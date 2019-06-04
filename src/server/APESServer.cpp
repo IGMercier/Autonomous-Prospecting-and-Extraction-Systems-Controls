@@ -102,8 +102,8 @@ void APESServer::write() {
                 std::string logline = this->logq->at(i);
     
                 if (logline == shutdown_tag) {
-                    shutdown_sig.store(1);
     	            shutdown();
+                    loglock.unlock();
                     return;
                 } else if (logline == data_tag) {
                     // reads off data file
@@ -129,8 +129,7 @@ void APESServer::write() {
             this->logq->clear();
             loglock.unlock();
     
-            
-	    }
+	}
     }
 }
 
@@ -140,7 +139,6 @@ void APESServer::disconnected() {
     this->cmdq->clear();
     std::string buf = "standby";
     this->cmdq->push_back(buf);
-    //this->cmdq->push_back(shutdown_tag);
     cmdlock.unlock();
     
     close(this->cfd);
@@ -150,6 +148,7 @@ void APESServer::disconnected() {
 }
 
 void APESServer::shutdown() {
+    shutdown_sig.store(1);
     if (this->cfd >= 0) {
         if (close(this->cfd) < 0) {
             //print(strerror(errno));
@@ -160,7 +159,10 @@ void APESServer::shutdown() {
             //print(strerror(errno));
         }
     }
-    exit(0);
+    std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
+    this->cmdq->push_back(shutdown_tag);
+    cmdlock.unlock();
+    return;
 }
 
 APESServer::~APESServer() {
