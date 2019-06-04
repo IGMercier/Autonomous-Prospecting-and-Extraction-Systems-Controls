@@ -16,7 +16,7 @@ std::atomic_int stop_wob = {0};
 std::atomic_int stop_encoder = {0};
 
 APES::APES(char *filename, std::mutex *data_mtx) {
-    if (filename != NULL) {
+    if (filename != nullptr) {
         this->filename = filename;
     } else {
         this->filename = "data.csv";
@@ -28,20 +28,21 @@ APES::APES(char *filename, std::mutex *data_mtx) {
 
     this->data_mtx = data_mtx;
 
-    this->sol_0 = NULL;
-    this->sol_1 = NULL;
-    this->heater_0 = NULL;
-    this->heater_1 = NULL;
-    this->relay_0 = NULL;
-    this->relay_1 = NULL;
-    this->drill = NULL;
-    this->wob = NULL;
-    this->therm = NULL;
-    this->amm = NULL;
-    this->wlevel = NULL;
-    this->stepper = NULL;
-    this->pump = NULL;
-    this->encoder = NULL;
+    this->sol_0 = nullptr;
+    this->sol_1 = nullptr;
+    this->heater_0 = nullptr;
+    this->heater_1 = nullptr;
+    this->relay_0 = nullptr;
+    this->relay_1 = nullptr;
+    this->drill = nullptr;
+    this->wob = nullptr;
+    this->encoder = nullptr;
+    this->therm = nullptr;
+    this->amm = nullptr;
+    this->wlevel = nullptr;
+    this->stepper = nullptr;
+    this->pump = nullptr;
+    this->spring = nullptr;
 
     // starts python interpreter
     py::initialize_interpreter();
@@ -75,7 +76,7 @@ int APES::setup() {
 }
 
 dataPt* APES::read_temp() {
-    if (this->therm != NULL) {
+    if (this->therm != nullptr) {
         float temp = this->therm->read_temp();
 
         dataPt *data = new dataPt;
@@ -89,11 +90,11 @@ dataPt* APES::read_temp() {
 
         return data;
     }
-    return NULL;
+    return nullptr;
 }
 
 dataPt* APES::read_dtemp() {
-    if (this->therm != NULL) {
+    if (this->therm != nullptr) {
         float dtemp = this->therm->D_temp();
 
         dataPt *data = new dataPt;
@@ -103,11 +104,11 @@ dataPt* APES::read_dtemp() {
 
         return data;
     }
-    return NULL;
+    return nullptr;
 }
 
 dataPt* APES::read_curr() {
-    if (this->amm != NULL) {
+    if (this->amm != nullptr) {
         float curr = this->amm->read_curr();
 
         dataPt *data = new dataPt;
@@ -121,11 +122,11 @@ dataPt* APES::read_curr() {
 
         return data;
     }
-    return NULL;
+    return nullptr;
 }
 
 dataPt* APES::read_wlevel() {
-    if (this->wlevel != NULL) {
+    if (this->wlevel != nullptr) {
         int level = this->wlevel->read_wlevel();
 
         dataPt *data = new dataPt;
@@ -139,11 +140,11 @@ dataPt* APES::read_wlevel() {
 
         return data;
     }
-    return NULL;
+    return nullptr;
 }
 
 dataPt* APES::read_wob() {
-    if (this->wob != NULL) {
+    if (this->wob != nullptr) {
         float force = this->wob->read_wob();
 
         dataPt *data = new dataPt;
@@ -157,11 +158,11 @@ dataPt* APES::read_wob() {
 
         return data;
     }
-    return NULL;
+    return nullptr;
 }
 
 dataPt* APES::read_encoder() {
-    if (this->encoder != NULL) {
+    if (this->encoder != nullptr) {
         unsigned int pulse = this->encoder->getPulse();
 
         dataPt *data = new dataPt;
@@ -175,101 +176,101 @@ dataPt* APES::read_encoder() {
 
         return data;
     }
-    return NULL;
+    return nullptr;
 }
 
 void APES::reset_encoder() {
-    if (this->encoder != NULL) {
+    if (this->encoder != nullptr) {
         this->encoder->reset();
     }
 }
 
 void APES::drill_run(int dc, float freq) {
-    if (this->drill != NULL) {
+    if (this->drill != nullptr) {
         this->drill->drill_run(dc, freq);
     }
 }
 
 void APES::drill_stop() {
-    if (this->drill != NULL) {
+    if (this->drill != nullptr) {
         this->drill->drill_stop();
     }
 }
 
 void APES::drill_cycle(int dc, int on_period, float freq) {
-    if (this->drill != NULL) {
+    if (this->drill != nullptr) {
         this->drill->drill_cycle(dc, on_period, freq);
     }
 }
 
 void APES::sol_0_open() {
-    if (this->sol_0 != NULL) {
+    if (this->sol_0 != nullptr) {
         this->sol_0->openValve();
     }
 }
 
 void APES::sol_0_close() {
-    if (this->sol_0 != NULL) {
+    if (this->sol_0 != nullptr) {
         this->sol_0->closeValve();
     }
 }
 
 void APES::sol_1_open() {
-    if (this->sol_1 != NULL) {
+    if (this->sol_1 != nullptr) {
         this->sol_1->openValve();
     }
 }
 
 void APES::sol_1_close() {
-    if (this->sol_1 != NULL) {
+    if (this->sol_1 != nullptr) {
         this->sol_1->closeValve();
     }
 }
 
 void APES::heater_0_on() {
-    if (this->heater_0 != NULL) {
+    if (this->heater_0 != nullptr) {
         this->heater_0->turnOn();
     }
 }
 
 void APES::heater_0_off() {
-    if (this->heater_0 != NULL) {
+    if (this->heater_0 != nullptr) {
         this->heater_0->turnOff();
     }
 }
 
 void APES::heater_1_on() {
-    if (this->heater_1 != NULL) {
+    if (this->heater_1 != nullptr) {
         this->heater_1->turnOn();
     }
 }
 
 void APES::heater_1_off() {
-    if (this->heater_1 != NULL) {
+    if (this->heater_1 != nullptr) {
         this->heater_1->turnOff();
     }
 }
 
 void APES::relay_0_on() {
-    if (this->relay_0 != NULL) {
+    if (this->relay_0 != nullptr) {
         this->relay_0->turnOn();
     }
 }
 
 void APES::relay_0_off() {
-    if (this->relay_0 != NULL) {
+    if (this->relay_0 != nullptr) {
         this->relay_0->turnOff();
     }
 }
 
 void APES::relay_1_on() {
-    if (this->relay_1 != NULL) {
+    if (this->relay_1 != nullptr) {
         this->relay_1->turnOn();
     }
 }
 
 void APES::relay_1_off() {
-    if (this->relay_1 != NULL) {
+    if (this->relay_1 != nullptr) {
         this->relay_1->turnOff();
     }
 }
@@ -277,7 +278,7 @@ void APES::relay_1_off() {
 void APES::stepper_drive(bool dir, int steps, int dc) {
 
     // @TODO: integer overflow will happen here
-    if (this->stepper != NULL) {
+    if (this->stepper != nullptr) {
         unsigned int actual = read_encoder().dataUI;
         unsigned int desired = steps + actual;
         while (actual < desired) {
@@ -289,20 +290,32 @@ void APES::stepper_drive(bool dir, int steps, int dc) {
 }
 
 void APES::stepper_stop() {
-    if (this->stepper != NULL) {
+    if (this->stepper != nullptr) {
         this->stepper->stepper_stop();
     }
 }
 
-void APES::pump_drive(bool dir, int speed, int time) {
-    if (this->pump != NULL) {
+void APES::pump_drive(int dir, int speed, int time) {
+    if (this->pump != nullptr) {
         this->pump->pump_drive(dir, speed, time);
     }
 }
 
 void APES::pump_stop() {
-    if (this->pump != NULL) {
+    if (this->pump != nullptr) {
         this->pump->pump_stop();
+    }
+}
+
+void APES::spring_drive(int dir, int speed, int time) {
+    if (this->spring != nullptr) {
+        this->spring->motor_drive(dir, speed, time);
+    }
+}
+
+void APES::spring_stop() {
+    if (this->spring != nullptr) {
+        this->spring->motor_stop();
     }
 }
 
@@ -357,25 +370,27 @@ void APES::auto_off() {
 }
 
 void APES::standby() {
-    // ensure that everything is off
-    motor_Z_stop();
-    pump_stop();
-    stop_therm = 1;
-    stop_amm = 1;
-    stop_wlevel = 1;
-    stop_wob = 1;
-}
-
-void APES::finish() {
-    // stop all actuators before deconstructor
     stop_therm.store(1);
     stop_amm.store(1);
     stop_wlevel.store(1);
     stop_wob.store(1);
     stop_encoder.store(1);
 
+    drill_stop();
     stepper_stop();
     pump_stop();
+    heater_0_off();
+    heater_1_off();
+    spring_stop;
+    sol_0_close();
+    sol_1_close();
+    relay_0_off();
+    relay_1_off();
+}
+
+void APES::finish() {
+    // stop all actuators before deconstructor
+    standby();
 
     // kills the python interpreter
     // and deletes everything, so
@@ -390,12 +405,21 @@ void APES::finish() {
     fclose(this->file);
     datalock.unlock();
 
-    if (this->wob != NULL) { delete this->wob; }
-    if (this->therm != NULL) { delete this->therm; }
-    if (this->amm != NULL) { delete this->amm; }
-    if (this->wlevel != NULL) { delete this->wlevel; }
-    if (this->motor_Z != NULL) { delete this->motor_Z; }
-    if (this->pump != NULL) { delete this->pump; }
+    if (this->therm != nullptr) { delete this->therm; }
+    if (this->amm != nullptr) { delete this->amm; }
+    if (this->wlevel != nullptr) { delete this->wlevel; }
+    if (this->wob != nullptr) { delete this->wob; }
+    if (this->encoder != nullptr) { delete this->encoder; }
+    if (this->stepper != nullptr) { delete this->stepper; }
+    if (this->pump != nullptr) { delete this->pump; }
+    if (this->drill != nullptr) { delete this->drill; }
+    if (this->spring != nullptr) { delete this->spring; }
+    if (this->sol_0 != nullptr) { delete this->sol_0; }
+    if (this->sol_1 != nullptr) { delete this->sol_1; }
+    if (this->heater_0 != nullptr) { delete this->heater_0; }
+    if (this->heater_1 != nullptr) { delete this->heater_1; }
+    if (this->relay_0 != nullptr) { delete this->relay_0; }
+    if (this->relay_1 != nullptr) { delete this->relay_1; }
 
     // super important that any pybind objects are
     // killed before pybind interpreter finalized!
@@ -403,7 +427,7 @@ void APES::finish() {
 }
 
 void APES::saveData(dataPt *data) {
-    assert(data != NULL);
+    assert(data != nullptr);
     // assumed that data_mtx is locked
 
     if (this->dataVector.size() >= MAXDATA) {

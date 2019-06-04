@@ -70,6 +70,7 @@ class APES {
         Encoder *encoder;
         Wob* wob;
         Pump* pump;
+        Motor* spring;
         Drill* drill;
         Relay* relay_0;
         Relay* relay_1;
@@ -93,8 +94,10 @@ class APES {
         void drill_cycle(int dc, int on_period, float freq);
         void stepper_drive(bool dir, int steps, int dc);
         void stepper_stop();
-        void pump_drive(bool dir, int speed, int time);
+        void pump_drive(intdir, int speed, int time);
         void pump_stop();
+        void spring_drive(int dir, int speed, int time);
+        void spring_stop();
         void sol_0_open();
         void sol_0_close();
         void sol_1_open();
