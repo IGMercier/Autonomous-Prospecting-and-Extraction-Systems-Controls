@@ -306,66 +306,53 @@ void APES::pump_stop() {
     }
 }
 
-void APES::auto_on(autoFunc which) {
+void APES::auto_on() {
+    stop_therm.store(0);
+    stop_amm.store(0);
+    stop_wlevel.store(0);
+    stop_wob.store(0);
+    stop_encoder.store(0);
 
     while (1) {
-        if (which & AUTO_THERM) {
-            if (!stop_therm) {
-                read_temp();
-            }
+       
+        if (!stop_therm.load()) {
+            read_temp();
         }
         
-        if (which & AUTO_AMM) {
-            if !(stop_amm) {
-                read_amm();
-            }
+        if (!stop_amm.load()) {
+            read_amm();
         }
 
-        if (which & AUTO_WLEVEL) {
-            if (!stop_wlevel) {
-                read_wlevel();
-            }
+        if (!stop_wlevel.load()) {
+            read_wlevel();
         }
 
-        if (which & AUTO_WOB) {
-            if (!stop_wob) {
-                read_wob();
-            }
-        }
-        
-        if (which & AUTO_ENCODER) {
-            if (!stop_encoder) {
-                read_encoder();
-            }
+        if (!stop_wob.load()) {
+            read_wob();
         }
 
-        if (stop_therm && stop_amm &&
-            stop_wlevel && stop_wob &&
-            stop_encoder) {
-            break;
+        if (!stop_encoder.load()) {
+            read_encoder();
+        }
+
+        if (stop_therm.load() && stop_amm.load() &&
+            stop_wlevel.load() && stop_wob.load() &&
+            stop_encoder.load()) {
+            return;
         }
 
         std::this_thread::sleep_for(
             std::chrono::milliseconds(SLEEP_INTVL)
         );
     }
-
-    return;
 }
 
-void APES::auto_off(autoFunc which) {
-    if (which & AUTO_THERM) {
-        stop_therm = 1;
-    }
-    if (which & AUTO_AMM) {
-        stop_amm = 1;
-    }
-    if (which & AUTO_WLEVEL) {
-        stop_wlevel = 1;
-    }
-    if (which & AUTO_WOB) {
-        stop_wob = 1;
-    }
+void APES::auto_off() {
+        stop_therm.store(1);
+        stop_amm.store(1);
+        stop_wlevel.store(1);
+        stop_wob.store(1);
+        stop_encoder.store(1);
     return;
 }
 
@@ -381,12 +368,13 @@ void APES::standby() {
 
 void APES::finish() {
     // stop all actuators before deconstructor
-    stop_therm = 1;
-    stop_amm = 1;
-    stop_wlevel = 1;
-    stop_wob = 1;
+    stop_therm.store(1);
+    stop_amm.store(1);
+    stop_wlevel.store(1);
+    stop_wob.store(1);
+    stop_encoder.store(1);
 
-    motor_Z_stop();
+    stepper_stop();
     pump_stop();
 
     // kills the python interpreter

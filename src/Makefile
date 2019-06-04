@@ -7,7 +7,7 @@ TARGET_COMP = comp.out
 SERVER_FILES = server/APESServer.cpp server/serverBase.cpp
 SHELL_FILES = shell/APESShell.cpp shell/shellBase.cpp
 COMP_FILES = APESsys/components.cpp
-ALL_FILES = $(SERVER_FILES) $(SHELL_FILES)
+ALL_FILES = APESsys/APES.cpp $(COMP_FILES) $(SERVER_FILES) $(SHELL_FILES)
 
 SERVER_TEST = tests/serverTest.cpp
 SHELL_TEST = tests/shellTest.cpp

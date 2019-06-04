@@ -36,14 +36,6 @@
 #define WLEVEL_BUS          0
 #define ENCODER_ADDR        0x20 
 
-typedef enum {
-    AUTO_THERM = 0b1,
-    AUTO_AMM = 0b10,
-    AUTO_WLEVEL = 0b100,
-    AUTO_WOB = 0b1000,
-    AUTO_ALL = 0b10000,
-    AUTO_NONE = 0b100000
-} autoFunc;
 
 typedef enum {
     THERM_DATA,
@@ -94,8 +86,8 @@ class APES {
         dataPt* read_wlevel();
         dataPt* read_wob();
         dataPt* read_encoder();
-        void auto_on(autoFunc which);
-        void auto_off(autoFunc which);
+        void auto_on();
+        void auto_off();
         void drill_run(int dc, float freq);
         void drill_stop();
         void drill_cycle(int dc, int on_period, float freq);

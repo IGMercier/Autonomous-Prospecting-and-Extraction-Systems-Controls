@@ -367,15 +367,15 @@ void APESShell::execute(parse_token *ltk) {
                 msg = "System's auto mode enabled!\n";
                 toSend(msg);
                 this->robot->auto_on();
-                //std::thread sensort(shell->robot->auto_on, /*fill this with param*/);
-                //if (sensort.joinable()) {
-                //    sensort.join();
-                //}
+                std::thread sensort(this->robot->auto_on);
+                if (sensort.joinable()) {
+                    sensort.join();
+                }
             }
             break;
 
         case AUTO_OFF:
-            //this->robot->auto_off();
+            this->robot->auto_off();
             msg = "System's auto mode disabled!\n";
             toSend(msg);
             break;

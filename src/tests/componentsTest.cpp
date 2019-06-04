@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
 
     py::initialize_interpreter();
 
-    Wob *wob = new Wob(25, 27);
+    Wob *wob = new Wob(22, 12);
     while (1) {
         float force = wob->read_wob();
         printf("Force reading: %d\n", force);
