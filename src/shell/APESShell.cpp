@@ -335,31 +335,41 @@ void APESShell::execute(parse_token *ltk) {
 
     switch (command) {
         case START:
-            this->robot->setup();
-            this->robot->standby();
-            msg = "System started!\n";
-            toSend(msg);
+            {
+                this->robot->setup();
+                this->robot->standby();
+                msg = "System started!\n";
+                toSend(msg);
+            }
             break;
 
         case STANDBY:
-            this->robot->standby();
-            msg = "System in standby!\n";
-            toSend(msg);
+            {
+                this->robot->standby();
+                msg = "System in standby!\n";
+                toSend(msg);
+            }
             break;
 
         case DATA:
-            toSend(data_tag);
+            {
+                toSend(data_tag);
+            }
             break;
 
         case HELP:
-            listCommands();
+            {
+                listCommands();
+            }
             break;
 
         case QUIT:
-            shutdown();
-            msg = "System shutting down!\n";
-            toSend(msg);
-            toSend(shutdown_tag);
+            {
+                shutdown();
+                msg = "System shutting down!\n";
+                toSend(msg);
+                toSend(shutdown_tag);
+            }
             break;
 
         case AUTO_ON:
@@ -375,123 +385,175 @@ void APESShell::execute(parse_token *ltk) {
             break;
 
         case AUTO_OFF:
-            this->robot->auto_off();
-            msg = "System's auto mode disabled!\n";
-            toSend(msg);
+            {
+                this->robot->auto_off();
+                msg = "System's auto mode disabled!\n";
+                toSend(msg);
+            }
             break;
 
         case SOL_0_OPEN:
-            this->robot->sol_0_open();
-            msg = "System's solenoid 0 opened!\n";
-            toSend(msg);
+            {
+                this->robot->sol_0_open();
+                msg = "System's solenoid 0 opened!\n";
+                toSend(msg);
+            }
             break;
 
         case SOL_0_CLOSE:
-            this->robot->sol_0_close();
-            msg = "System's solenoid 0 closed!\n";
-            toSend(msg);
+            {
+                this->robot->sol_0_close();
+                msg = "System's solenoid 0 closed!\n";
+                toSend(msg);
+            }
             break;
         
         case SOL_1_OPEN:
-            this->robot->sol_1_open();
-            msg = "System's solenoid 1 opened!\n";
-            toSend(msg);
+            {
+                this->robot->sol_1_open();
+                msg = "System's solenoid 1 opened!\n";
+                toSend(msg);
+            }
             break;
 
         case SOL_1_CLOSE:
-            this->robot->sol_1_close();
-            msg = "System's solenoid 1 closed!\n";
-            toSend(msg);
+            {
+                this->robot->sol_1_close();
+                msg = "System's solenoid 1 closed!\n";
+                toSend(msg);
+            }
             break;
         
         case HEATER_0_ON:
-            this->robot->heater_0_on();
-            msg = "System's dc heater 0 on!\n";
-            toSend(msg);
+            {
+                this->robot->heater_0_on();
+                msg = "System's dc heater 0 on!\n";
+                toSend(msg);
+            }
             break;
         
         case HEATER_0_OFF:
-            this->robot->heater_0_off();
-            msg = "System's dc heater 0 off!\n";
-            toSend(msg);
+            {
+                this->robot->heater_0_off();
+                msg = "System's dc heater 0 off!\n";
+                toSend(msg);
+            }
             break;
         
         case HEATER_1_ON:
-            this->robot->heater_1_on();
-            msg = "System's dc heater 1 on!\n";
-            toSend(msg);
+            {
+                this->robot->heater_1_on();
+                msg = "System's dc heater 1 on!\n";
+                toSend(msg);
+            }
             break;
         
         case HEATER_1_OFF:
-            this->robot->heater_1_off();
-            msg = "System's dc heater 1 off!\n";
-            toSend(msg);
+            {
+                this->robot->heater_1_off();
+                msg = "System's dc heater 1 off!\n";
+                toSend(msg);
+            }
             break;
 
         case RELAY_0_ON:
-            this->robot->relay_0_on();
-            msg = "System's relay 0 on!\n";
-            toSend(msg);
+            {
+                this->robot->relay_0_on();
+                msg = "System's relay 0 on!\n";
+                toSend(msg);
+            }
             break;
         
         case RELAY_0_OFF:
-            this->robot->relay_0_off();
-            msg = "System's relay 0 off!\n";
-            toSend(msg);
+            {
+                this->robot->relay_0_off();
+                msg = "System's relay 0 off!\n";
+                toSend(msg);
+            }
             break;
         
         case RELAY_1_ON:
-            this->robot->relay_1_on();
-            msg = "System's relay 1 on!\n";
-            toSend(msg);
+            {
+                this->robot->relay_1_on();
+                msg = "System's relay 1 on!\n";
+                toSend(msg);
+            }
             break;
         
         case RELAY_1_OFF:
-            this->robot->relay_1_off();
-            msg = "System's relay 1 off!\n";
-            toSend(msg);
+            {
+                this->robot->relay_1_off();
+                msg = "System's relay 1 off!\n";
+                toSend(msg);
+            }
             break;
 
         case TEMP:
-            float temp = this->robot->read_temp()->dataField.dataF;
-            msg = "Temp @time: " + std::to_string(temp) + "!\n";
-            toSend(msg);
+            {
+                dataPt *data = this->robot->read_temp();
+                float temp = data->dataField.dataF;
+                int time = data->time.count();
+                msg = "Temp @" + std::to_string(time) + ": " + std::to_string(temp) + "!\n";
+                toSend(msg);
+            }
             break;
 
         case DTEMP:
-            float dtemp = this->robot->read_dtemp()->dataField.dataF;
-            msg = "Dtemp @time: " + std::to_string(dtemp) + "!\n";
-            toSend(msg);
+            {
+                dataPt *data = this->robot->read_dtemp();
+                float dtemp = data->dataField.dataF;
+                int time = data->time.count();
+                msg = "Dtemp @" + std::to_string(time) + ": " + std::to_string(dtemp) + "!\n";
+                toSend(msg);
+            }
             break;
 
         case CURR:
-            float curr = this->robot->read_curr()->dataField.dataF;
-            msg = "Curr @time: " + std::to_string(curr) + "!\n";
-            toSend(msg);
+            {
+                dataPt *data = this->robot->read_curr();
+                float curr = data->dataField.dataF;
+                int time = data->time.count();
+                msg = "Curr @" + std::to_string(time) + ": " + std::to_string(curr) + "!\n";
+                toSend(msg);
+            }
             break;
 
         case WLEVEL:
-            int wlevel = this->robot->read_wlevel()->dataField.dataI;
-            msg = "Wlevel @time: " + std::to_string(wlevel) + "!\n";
-            toSend(msg);
+            {
+                dataPt *data = this->robot->read_wlevel();
+                int wlevel = data->dataField.dataI;
+                int time = data->time.count();
+                msg = "Wlevel @" + std::to_string(time) + ": " + std::to_string(wlevel) + "!\n";
+                toSend(msg);
+            }
             break;
 
         case WOB:
-            float force = this->robot->read_wob()->dataField.dataF;
-            msg = "Force @time: " + std::to_string(force) + "!\n";
-            toSend(msg);
+            {
+                dataPt *data = this->robot->read_wob();
+                float force = data->dataField.dataF;
+                int time = data->time.count();
+                msg = "Force @" + std::to_string(time) + ": " + std::to_string(force) + "!\n";
+                toSend(msg);
+            }
             break;
 
         case ENCODER:
-            unsigned int pulse = this->robot->read_encoder()->dataField.dataUI;
-            msg = "Pulse @time: " + std::to_string(pulse) + "!\n";
-            toSend(msg);
+            {
+                dataPt *data = this->robot->read_encoder();
+                unsigned int pulse = data->dataField.dataUI;
+                int time = data->time.count();
+                msg = "Pulse @" + std::to_string(time) + ": " + std::to_string(pulse) + "!\n";
+                toSend(msg);
+            }
             break;
 
         case ENCODER_RESET:
-            this->robot->reset_encoder();
-            msg = "Encoder reset!\n";
-            toSend(msg);
+            {
+                this->robot->reset_encoder();
+                msg = "Encoder reset!\n";
+                toSend(msg);
+            }
             break;
 
         case STEPPER_DRIVE:
@@ -506,9 +568,11 @@ void APESShell::execute(parse_token *ltk) {
             break;
 
         case STEPPER_STOP:
-            this->robot->stepper_stop();
-            msg = "System's stepper motor disabled!\n";
-            toSend(msg);
+            {
+                this->robot->stepper_stop();
+                msg = "System's stepper motor disabled!\n";
+                toSend(msg);
+            }
             break;
         
         case PUMP_DRIVE:
@@ -523,9 +587,11 @@ void APESShell::execute(parse_token *ltk) {
             break;
 
         case PUMP_STOP:
-            this->robot->pump_stop();
-            msg = "System's pump disabled!\n";
-            toSend(msg);
+            {
+                this->robot->pump_stop();
+                msg = "System's pump disabled!\n";
+                toSend(msg);
+            }
             break;
 
         case DRILL_RUN:
@@ -539,9 +605,11 @@ void APESShell::execute(parse_token *ltk) {
             break;
 
         case DRILL_STOP:
-            this->robot->drill_stop();
-            msg = "System's drill disabled!\n";
-            toSend(msg);
+            {
+                this->robot->drill_stop();
+                msg = "System's drill disabled!\n";
+                toSend(msg);
+            }
             break;
 
         case DRILL_CYCLE:
@@ -557,8 +625,10 @@ void APESShell::execute(parse_token *ltk) {
 
         case NONE:
         default:
-            msg = "Not a valid command (use 'help' for more info)!\n";
-            toSend(msg);
+            {
+                msg = "Not a valid command (use 'help' for more info)!\n";
+                toSend(msg);
+            }
             break;
     }
 }
