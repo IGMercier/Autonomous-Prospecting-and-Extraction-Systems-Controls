@@ -60,7 +60,7 @@ class Connection():
                 try:
                     buffer = self.socket.recv(BUFFER_SIZE)
                     if len(buffer) > 0:
-                        self.writeback.emit(buffer.decode("utf-8"))
+                        self.writeback.emit(buffer.decode("utf-8"), "")
                     else:
                         raise Exception("Server returned empty packet (likely shutdown)")
                 except Exception as e:
