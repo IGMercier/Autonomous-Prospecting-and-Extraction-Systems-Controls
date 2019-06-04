@@ -71,9 +71,9 @@ void APESShell::evaluate(std::string cmdline) {
 }
 
 void APESShell::toSend(std::string msg) {
-	std::unique_lock<std::mutex> loglock(*(this->log_mtx));
-	this->logq->push_back(msg);
-	loglock.unlock();
+    std::unique_lock<std::mutex> loglock(*(this->log_mtx));
+    this->logq->push_back(msg);
+    loglock.unlock();
 }
 
 void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
@@ -352,7 +352,7 @@ void APESShell::execute(parse_token *ltk) {
             break;
 
         case HELP:
-	        listCommands();
+            listCommands();
             break;
 
         case QUIT:

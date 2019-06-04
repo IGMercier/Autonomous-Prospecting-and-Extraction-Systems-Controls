@@ -8,6 +8,8 @@ from PySide2.QtGui  import QTextOption, QTextCursor
 from PySide2.QtCore import Signal, Slot
 from PySide2.QtCore import qDebug as qPrint
 
+import datetime, random # some logging data
+
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self)
@@ -44,7 +46,7 @@ class TabBar(QTabWidget):
             self.tabs.pop(index)
 
 class ConnTab(QDialog):
-    writeback = Signal(str)
+    writeback = Signal(str, str)
     onlineSignal = Signal(bool, bool)
     def __init__(self, parent, addr, port):
         super().__init__(parent)
@@ -53,7 +55,7 @@ class ConnTab(QDialog):
         mainLayout = QVBoxLayout()
         self.connLog = ConsoleLog(self)
         self.writeback.connect(self.connLog.addText)
-        self.writeback.emit("Connecting...")
+        self.writeback.emit("Connecting to {}:{}...".format(addr, port), "")
 
         submit = QHBoxLayout()
         self.command = QLineEdit(self)
@@ -79,19 +81,19 @@ class ConnTab(QDialog):
         self.setLayout(mainLayout)
 
         self.onlineSignal.connect(self.setOnline)
-
         self.conn = tcpConn.Connection(addr, port, self.writeback, self.onlineSignal, self.reconAuto.isChecked)
 
     def sendCommand(self):
         if self.connected:
             cmd = self.command.text()
             if cmd != "":
-                self.writeback.emit('<font color="#575757">> ' + cmd + '</font>')
+                self.writeback.emit(cmd, "#575757")
                 self.command.setText("")
                 self.conn.socket_write(cmd)
 
     def close(self, override):
         self.conn.close(override)
+        self.connLog.logClose()
 
     def reconnect(self):
         if not self.connected:
@@ -110,12 +112,36 @@ class ConsoleLog(QTextEdit):
         self.setReadOnly(True)
         self.setWordWrapMode(QTextOption.NoWrap)
         self.writeMutex = threading.Lock()
+        self.log = False
+        self.file = None
+        self.logOpen()
+        
+    def logOpen(self):
+        date = datetime.datetime.now().strftime("%Y-%m-%d.%H")
+        rdm = random.randint(0, 2**32-1)
+        try:
+            self.file = open("{}.{}.log".format(date, rdm), "a")
+            self.file.write("--------")
+        except:
+            return False
+        self.log = True
+        return True
 
-    @Slot(str)
-    def addText(self, text):
+    def logClose(self):
+        if self.log:
+            self.file.close()
+            self.log = False
+
+    @Slot(str, str)
+    def addText(self, text, color):
         self.writeMutex.acquire()
+        if self.log:
+            self.file.write(text+'\n')
         self.moveCursor(QTextCursor.End)
-        self.insertHtml(text.replace('\n', '<br>') + '<br>')
+        if color == None:
+            self.insertHtml(text.replace('\n', '<br>') + '<br>')
+        else:
+            self.insertHtml('<font color="' + color + '">' + text.replace('\n', '<br>') + '</font><br>')
         self.moveCursor(QTextCursor.End)
         self.writeMutex.release()
 
