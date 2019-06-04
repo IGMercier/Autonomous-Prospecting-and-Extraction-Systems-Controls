@@ -9,6 +9,8 @@
 
 #define THERM_RATE 0.259
 #define THERM_OFFSET -37.0
+#define AMM_RATE 3.24
+#define AMM_OFFSET -20.64
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -90,7 +92,7 @@ Amm::Amm(int bus, int chan) {
 }
 
 float Amm::read_curr() {
-    return (float)readADC(this->bus, this->chan);
+    return AMM_RATE * (float)readADC(this->bus, this->chan) + AMM_OFFSET;
 }
 
 Amm::~Amm() {}
