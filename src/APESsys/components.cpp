@@ -166,7 +166,7 @@ Wob::Wob(int pinA, int pinB) {
 
     this->HX711 = hx711(pinA, pinB);
     this->HX711.attr("set_reading_format")("byte_format"_a="MSB", "bit_format"_a="MSB");
-    this->HX711.attr("set_reference_unit")(1);
+    //this->HX711.attr("set_reference_unit")(1);
     this->HX711.attr("reset")();
     this->HX711.attr("tare")();
     fprintf(stdout, "Initialized Wob!\n");
