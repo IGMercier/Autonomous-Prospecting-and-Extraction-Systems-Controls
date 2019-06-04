@@ -5,7 +5,7 @@ from PySide2.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QWid
                               QVBoxLayout, QToolBar, QFrame, QDialog, QPushButton, QTextEdit, \
                               QHBoxLayout, QCheckBox, QSizePolicy
 from PySide2.QtGui  import QTextOption, QTextCursor
-from PySide2.QtCore import Signal, Slot
+from PySide2.QtCore import Signal, Slot, Qt
 from PySide2.QtCore import qDebug as qPrint
 
 import datetime, random # some logging data
@@ -58,7 +58,7 @@ class ConnTab(QDialog):
         self.writeback.emit("Connecting to {}:{}...".format(addr, port), "")
 
         submit = QHBoxLayout()
-        self.command = QLineEdit(self)
+        self.command = commandLine(self)
         self.buttonSend = QPushButton("Send", self)
         self.command.returnPressed.connect(self.buttonSend.click)
         self.buttonSend.clicked.connect(self.sendCommand)
@@ -105,6 +105,32 @@ class ConnTab(QDialog):
         self.buttonSend.setEnabled(connected)
         self.reconButton.setEnabled(not self.reconAuto.isChecked() and not active)
 
+class commandLine(QLineEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.history = [""]
+        self.historyIndex = 0
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == Qt.Key_Up:
+            if self.historyIndex > 0:
+                if self.historyIndex == len(self.history) - 1:
+                    self.history[self.historyIndex] = self.text()
+                self.historyIndex = self.historyIndex - 1
+                self.setText(self.history[self.historyIndex])
+        elif key == Qt.Key_Down:
+            if self.historyIndex < len(self.history) - 1:
+                self.historyIndex = self.historyIndex + 1
+                self.setText(self.history[self.historyIndex])
+        elif key == Qt.Key_Return:
+            self.history[len(self.history) - 1] = self.text()
+            self.historyIndex = len(self.history)
+            qPrint(str(self.historyIndex))
+            self.history.append("")
+            super().keyPressEvent(event)
+        else:
+            super().keyPressEvent(event)
 
 class ConsoleLog(QTextEdit):
     def __init__(self, parent=None):
@@ -138,7 +164,7 @@ class ConsoleLog(QTextEdit):
         if self.log:
             self.file.write(text+'\n')
         self.moveCursor(QTextCursor.End)
-        if color == None:
+        if color == "":
             self.insertHtml(text.replace('\n', '<br>') + '<br>')
         else:
             self.insertHtml('<font color="' + color + '">' + text.replace('\n', '<br>') + '</font><br>')
