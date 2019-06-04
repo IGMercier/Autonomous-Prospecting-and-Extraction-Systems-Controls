@@ -1,11 +1,12 @@
 #ifndef _APES_SHELL_H_
 #define _APES_SHELL_H_
 
+
+#include <string>
 #include "shellBase.h"
 #include "../misc/flags.h"
 #include "../APESsys/APES.h"
-
-#include <string>
+#include "../APESsys/commands.h"
 
 class APESShell : public ShellBase {
     private:

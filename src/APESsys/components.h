@@ -15,7 +15,6 @@ class Therm {
         int bus;
         int chan;
 	    float iTemp;
-	    int read_raw();
     public:
         Therm(int bus, int chan);
         ~Therm();
@@ -88,15 +87,26 @@ class Stepper {
         ~Stepper();
 };
 
-class Pump {
-    private:
+class Motor {
+    protected
         int dir_pin;
         int pwm_pin;
+        Motor(int dir_pin, int pwm_pin);
+        ~Motor();
+        void motor_drive(int dir, int dc);
+        void motor_stop();
+};
+
+class Pump : public Motor {
     public:
-        Pump(int dir_pin, int pwm_pin);
-        ~Pump();
-        void pump_drive(int dir, int dc);
-        void pump_stop();
+        Pump(int dir_pin, int pwm_pin) : Motor(dir_pin, pwm_pin);
+        void pump_drive(int dir, int dc) {
+            Motor::motor_drive(dir, dc);
+        }
+        void pump_stop() {
+            Motor::motor_stop(dir, dc);
+        }
+        ~Pump() : ~Motor();
 };
 
 class Solenoid {
