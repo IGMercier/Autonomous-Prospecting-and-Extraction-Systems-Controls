@@ -8,7 +8,7 @@ from PySide2.QtGui  import QTextOption, QTextCursor
 from PySide2.QtCore import Signal, Slot, Qt
 from PySide2.QtCore import qDebug as qPrint
 
-import datetime, random # some logging data
+import datetime # some logging data
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -140,11 +140,13 @@ class ConsoleLog(QTextEdit):
         self.log = False
         self.file = None
         self.fileData = None
+        self.fileAll = None
+        self.fileDataAll = None
         self.logOpen()
         
     def logOpen(self):
-        date = datetime.datetime.now().strftime("%Y-%m-%d.%H")
         try:
+            timestamp = datetime.datetime.now().strftime("%d-%H-%M-%S")
             self.file = open("{}.log".format(date), "a")
         except:
             return False
@@ -153,6 +155,19 @@ class ConsoleLog(QTextEdit):
         except:
             self.file.close()
             return False
+        try:
+            self.fileAll = open("client.log", "a")
+        except:
+            self.file.close()
+            self.fileData.close()
+            return False
+        try:
+            self.fileDataAll = open("client.data.log", "a")
+        except:
+            self.file.close()
+            self.fileData.close()
+            self.fileAll.close()
+            return False
         self.log = True
         return True
 
@@ -160,26 +175,31 @@ class ConsoleLog(QTextEdit):
         if self.log:
             self.file.close()
             self.fileData.close()
+            self.fileAll.close()
+            self.fileDataAll.close()
             self.log = False
 
     @Slot(str, str)
     def addText(self, text, color):
+        timestamp = datetime.datetime.now().strftime("%d-%H-%M-%S") + ": "
         self.writeMutex.acquire()
         if self.log:
             if text[:6] == "<data>":
-                data = text[6:-7]
+                data = text[6:]
                 self.fileData.write(data)
+                self.fileDataAll.write(data)
                 dataRaw = data.split(", ")
                 ## do something here
                 # skip writing the data to the console
                 return
             else:
-                self.file.write(text+'\n')
+                self.file.write(timestamp + text + '\n')
+                self.fileAll.write(timestamp + text + '\n')
         self.moveCursor(QTextCursor.End)
         if color == "":
-            self.insertHtml(text.replace('\n', '<br>') + '<br>')
+            self.insertHtml(timestamp + text.replace('\n', '<br>') + '<br>')
         else:
-            self.insertHtml('<font color="' + color + '">' + text.replace('\n', '<br>') + '</font><br>')
+            self.insertHtml(timestamp + '<font color="' + color + '">' + text.replace('\n', '<br>') + '</font><br>')
         self.moveCursor(QTextCursor.End)
         self.writeMutex.release()
 
