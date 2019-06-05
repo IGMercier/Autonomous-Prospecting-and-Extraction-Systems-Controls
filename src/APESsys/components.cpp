@@ -11,6 +11,8 @@
 #define THERM_OFFSET -37.0
 #define AMM_RATE 3.24
 #define AMM_OFFSET -20.64
+#define STEP_DC 50
+#define STEP_HZ 1000
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -282,8 +284,8 @@ Stepper::Stepper(int dir_pin, int step_pin) {
     softPwmCreate(this->step_pin, 0, 100);
 }
 
-void Stepper::stepper_drive(int dir, int dc, float freq) {
-    float pwmClock = PWM_MAX_FREQ / freq / PWM_RANGE;
+void Stepper::stepper_drive(int dir) {
+    float pwmClock = PWM_MAX_FREQ / STEP_HZ / PWM_RANGE;
     pwmSetRange(PWM_RANGE);
     pwmSetClock(pwmClock);
     if (dir == 0) {
@@ -291,7 +293,7 @@ void Stepper::stepper_drive(int dir, int dc, float freq) {
     } else {
         digitalWrite(this->dir_pin, HIGH);
     }
-    softPwmWrite(this->step_pin, dc);
+    softPwmWrite(this->step_pin, STEP_DC);
 }
 
 void Stepper::stepper_stop() {

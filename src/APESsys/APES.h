@@ -42,7 +42,8 @@ typedef enum {
     AMM_DATA,
     WLEVEL_DATA,
     WOB_DATA,
-    ENCODER_DATA
+    ENCODER_DATA,
+    ENCODER_DIFF
 } sensor;
 
 typedef struct dataPt {
@@ -92,7 +93,7 @@ class APES {
         void drill_run(int dc, float freq);
         void drill_stop();
         void drill_cycle(int dc, int on_period, float freq);
-        void stepper_drive(bool dir, int steps, int dc);
+        void stepper_drive(bool dir, int steps);
         void stepper_stop();
         void pump_drive(intdir, int speed, int time);
         void pump_stop();

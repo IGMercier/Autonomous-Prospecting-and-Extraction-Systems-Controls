@@ -493,7 +493,8 @@ void APESShell::execute(parse_token *ltk) {
                 dataPt *data = this->robot->read_temp();
                 float temp = data->dataField.dataF;
                 int time = data->time.count();
-                msg = "<data>" + std::to_string(time) + ", TEMP, " + std::to_string(temp) + "</data>";
+                // TODO: Unify data sending
+		msg = "<data>" + std::to_string(time) + ", TEMP, " + std::to_string(temp) + "</data>";
                 toSend(msg);
             }
             break;
@@ -559,10 +560,9 @@ void APESShell::execute(parse_token *ltk) {
         case STEPPER_DRIVE:
             {
                 int dir = ctk.argv[0].dataI;
-                int speed = ctk.argv[1].dataI;
-                int time = ctk.argv[2].dataI;
-                this->robot->stepper_drive(dir, speed, time);
-                msg = "System's stepper motor enabled for " + std::to_string(time) + " us!\n";
+                int steps = ctk.argv[1].dataI;
+                this->robot->stepper_drive(dir, steps);
+                msg = "System's stepper motor enabled for " + std::to_string(steps) + " steps!\n";
                 toSend(msg);
             }
             break;
