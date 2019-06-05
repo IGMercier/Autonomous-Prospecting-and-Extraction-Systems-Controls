@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <thread>
+#include <atomic>
 #include <string>
 #include <unistd.h>
 #include <assert.h>
@@ -8,6 +9,12 @@
 #include "APESShell.h"
 
 using std::thread;
+
+std::atomic_int stop_therm = {0};
+std::atomic_int stop_amm = {0};
+std::atomic_int stop_wlevel = {0};
+std::atomic_int stop_wob = {0};
+std::atomic_int stop_encoder = {0};
 
 APESShell::APESShell(sysArgs *args) {
     assert(args != nullptr);
@@ -336,6 +343,11 @@ void APESShell::execute(parse_token *ltk) {
     switch (command) {
         case START:
             {
+                stop_therm.store(1);
+                stop_amm.store(1);
+                stop_wlevel.store(1);
+                stop_wob.store(1);
+                stop_encoder.store(1);
                 this->robot->setup();
                 this->robot->standby();
                 msg = "System started!\n";
@@ -345,6 +357,11 @@ void APESShell::execute(parse_token *ltk) {
 
         case STANDBY:
             {
+                stop_therm.store(1);
+                stop_amm.store(1);
+                stop_wlevel.store(1);
+                stop_wob.store(1);
+                stop_encoder.store(1);
                 this->robot->standby();
                 msg = "System in standby!\n";
                 toSend(msg);
@@ -376,17 +393,13 @@ void APESShell::execute(parse_token *ltk) {
             {
                 msg = "System's auto mode enabled!\n";
                 toSend(msg);
-                this->robot->auto_on();
-                std::thread sensort(this->robot->auto_on);
-                if (sensort.joinable()) {
-                    sensort.join();
-                }
+                auto_on();
             }
             break;
 
         case AUTO_OFF:
             {
-                this->robot->auto_off();
+                auto_off();
                 msg = "System's auto mode disabled!\n";
                 toSend(msg);
             }
@@ -493,8 +506,7 @@ void APESShell::execute(parse_token *ltk) {
                 dataPt *data = this->robot->read_temp();
                 float temp = data->dataField.dataF;
                 int time = data->time.count();
-                // TODO: Unify data sending
-		msg = "<data>" + std::to_string(time) + ", TEMP, " + std::to_string(temp) + "</data>";
+		        msg = "<data>" + std::to_string(time) + ", TEMP, " + std::to_string(temp) + "</data>";
                 toSend(msg);
             }
             break;
@@ -633,6 +645,68 @@ void APESShell::execute(parse_token *ltk) {
     }
 }
 
+void APESShell::auto_on() {
+    stop_therm.store(0);
+    stop_amm.store(0);
+    stop_wlevel.store(0);
+    stop_wob.store(0);
+    stop_encoder.store(0);
+    while (1) {
+       
+        if (!stop_therm.load()) {
+            dataPt *data = this->robot->read_temp();
+            float temp = data->dataField.dataF;
+            int time = data->time.count();
+		    msg = "<data>" + std::to_string(time) + ", TEMP, " + std::to_string(temp) + "</data>";
+            toSend(msg);
+        }
+        
+        if (!stop_amm.load()) {
+            dataPt *data = this->robot->read_curr();
+            float curr = data->dataField.dataF;
+            int time = data->time.count();
+            msg = "<data>" + std::to_string(time) + ", CURR, " + std::to_string(curr) + "</data>";
+            toSend(msg);
+        }
+
+        if (!stop_wob.load()) {
+            dataPt *data = this->robot->read_wob();
+            float force = data->dataField.dataF;
+            int time = data->time.count();
+            msg = "<data>" + std::to_string(time) + ", WOB, " + std::to_string(force) + "</data>";
+            toSend(msg);
+        }
+
+        if (!stop_encoder.load()) {
+            dataPt *data = this->robot->read_encoder();
+            unsigned int pulse = data->dataField.dataUI;
+            int time = data->time.count();
+            msg = "<data>" + std::to_string(time) + ", ENCODER, " + std::to_string(pulse) + "</data>";
+            toSend(msg);
+        }
+
+        if (stop_therm.load() && stop_amm.load() &&
+            stop_wlevel.load() && stop_wob.load() &&
+            stop_encoder.load()) {
+            return;
+        }
+
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(SLEEP_INTVL)
+        );
+    }
+
+}
+
+void APESShell::auto_off() {
+        stop_therm.store(1);
+        stop_amm.store(1);
+        stop_wlevel.store(1);
+        stop_wob.store(1);
+        stop_encoder.store(1);
+    return;
+}
+
 APESShell::~APESShell() {
     if (this->robot != nullptr) {
         this->robot->standby();
@@ -642,6 +716,11 @@ APESShell::~APESShell() {
 }
 
 void APESShell::shutdown() {
+    stop_therm.store(1);
+    stop_amm.store(1);
+    stop_wlevel.store(1);
+    stop_wob.store(1);
+    stop_encoder.store(1);
     if (this->robot != nullptr) {
         this->robot->standby();
         this->robot->finish();

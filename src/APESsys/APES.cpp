@@ -12,11 +12,6 @@
 namespace py = pybind11;
 using namespace py::literals;
 
-std::atomic_int stop_therm = {0};
-std::atomic_int stop_amm = {0};
-std::atomic_int stop_wlevel = {0};
-std::atomic_int stop_wob = {0};
-std::atomic_int stop_encoder = {0};
 
 APES::APES(char *filename, std::mutex *data_mtx) {
     if (filename != nullptr) {
@@ -333,62 +328,8 @@ void APES::spring_stop() {
     }
 }
 
-void APES::auto_on() {
-    stop_therm.store(0);
-    stop_amm.store(0);
-    stop_wlevel.store(0);
-    stop_wob.store(0);
-    stop_encoder.store(0);
-
-    while (1) {
-       
-        if (!stop_therm.load()) {
-            read_temp();
-        }
-        
-        if (!stop_amm.load()) {
-            read_amm();
-        }
-
-        if (!stop_wlevel.load()) {
-            read_wlevel();
-        }
-
-        if (!stop_wob.load()) {
-            read_wob();
-        }
-
-        if (!stop_encoder.load()) {
-            read_encoder();
-        }
-
-        if (stop_therm.load() && stop_amm.load() &&
-            stop_wlevel.load() && stop_wob.load() &&
-            stop_encoder.load()) {
-            return;
-        }
-
-        std::this_thread::sleep_for(
-            std::chrono::milliseconds(SLEEP_INTVL)
-        );
-    }
-}
-
-void APES::auto_off() {
-        stop_therm.store(1);
-        stop_amm.store(1);
-        stop_wlevel.store(1);
-        stop_wob.store(1);
-        stop_encoder.store(1);
-    return;
-}
 
 void APES::standby() {
-    stop_therm.store(1);
-    stop_amm.store(1);
-    stop_wlevel.store(1);
-    stop_wob.store(1);
-    stop_encoder.store(1);
 
     drill_stop();
     stepper_stop();
