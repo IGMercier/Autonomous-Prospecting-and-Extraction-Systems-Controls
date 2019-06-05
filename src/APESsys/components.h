@@ -7,6 +7,9 @@
 #include <wiringPiI2C.h>
 #include <softPwm.h>
 
+#include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
+
 #define PWM_RANGE 200
 #define PWM_MAX_FREQ 19.2e6
 

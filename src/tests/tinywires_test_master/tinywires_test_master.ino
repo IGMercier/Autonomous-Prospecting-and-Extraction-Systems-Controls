@@ -15,12 +15,16 @@
 
 #define SLAVE_RESET_PIN 2
 
-char c_buf[64]; // for creating messages
+unsigned long pulse = 0;
+
+
 
 void setup()
 {
   // set pin modes 
   pinMode(SLAVE_RESET_PIN,OUTPUT);
+  pinMode( 9 , OUTPUT );
+  pinMode( 11 , OUTPUT );
 
   // init the serial port
   Serial.begin(115200);
@@ -35,31 +39,31 @@ void setup()
   
   // wait for slave to finish any init sequence
   delay(2000);
+  
 }
 
-void loop()
-{
-  uint8_t i;
-  uint8_t req_rtn;       // num bytes returned by requestFrom() call
-  uint8_t out[16];  // data written from master
-  uint8_t in[16];   // data read back from slave
-
-  // generate, save, and send N random byte values
-  Wire.beginTransmission(I2C_SLAVE_ADDR);
-  for (i = 0; i < 10; i++)
-    Wire.write(out[i] = i);
-  Wire.endTransmission();
+void loop() {
+  digitalWrite(9, LOW);
+  digitalWrite(11, LOW);
   
-  //delay (10);  // optional delay if required by slave (like sample ADC)
-
-  // read N bytes from slave
-  req_rtn = Wire.requestFrom(I2C_SLAVE_ADDR, 10);      // Request N bytes from slave
-  for (i = 0; i < req_rtn; i++) {
-    in[i] = Wire.read();
-    Serial.print(in[i]);
-    Serial.print("\n");
+  for (int i = 0; i < 10; i++) {
+    digitalWrite(9, HIGH);
+    delay(50);
+    digitalWrite(11, HIGH);
+    delay(50);
+    digitalWrite(9, LOW);
+    delay(50);
+    digitalWrite(11, LOW);
+    delay(50);
   }
-
-  // delay 1 second so user can watch results
-  delay(1000);
+  int count = Wire.requestFrom(I2C_SLAVE_ADDR, 4);
+  pulse = 0;
+  while(Wire.available()) {
+    pulse = pulse << 4;
+    pulse |= Wire.read();
+  }
+  Serial.print("pulse count = ");
+  Serial.println(pulse);
+  delay(2000);  
+  
 }
