@@ -402,31 +402,31 @@ void APES::writeDataVector() {
         switch(data->origin) {
             case THERM_DATA:
                 fprintf(file, "%li, %s, %f\n",
-                        data->time.time_since_epoch(), "therm", data->dataField.dataF);
+                        data->time.time_since_epoch().count(), "therm", data->dataField.dataF);
                 break;
             case AMM_DATA:
                 fprintf(file, "%li, %s, %f\n",
-                        data->time.time_since_epoch(), "amm", data->dataField.dataF);
+                        data->time.time_since_epoch().count(), "amm", data->dataField.dataF);
                 break;
             case WLEVEL_DATA:
                 fprintf(file, "%li, %s, %d\n",
-                        data->time.time_since_epoch(), "wlevel", data->dataField.dataI);
+                        data->time.time_since_epoch().count(), "wlevel", data->dataField.dataI);
                 break;
             case WOB_DATA:
                 fprintf(file, "%li, %s, %f\n",
-                        data->time.time_since_epoch(), "wob", data->dataField.dataF);
+                        data->time.time_since_epoch().count(), "wob", data->dataField.dataF);
                 break;
             case ENCODER_DATA:
                 fprintf(file, "%li, %s, %u\n",
-                        data->time.time_since_epoch(), "encoder", data->dataField.dataUI);
+                        data->time.time_since_epoch().count(), "encoder", data->dataField.dataUI);
                 break;
             case ENCODER_DIFF:
                 fprintf(file, "%li, %s, %u\n",
-                        data->time.time_since_epoch(), "encoder-diff", data->dataField.dataUI);
+                        data->time.time_since_epoch().count(), "encoder-diff", data->dataField.dataUI);
                 break;
             default:
                 fprintf(file, "%li, %s, %f\n",
-                        data->time.time_since_epoch(), "none", data->dataField.dataF);
+                        data->time.time_since_epoch().count(), "none", data->dataField.dataF);
                 break;
         }
 
