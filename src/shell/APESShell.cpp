@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <thread>
+#include <chrono>
 #include <atomic>
 #include <string>
 #include <unistd.h>
@@ -47,7 +48,7 @@ void APESShell::run() {
 
         evaluate(cmdline);
     }
-    shutdown()
+    shutdown();
     return; // kills shell thread in main program
 }
 
@@ -643,6 +644,7 @@ void APESShell::auto_on() {
     stop_wlevel.store(0);
     stop_wob.store(0);
     stop_encoder.store(0);
+    std::string msg;
     while (1) {
 
         // automated sensor readings

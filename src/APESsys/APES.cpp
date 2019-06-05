@@ -1,6 +1,5 @@
 #include <thread>
 #include <atomic>
-#include <assert>
 #include <chrono>
 #include <unistd.h>
 #include <error.h>
@@ -78,7 +77,7 @@ dataPt* APES::read_temp() {
         float temp = this->therm->read_temp();
 
         dataPt *data = new dataPt;
-        data->time = std::chrono::system_clock::now();
+        data->time = std::chrono::high_resolution_clock::now().time_since_epoch();
         data->sensor = THERM_DATA;
         data->dataField.dataF = temp;
         
@@ -96,7 +95,7 @@ dataPt* APES::read_dtemp() {
         float dtemp = this->therm->D_temp();
 
         dataPt *data = new dataPt;
-        data->time = std::chrono::system_clock::now();
+        data->time = std::chrono::high_resolution_clock::now().time_since_epoch();
         data->sensor = THERM_DATA;
         data->dataField.dataF = dtemp;
 
@@ -110,7 +109,7 @@ dataPt* APES::read_curr() {
         float curr = this->amm->read_curr();
 
         dataPt *data = new dataPt;
-        data->time = std::chrono::system_clock::now();
+        data->time = std::chrono::high_resolution_clock::now().time_since_epoch();
         data->sensor = AMM_DATA;
         data->dataField.dataF = curr;
         
@@ -128,7 +127,7 @@ dataPt* APES::read_wlevel() {
         int level = this->wlevel->read_wlevel();
 
         dataPt *data = new dataPt;
-        data->time = std::chrono::system_clock::now();
+        data->time = std::chrono::high_resolution_clock::now().time_since_epoch();
         data->sensor = WLEVEL_DATA;
         data->dataField.dataI = level;
         
@@ -146,7 +145,7 @@ dataPt* APES::read_wob() {
         float force = this->wob->read_wob();
 
         dataPt *data = new dataPt;
-        data->time = std::chrono::system_clock::now();
+        data->time = std::chrono::high_resolution_clock::now().time_since_epoch();
         data->sensor = WOB_DATA;
         data->dataField.dataF = force;
 
@@ -164,7 +163,7 @@ dataPt* APES::read_encoder() {
         unsigned int pulse = this->encoder->getPulse();
 
         dataPt *data = new dataPt;
-        data->time = std::chrono::system_clock::now();
+        data->time = std::chrono::high_resolution_clock::now().time_since_epoch();
         data->sensor = ENCODER_DATA;
         data->dataField.dataUI = pulse;
         
@@ -275,18 +274,18 @@ void APES::relay_1_off() {
 
 void APES::stepper_drive(bool dir, int steps) {
     if (this->stepper != nullptr) {
-	    std::chrono::time_point<std::chrono::system_clock> time;
+	    std::chrono::time_point<std::chrono::high_resolution_clock> time;
 	    int steps_time = steps * STEP_STEPS_TO_MS;
 	    dataPt *previous = read_encoder();
-	    time = std::chrono::system_clock::now() + std::chrono::milliseconds(steps_time);
+	    time = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(steps_time);
 	    this->stepper->stepper_drive(dir);
-	    while(std::chrono::system_clock::now() < time);
+	    while(std::chrono::high_resolution_clock::now() < time);
 	    this->stepper->stepper_stop();
 	    dataPt *current = read_encoder();
         int actual = current.dataUI - previous.dataUI;
 	
 	    dataPt *data = new dataPt;
-        data->time = std::chrono::system_clock::now();
+        data->time = std::chrono::high_resolution_clock::now();
         data->sensor = ENCODER_DIFF;
         data->dataField.dataI = actual;
         

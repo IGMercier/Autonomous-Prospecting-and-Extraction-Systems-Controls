@@ -4,7 +4,7 @@
 #include <mutex>
 #include <deque>
 #include <string>
-#include <assert>
+#include <assert.h>
 
 #define VERBOSE 1
 #define ASSERT

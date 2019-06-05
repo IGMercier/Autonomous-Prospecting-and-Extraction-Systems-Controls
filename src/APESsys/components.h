@@ -91,7 +91,7 @@ class Stepper {
 };
 
 class Motor {
-    protected
+    protected:
         int dir_pin;
         int pwm_pin;
         Motor(int dir_pin, int pwm_pin);
@@ -102,14 +102,14 @@ class Motor {
 
 class Pump : public Motor {
     public:
-        Pump(int dir_pin, int pwm_pin) : Motor(dir_pin, pwm_pin);
+        Pump(int dir_pin, int pwm_pin) : Motor(dir_pin, pwm_pin) {};
         void pump_drive(int dir, int dc) {
             Motor::motor_drive(dir, dc);
         }
         void pump_stop() {
-            Motor::motor_stop(dir, dc);
+            Motor::motor_stop();
         }
-        ~Pump() : ~Motor();
+        ~Pump();
 };
 
 class Solenoid {
