@@ -1,10 +1,13 @@
 #include <thread>
 #include <atomic>
 #include <assert>
+#include <chrono>
 #include <unistd.h>
 #include <error.h>
 #include "APES.h"
 //#include "libraries/pybind11/include/pybind11/embed.h"
+
+#define STEP_STEPS_TO_MS 1     // 1000 Hz
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -275,17 +278,28 @@ void APES::relay_1_off() {
     }
 }
 
-void APES::stepper_drive(bool dir, int steps, int dc) {
-
-    // @TODO: integer overflow will happen here
+void APES::stepper_drive(bool dir, int steps) {
     if (this->stepper != nullptr) {
-        unsigned int actual = read_encoder().dataUI;
-        unsigned int desired = steps + actual;
-        while (actual < desired) {
-            this->stepper->stepper_drive(dir, dc);
-            actual = read_encoder().dataUI;
-        }
-        if (actual > desired) { stepper_stop(); }
+	    std::chrono::time_point<std::chrono::high_resolution_clock> time;
+	    int steps_time = steps * STEP_STEPS_TO_MS;
+	    dataPt *previous = read_encoder();
+	    time = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(steps_time);
+	    this->stepper->stepper_drive(dir);
+	    while(std::chrono::high_resolution_clock::now() < time);
+	    this->stepper->stepper_stop();
+	    dataPt *current = read_encoder();
+        int actual = current.dataUI - previous.dataUI;
+	
+	    dataPt *data = new dataPt;
+        data->time = std::chrono::system_clock::now();
+        data->sensor = ENCODER_DIFF;
+        data->dataField.dataI = actual;
+        
+        std::unique_lock<std::mutex> datalock(*(this->data_mtx));
+        saveData(previous);
+        saveData(actual);
+        saveData(data);
+        datalock.unlock();
     }
 }
 
@@ -465,6 +479,10 @@ void APES::writeDataVector() {
             case ENCODER_DATA:
                 fprintf(file, "%li, %s, %u\n",
                         data->time.count(), "encoder", data->dataField.dataUI);
+                break;
+            case ENCODER_DIFF:
+                fprintf(file, "%li, %s, %u\n",
+                        data->time.count(), "encoder-diff", data->dataField.dataUI);
                 break;
             default:
                 fprintf(file, "%li, %s, %f\n",

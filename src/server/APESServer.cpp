@@ -109,6 +109,7 @@ void APESServer::write() {
                     // reads off data file
                     std::unique_lock<std::mutex> datalock(*(this->data_mtx));
                     {
+			// TODO: This seems very incorrect
                         std::ifstream data(this->datafile);
                         if (data) {
                             std::string dataline;
