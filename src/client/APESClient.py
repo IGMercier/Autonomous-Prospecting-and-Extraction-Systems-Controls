@@ -126,7 +126,6 @@ class commandLine(QLineEdit):
         elif key == Qt.Key_Return:
             self.history[len(self.history) - 1] = self.text()
             self.historyIndex = len(self.history)
-            qPrint(str(self.historyIndex))
             self.history.append("")
             super().keyPressEvent(event)
         else:
@@ -140,15 +139,19 @@ class ConsoleLog(QTextEdit):
         self.writeMutex = threading.Lock()
         self.log = False
         self.file = None
+        self.fileData = None
         self.logOpen()
         
     def logOpen(self):
         date = datetime.datetime.now().strftime("%Y-%m-%d.%H")
-        rdm = random.randint(0, 2**32-1)
         try:
-            self.file = open("{}.{}.log".format(date, rdm), "a")
-            self.file.write("--------")
+            self.file = open("{}.log".format(date), "a")
         except:
+            return False
+        try:
+            self.fileData = open("{}.data.log".format(date), "a")
+        except:
+            self.file.close()
             return False
         self.log = True
         return True
@@ -156,13 +159,22 @@ class ConsoleLog(QTextEdit):
     def logClose(self):
         if self.log:
             self.file.close()
+            self.fileData.close()
             self.log = False
 
     @Slot(str, str)
     def addText(self, text, color):
         self.writeMutex.acquire()
         if self.log:
-            self.file.write(text+'\n')
+            if text[:6] == "<data>":
+                data = text[6:-7]
+                self.fileData.write(data)
+                dataRaw = data.split(", ")
+                ## do something here
+                # skip writing the data to the console
+                return
+            else:
+                self.file.write(text+'\n')
         self.moveCursor(QTextCursor.End)
         if color == "":
             self.insertHtml(text.replace('\n', '<br>') + '<br>')

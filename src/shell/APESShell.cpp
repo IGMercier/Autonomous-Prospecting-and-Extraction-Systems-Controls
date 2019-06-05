@@ -650,61 +650,73 @@ void APESShell::shutdown() {
 }
 
 void APESShell::listCommands() {
-    std::string msg = "Listing Help Commands!";
+    std::string msg = "Listing Help Commands!\n";
     toSend(msg);
 
-    msg = "start => setups APES system";
+    msg = "start => setups APES system\n";
     toSend(msg);
 
-    msg = "standby => turns off actuators and stops auto mode";
+    msg = "standby => turns off actuators and stops auto mode\n";
     toSend(msg);
     
-    msg = "data => does something not specified";
+    msg = "data => does something not specified\n";
     toSend(msg);
     
-    msg = "help => prints this help message";
+    msg = "help => prints this help message\n";
     toSend(msg);
 
-    msg = "quit => quits APES, shell, and server systems";
+    msg = "quit => quits APES, shell, and server systems\n";
     toSend(msg);
 
-    msg = "auto on & => automatically reads off sensor data";
+    msg = "auto on & => automatically reads off sensor data\n";
     toSend(msg);
 
-    msg = "auto off => turns off auto mode";
+    msg = "auto off => turns off auto mode\n";
     toSend(msg);
 
-    msg = "temp => reads off current temp";
+    msg = "sol 0 <open/close> => opens and closes the solenoid valve\n";
     toSend(msg);
 
-    msg = "dtemp => reads off difference in temp since start";
+    msg = "heater 0 <on/off> => enables or disables the drill heater\n";
     toSend(msg);
 
-    msg = "curr => reads off current current";
+    msg = "relay 0 <on/off> => enables or disables the water heater\n";
     toSend(msg);
 
-    msg = "wlevel => reads off current water level";
+    msg = "auto <on/off> => enables or disables automatic sensor data\n";
     toSend(msg);
 
-    msg = "wob => reads off current force";
+    msg = "temp => reads off current temp\n";
     toSend(msg);
 
-    msg = "encoder => reads off current encoder data";
+    msg = "dtemp => reads off difference in temp since start\n";
     toSend(msg);
 
-    msg = "motor drive <dir> <speed> <time> => runs motor";
+    msg = "curr => reads off current current\n";
     toSend(msg);
 
-    msg = "motor stop => stops motor";
+    msg = "wlevel => reads off current water level\n";
     toSend(msg);
 
-    msg = "drill run => runs drill";
+    msg = "wob => reads off current force\n";
     toSend(msg);
 
-    msg = "drill stop => stops drill";
+    msg = "encoder => reads off current encoder data\n";
     toSend(msg);
 
-    msg = "drill cycle <dc> => changes drill duty cycle";
+    msg = "motor drive <dir> <speed> <time> => runs motor\n";
+    toSend(msg);
+
+    msg = "motor stop => stops motor\n";
+    toSend(msg);
+
+    msg = "drill run => runs drill\n";
+    toSend(msg);
+
+    msg = "drill stop => stops drill\n";
+    toSend(msg);
+
+    msg = "drill cycle <dc> => changes drill duty cycle\n";
     toSend(msg);
 
     return;

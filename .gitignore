@@ -5,3 +5,5 @@ src/include
 src/libraries/hx711.py
 **/__pycache__/
 src/client/*.log
+*.swp
+*.out
