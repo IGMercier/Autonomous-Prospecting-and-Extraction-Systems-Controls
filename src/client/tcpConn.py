@@ -56,11 +56,15 @@ class Connection():
 
             self.socket.settimeout(None)
             self.writeback.emit("Connection Established", "")
+            fullText = ""
             while True:
                 try:
                     buffer = self.socket.recv(BUFFER_SIZE)
                     if len(buffer) > 0:
-                        self.writeback.emit(buffer.decode("utf-8"), "")
+                        fullText = fullText + buffer.decode("utf-8")
+                        if fullText[-1] == '\n':
+                            self.writeback.emit(fullText, "")
+                            fullText = ""
                     else:
                         raise Exception("Server returned empty packet (likely shutdown)")
                 except Exception as e:

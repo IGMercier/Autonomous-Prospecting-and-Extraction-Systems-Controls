@@ -137,6 +137,7 @@ class ConsoleLog(QTextEdit):
         self.setReadOnly(True)
         self.setWordWrapMode(QTextOption.NoWrap)
         self.writeMutex = threading.Lock()
+        self.data = []
         self.log = False
         self.file = None
         self.fileData = None
@@ -185,13 +186,16 @@ class ConsoleLog(QTextEdit):
         self.writeMutex.acquire()
         if self.log:
             if text[:6] == "<data>":
-                data = text[6:]
+                end = text.find("</data>")
+                if end < 0: 
+                    return
+                data = text[6:end]
                 self.fileData.write(data)
                 self.fileDataAll.write(data)
                 dataRaw = data.split(", ")
-                ## do something here
-                # skip writing the data to the console
-                return
+
+                text = "DATA from {} at {}: {}".format(data[1], data[0], data[2])
+                color = "#0000ff"
             else:
                 self.file.write(timestamp + text + '\n')
                 self.fileAll.write(timestamp + text + '\n')
