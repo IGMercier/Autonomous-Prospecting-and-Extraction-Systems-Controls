@@ -343,11 +343,7 @@ void APESShell::execute(parse_token *ltk) {
     switch (command) {
         case START:
             {
-                stop_therm.store(1);
-                stop_amm.store(1);
-                stop_wlevel.store(1);
-                stop_wob.store(1);
-                stop_encoder.store(1);
+                auto_off();
                 this->robot->setup();
                 this->robot->standby();
                 msg = "System started!\n";
@@ -357,11 +353,7 @@ void APESShell::execute(parse_token *ltk) {
 
         case STANDBY:
             {
-                stop_therm.store(1);
-                stop_amm.store(1);
-                stop_wlevel.store(1);
-                stop_wob.store(1);
-                stop_encoder.store(1);
+                auto_off();
                 this->robot->standby();
                 msg = "System in standby!\n";
                 toSend(msg);
@@ -652,7 +644,8 @@ void APESShell::auto_on() {
     stop_wob.store(0);
     stop_encoder.store(0);
     while (1) {
-       
+
+        // automated sensor readings
         if (!stop_therm.load()) {
             dataPt *data = this->robot->read_temp();
             float temp = data->dataField.dataF;
@@ -716,11 +709,7 @@ APESShell::~APESShell() {
 }
 
 void APESShell::shutdown() {
-    stop_therm.store(1);
-    stop_amm.store(1);
-    stop_wlevel.store(1);
-    stop_wob.store(1);
-    stop_encoder.store(1);
+    auto_off();
     if (this->robot != nullptr) {
         this->robot->standby();
         this->robot->finish();
@@ -762,7 +751,7 @@ void APESShell::listCommands() {
     msg = "relay 0 <on/off> => enables or disables the water heater\n";
     toSend(msg);
 
-    msg = "auto <on/off> => enables or disables automatic sensor data\n";
+    msg = "auto <on/off> & => enables or disables automatic sensor data (MUST be background job!)\n";
     toSend(msg);
 
     msg = "temp => reads off current temp\n";

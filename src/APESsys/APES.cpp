@@ -275,12 +275,12 @@ void APES::relay_1_off() {
 
 void APES::stepper_drive(bool dir, int steps) {
     if (this->stepper != nullptr) {
-	    std::chrono::time_point<std::chrono::high_resolution_clock> time;
+	    std::chrono::time_point<std::chrono::system_clock> time;
 	    int steps_time = steps * STEP_STEPS_TO_MS;
 	    dataPt *previous = read_encoder();
-	    time = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(steps_time);
+	    time = std::chrono::system_clock::now() + std::chrono::milliseconds(steps_time);
 	    this->stepper->stepper_drive(dir);
-	    while(std::chrono::high_resolution_clock::now() < time);
+	    while(std::chrono::system_clock::now() < time);
 	    this->stepper->stepper_stop();
 	    dataPt *current = read_encoder();
         int actual = current.dataUI - previous.dataUI;
