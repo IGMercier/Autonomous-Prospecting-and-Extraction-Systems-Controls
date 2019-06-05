@@ -13,6 +13,8 @@ using namespace py::literals;
 
 
 APES::APES(char *filename, std::mutex *data_mtx) {
+    assert(data_mtx != nullptr);
+
     if (filename != nullptr) {
         this->filename = filename;
     } else {
@@ -77,7 +79,7 @@ dataPt* APES::read_temp() {
         float temp = this->therm->read_temp();
 
         dataPt *data = new dataPt;
-        data->time = std::chrono::high_resolution_clock::now().time_since_epoch();
+        data->time = std::chrono::high_resolution_clock::now().time_since_epoch().count();
         data->sensor = THERM_DATA;
         data->dataField.dataF = temp;
         
@@ -95,7 +97,7 @@ dataPt* APES::read_dtemp() {
         float dtemp = this->therm->D_temp();
 
         dataPt *data = new dataPt;
-        data->time = std::chrono::high_resolution_clock::now().time_since_epoch();
+        data->time = std::chrono::high_resolution_clock::now().time_since_epoch().count();
         data->sensor = THERM_DATA;
         data->dataField.dataF = dtemp;
 
@@ -109,7 +111,7 @@ dataPt* APES::read_curr() {
         float curr = this->amm->read_curr();
 
         dataPt *data = new dataPt;
-        data->time = std::chrono::high_resolution_clock::now().time_since_epoch();
+        data->time = std::chrono::high_resolution_clock::now().time_since_epoch().count();
         data->sensor = AMM_DATA;
         data->dataField.dataF = curr;
         
@@ -127,7 +129,7 @@ dataPt* APES::read_wlevel() {
         int level = this->wlevel->read_wlevel();
 
         dataPt *data = new dataPt;
-        data->time = std::chrono::high_resolution_clock::now().time_since_epoch();
+        data->time = std::chrono::high_resolution_clock::now().time_since_epoch().count();
         data->sensor = WLEVEL_DATA;
         data->dataField.dataI = level;
         
@@ -145,7 +147,7 @@ dataPt* APES::read_wob() {
         float force = this->wob->read_wob();
 
         dataPt *data = new dataPt;
-        data->time = std::chrono::high_resolution_clock::now().time_since_epoch();
+        data->time = std::chrono::high_resolution_clock::now().time_since_epoch().count();
         data->sensor = WOB_DATA;
         data->dataField.dataF = force;
 
@@ -163,7 +165,7 @@ dataPt* APES::read_encoder() {
         unsigned int pulse = this->encoder->getPulse();
 
         dataPt *data = new dataPt;
-        data->time = std::chrono::high_resolution_clock::now().time_since_epoch();
+        data->time = std::chrono::high_resolution_clock::now().time_since_epoch().count();
         data->sensor = ENCODER_DATA;
         data->dataField.dataUI = pulse;
         
@@ -282,16 +284,16 @@ void APES::stepper_drive(bool dir, int steps) {
 	    while(std::chrono::high_resolution_clock::now() < time);
 	    this->stepper->stepper_stop();
 	    dataPt *current = read_encoder();
-        int actual = current.dataUI - previous.dataUI;
+
+        int actual = (int)(current->dataField.dataUI - previous->dataField.dataUI);
 	
 	    dataPt *data = new dataPt;
-        data->time = std::chrono::high_resolution_clock::now();
+        data->time = std::chrono::high_resolution_clock::now().count();
         data->sensor = ENCODER_DIFF;
         data->dataField.dataI = actual;
         
         std::unique_lock<std::mutex> datalock(*(this->data_mtx));
-        saveData(previous);
-        saveData(actual);
+
         saveData(data);
         datalock.unlock();
     }
@@ -399,34 +401,34 @@ void APES::writeDataVector() {
     for (unsigned int i = 0; i < this->dataVector.size(); i++) {
         dataPt *data = this->dataVector.at(i);
 
-        switch(data->origin) {
+        switch(data->sensor) {
             case THERM_DATA:
-                fprintf(file, "%li, %s, %f\n",
-                        data->time.time_since_epoch().count(), "therm", data->dataField.dataF);
+                fprintf(file, "%lli, %s, %f\n",
+                        data->time, "therm", data->dataField.dataF);
                 break;
             case AMM_DATA:
-                fprintf(file, "%li, %s, %f\n",
-                        data->time.time_since_epoch().count(), "amm", data->dataField.dataF);
+                fprintf(file, "%lli, %s, %f\n",
+                        data->time, "amm", data->dataField.dataF);
                 break;
             case WLEVEL_DATA:
-                fprintf(file, "%li, %s, %d\n",
-                        data->time.time_since_epoch().count(), "wlevel", data->dataField.dataI);
+                fprintf(file, "%lli, %s, %d\n",
+                        data->time, "wlevel", data->dataField.dataI);
                 break;
             case WOB_DATA:
-                fprintf(file, "%li, %s, %f\n",
-                        data->time.time_since_epoch().count(), "wob", data->dataField.dataF);
+                fprintf(file, "%lli, %s, %f\n",
+                        data->time, "wob", data->dataField.dataF);
                 break;
             case ENCODER_DATA:
-                fprintf(file, "%li, %s, %u\n",
-                        data->time.time_since_epoch().count(), "encoder", data->dataField.dataUI);
+                fprintf(file, "%lli, %s, %u\n",
+                        data->time, "encoder", data->dataField.dataUI);
                 break;
             case ENCODER_DIFF:
-                fprintf(file, "%li, %s, %u\n",
-                        data->time.time_since_epoch().count(), "encoder-diff", data->dataField.dataUI);
+                fprintf(file, "%lli, %s, %u\n",
+                        data->time, "encoder-diff", data->dataField.dataUI);
                 break;
             default:
-                fprintf(file, "%li, %s, %f\n",
-                        data->time.time_since_epoch().count(), "none", data->dataField.dataF);
+                fprintf(file, "%lli, %s, %f\n",
+                        data->time, "none", data->dataField.dataF);
                 break;
         }
 

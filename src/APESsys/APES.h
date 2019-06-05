@@ -34,7 +34,7 @@
 #define WLEVEL_CHAN_START   0    
 #define WLEVEL_CHAN_END     7
 #define WLEVEL_BUS          0
-#define ENCODER_ADDR        0x20 
+#define ENCODER_ADDR        0x26 
 
 
 typedef enum {
@@ -44,17 +44,17 @@ typedef enum {
     WOB_DATA,
     ENCODER_DATA,
     ENCODER_DIFF
-} sensor;
+} origin;
 
 typedef struct dataPt {
-    sensor origin;
+    origin sensor;
     union {
         unsigned int dataUI; 
         int dataI;
         float dataF;
     } dataField;
 
-    std::chrono::time_point<std::chrono::system_clock> time;
+    long long int time;
 } dataPt;
 
 class APES {
@@ -79,9 +79,9 @@ class APES {
         Amm* amm;
         WLevel* wlevel;
     public:
-        APES();
+        APES(char *filename, std::mutex *data_mtx);
         ~APES();
-        int setup(char *filename);
+        int setup();
         dataPt* read_temp();
         dataPt* read_dtemp();
         dataPt* read_curr();

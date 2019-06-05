@@ -7,6 +7,8 @@
 
 #include "components.h"
 
+#define WOB_RATE 0.0001161
+#define WOB_OFFSET -1.787
 #define THERM_RATE 0.259
 #define THERM_OFFSET -37.0
 #define AMM_RATE 3.24
@@ -180,7 +182,7 @@ float Wob::read_wob() {
     this->HX711.attr("power_down")();
     this->HX711.attr("power_up")();
 
-    float force = value.cast<float>();
+    float force = WOB_RATE*value.cast<float>() + WOB_RATE;
 
     return force;
 }

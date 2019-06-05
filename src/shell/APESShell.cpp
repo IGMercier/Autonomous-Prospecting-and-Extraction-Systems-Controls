@@ -21,10 +21,11 @@ APESShell::APESShell(sysArgs *args) {
     assert(args != nullptr);
     assert(args->cmd_mtx != nullptr);
     assert(args->log_mtx != nullptr);
+    assert(args->data_mtx != nullptr);
     assert(args->cmdq != nullptr);
     assert(args->logq != nullptr);
 
-    this->robot = new APES();
+    this->robot = new APES("data.csv", data_mtx);
     this->cmd_mtx = args->cmd_mtx;
     this->log_mtx = args->log_mtx;
     this->cmdq = args->cmdq;
@@ -345,7 +346,7 @@ void APESShell::execute(parse_token *ltk) {
         case START:
             {
                 auto_off();
-                this->robot->setup();
+                this->robot->setup("data.csv");
                 this->robot->standby();
                 msg = "System started!\n";
                 toSend(msg);
@@ -498,7 +499,7 @@ void APESShell::execute(parse_token *ltk) {
             {
                 dataPt *data = this->robot->read_temp();
                 float temp = data->dataField.dataF;
-                int time = data->time.count();
+                long long int time = data->time;
 		        msg = "<data>" + std::to_string(time) + ", TEMP, " + std::to_string(temp) + "</data>";
                 toSend(msg);
             }
@@ -508,7 +509,7 @@ void APESShell::execute(parse_token *ltk) {
             {
                 dataPt *data = this->robot->read_dtemp();
                 float dtemp = data->dataField.dataF;
-                int time = data->time.count();
+                long long int time = data->time;
                 msg = "<data>" + std::to_string(time) + ", DTEMP, " + std::to_string(dtemp) + "</data>";
                 toSend(msg);
             }
@@ -518,7 +519,7 @@ void APESShell::execute(parse_token *ltk) {
             {
                 dataPt *data = this->robot->read_curr();
                 float curr = data->dataField.dataF;
-                int time = data->time.count();
+                long long int time = data->time;
                 msg = "<data>" + std::to_string(time) + ", CURR, " + std::to_string(curr) + "</data>";
                 toSend(msg);
             }
@@ -528,7 +529,7 @@ void APESShell::execute(parse_token *ltk) {
             {
                 dataPt *data = this->robot->read_wlevel();
                 int wlevel = data->dataField.dataI;
-                int time = data->time.count();
+                long long int time = data->time;
                 msg = "<data>" + std::to_string(time) + ", WLEVEL, " + std::to_string(wlevel) + "</data>";
                 toSend(msg);
             }
@@ -538,7 +539,7 @@ void APESShell::execute(parse_token *ltk) {
             {
                 dataPt *data = this->robot->read_wob();
                 float force = data->dataField.dataF;
-                int time = data->time.count();
+                long long int time = data->time;
                 msg = "<data>" + std::to_string(time) + ", WOB, " + std::to_string(force) + "</data>";
                 toSend(msg);
             }
@@ -548,7 +549,7 @@ void APESShell::execute(parse_token *ltk) {
             {
                 dataPt *data = this->robot->read_encoder();
                 unsigned int pulse = data->dataField.dataUI;
-                int time = data->time.count();
+                long long int time = data->time;
                 msg = "<data>" + std::to_string(time) + ", ENCODER, " + std::to_string(pulse) + "</data>";
                 toSend(msg);
             }
@@ -651,7 +652,7 @@ void APESShell::auto_on() {
         if (!stop_therm.load()) {
             dataPt *data = this->robot->read_temp();
             float temp = data->dataField.dataF;
-            int time = data->time.count();
+            long long int time = data->time;
 		    msg = "<data>" + std::to_string(time) + ", TEMP, " + std::to_string(temp) + "</data>";
             toSend(msg);
         }
@@ -659,7 +660,7 @@ void APESShell::auto_on() {
         if (!stop_amm.load()) {
             dataPt *data = this->robot->read_curr();
             float curr = data->dataField.dataF;
-            int time = data->time.count();
+            long long int time = data->time;
             msg = "<data>" + std::to_string(time) + ", CURR, " + std::to_string(curr) + "</data>";
             toSend(msg);
         }
@@ -667,7 +668,7 @@ void APESShell::auto_on() {
         if (!stop_wob.load()) {
             dataPt *data = this->robot->read_wob();
             float force = data->dataField.dataF;
-            int time = data->time.count();
+            long long int time = data->time;
             msg = "<data>" + std::to_string(time) + ", WOB, " + std::to_string(force) + "</data>";
             toSend(msg);
         }
@@ -675,7 +676,7 @@ void APESShell::auto_on() {
         if (!stop_encoder.load()) {
             dataPt *data = this->robot->read_encoder();
             unsigned int pulse = data->dataField.dataUI;
-            int time = data->time.count();
+            long long int time = data->time;
             msg = "<data>" + std::to_string(time) + ", ENCODER, " + std::to_string(pulse) + "</data>";
             toSend(msg);
         }
