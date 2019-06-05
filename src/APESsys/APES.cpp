@@ -280,17 +280,17 @@ void APES::relay_1_off() {
 
 void APES::stepper_drive(bool dir, int steps) {
     if (this->stepper != nullptr) {
-	std::chrono::time_point<std::chrono::high_resolution_clock> time;
-	int steps_time = steps * STEP_STEPS_TO_MS;
-	dataPt *previous = read_encoder();
-	time = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(steps_time);
-	this->stepper->stepper_drive(dir);
-	while(std::chrono::high_resolution_clock::now() < time);
-	this->stepper->stepper_stop();
-	dataPt *current = read_encoder();
+	    std::chrono::time_point<std::chrono::high_resolution_clock> time;
+	    int steps_time = steps * STEP_STEPS_TO_MS;
+	    dataPt *previous = read_encoder();
+	    time = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(steps_time);
+	    this->stepper->stepper_drive(dir);
+	    while(std::chrono::high_resolution_clock::now() < time);
+	    this->stepper->stepper_stop();
+	    dataPt *current = read_encoder();
         int actual = current.dataUI - previous.dataUI;
 	
-	dataPt *data = new dataPt;
+	    dataPt *data = new dataPt;
         data->time = std::chrono::system_clock::now();
         data->sensor = ENCODER_DIFF;
         data->dataField.dataI = actual;
