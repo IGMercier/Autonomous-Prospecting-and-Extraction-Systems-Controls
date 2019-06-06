@@ -11,11 +11,12 @@
 
 using std::thread;
 
-std::atomic_int stop_therm = {0};
-std::atomic_int stop_amm = {0};
-std::atomic_int stop_wlevel = {0};
-std::atomic_int stop_wob = {0};
-std::atomic_int stop_encoder = {0};
+std::atomic_int sensor_auto = {0};
+            
+constexpr const std::chrono::milliseconds therm_period(50);
+constexpr const std::chrono::milliseconds amm_period(50);
+constexpr const std::chrono::milliseconds wob_period(50);
+constexpr const std::chrono::milliseconds enc_period(50);
 
 APESShell::APESShell(sysArgs *args) {
     assert(args != nullptr);
@@ -639,16 +640,26 @@ void APESShell::execute(parse_token *ltk) {
 }
 
 void APESShell::auto_on() {
-    stop_therm.store(0);
-    stop_amm.store(0);
-    stop_wlevel.store(0);
-    stop_wob.store(0);
-    stop_encoder.store(0);
     std::string msg;
-    while (1) {
+    if (sensor_auto.load())
+        msg = "Sensors already running!";
+        toSend(msg);
+        return;
 
-        // automated sensor readings
-        if (!stop_therm.load()) {
+    sensor_auto.store(1);
+    msg = "Initiated automatic sensing!";
+    toSend(msg);
+    std::chrono::time_point<std::chrono::high_resolution_clock> now, therm_next, amm_next, wob_next, enc_next;
+
+        therm_next = std::chrono::high_resolution_clock::now();
+        amm_next = std::chrono::high_resolution_clock::now();
+        wob_next = std::chrono::high_resolution_clock::now();
+        enc_next = std::chrono::high_resolution_clock::now();
+    while (sensor_auto.load()) {
+        now = std::chrono::high_resolution_clock::now();
+        
+        if (now > therm_next) { 
+            therm_next = now + therm_period;
             dataPt *data = this->robot->read_temp();
             float temp = data->dataField.dataF;
             int time = data->time.count();
@@ -656,7 +667,8 @@ void APESShell::auto_on() {
             toSend(msg);
         }
         
-        if (!stop_amm.load()) {
+        if (now > amm_next) {
+            amm_next = now + amm_period;
             dataPt *data = this->robot->read_curr();
             float curr = data->dataField.dataF;
             int time = data->time.count();
@@ -664,7 +676,8 @@ void APESShell::auto_on() {
             toSend(msg);
         }
 
-        if (!stop_wob.load()) {
+        if (now > wob_next) {
+            wob_next = now + wob_period;
             dataPt *data = this->robot->read_wob();
             float force = data->dataField.dataF;
             int time = data->time.count();
@@ -672,33 +685,22 @@ void APESShell::auto_on() {
             toSend(msg);
         }
 
-        if (!stop_encoder.load()) {
+        if (now > enc_next) {
+            enc_next = now + enc_period;
             dataPt *data = this->robot->read_encoder();
             unsigned int pulse = data->dataField.dataUI;
             int time = data->time.count();
             msg = "<data>" + std::to_string(time) + ", ENCODER, " + std::to_string(pulse) + "</data>";
             toSend(msg);
         }
-
-        if (stop_therm.load() && stop_amm.load() &&
-            stop_wlevel.load() && stop_wob.load() &&
-            stop_encoder.load()) {
-            return;
-        }
-
-        std::this_thread::sleep_for(
-            std::chrono::milliseconds(SLEEP_INTVL)
-        );
     }
-
 }
 
 void APESShell::auto_off() {
-        stop_therm.store(1);
-        stop_amm.store(1);
-        stop_wlevel.store(1);
-        stop_wob.store(1);
-        stop_encoder.store(1);
+    sensor_auto.store(0);
+    std::string msg;
+    msg = "Stopping automatic sensing!";
+    toSend(msg);
     return;
 }
 

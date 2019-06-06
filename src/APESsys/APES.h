@@ -54,7 +54,7 @@ typedef struct dataPt {
         float dataF;
     } dataField;
 
-    std::chrono::time_point<std::chrono::system_clock> time;
+    std::chrono::time_point<std::chrono::high_resolution_clock> time;
 } dataPt;
 
 class APES {
