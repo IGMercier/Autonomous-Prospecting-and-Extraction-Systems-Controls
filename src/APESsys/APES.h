@@ -94,11 +94,11 @@ class APES {
         void drill_run(int dc, float freq);
         void drill_stop();
         void drill_cycle(int dc, int on_period, float freq);
-        void stepper_drive(bool dir, int steps);
+        void stepper_drive(int steps, float freq);
         void stepper_stop();
-        void pump_drive(int dir, int speed, int time);
+        void pump_drive(int dir, int dc);
         void pump_stop();
-        void spring_drive(int dir, int speed, int time);
+        void spring_drive(int dir, int dc);
         void spring_stop();
         void sol_0_open();
         void sol_0_close();

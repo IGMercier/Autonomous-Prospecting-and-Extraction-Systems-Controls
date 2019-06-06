@@ -81,11 +81,11 @@ class Drill {
 
 class Stepper {
     private:
-        int step_pin;
+        int pwm_pin;
         int dir_pin;
     public:
-        Stepper(int step_pin, int dir_pin);
-        void stepper_drive(int dir);
+        Stepper(int pwm_pin, int dir_pin);
+        void stepper_drive(int step, float freq);
         void stepper_stop();
         ~Stepper();
 };
@@ -110,7 +110,7 @@ class Pump : public Motor {
         void pump_stop() {
             Motor::motor_stop();
         }
-        ~Pump();
+        ~Pump() {}
 };
 
 class Solenoid {

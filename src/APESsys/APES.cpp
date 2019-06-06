@@ -63,7 +63,7 @@ int APES::setup() {
     this->wlevel = new WLevel(WLEVEL_BUS, WLEVEL_CHAN_START, WLEVEL_CHAN_END);
     this->stepper = new Stepper(STEPPER_DIR_PIN, STEPPER_STP_PIN);
     this->pump = new Pump(PUMP_DIR_PIN, PUMP_SPEED_PIN);
-    this->spring = new Motor();
+    //this->spring = new Motor();
 
     int fd = wiringPiI2CSetup(ENCODER_ADDR);
     this->encoder = new Encoder(fd, 1024); // ppr from datasheet
@@ -275,8 +275,26 @@ void APES::relay_1_off() {
     }
 }
 
-void APES::stepper_drive(bool dir, int steps) {
+void APES::stepper_drive(int steps, float freq) {
     if (this->stepper != nullptr) {
+	    dataPt *prev = read_encoder();
+
+        this->stepper->stepper_drive(steps, freq);
+
+        dataPt *curr = read_encoder();
+
+        dataPt *diffPt = new dataPt;
+        diffPt->time = curr->time;
+        diffPt->sensor = ENCODER_DIFF;
+
+        int diff = (int)(curr->dataField.dataUI - prev->dataField.dataUI);
+        diffPt->dataField.dataI = diff;
+        
+        std::unique_lock<std::mutex> datalock(*(this->data_mtx));
+        saveData(diffPt);
+        datalock.unlock();
+
+        /*
 	    std::chrono::time_point<std::chrono::high_resolution_clock> time;
 
 	    int steps_time = steps * STEP_STEPS_TO_MS;
@@ -293,7 +311,7 @@ void APES::stepper_drive(bool dir, int steps) {
         int actual = (int)(current->dataField.dataUI - previous->dataField.dataUI);
 	
 	    dataPt *data = new dataPt;
-        data->time = std::chrono::high_resolution_clock::now().count();
+        data->time = std::chrono::high_resolution_clock::now().time_since_epoch().count();
         data->sensor = ENCODER_DIFF;
         data->dataField.dataI = actual;
         
@@ -301,6 +319,7 @@ void APES::stepper_drive(bool dir, int steps) {
 
         saveData(data);
         datalock.unlock();
+        */
     }
 }
 
@@ -310,9 +329,9 @@ void APES::stepper_stop() {
     }
 }
 
-void APES::pump_drive(int dir, int speed, int time) {
+void APES::pump_drive(int dir, int dc) {
     if (this->pump != nullptr) {
-        this->pump->pump_drive(dir, speed, time);
+        this->pump->pump_drive(dir, dc);
     }
 }
 
@@ -322,15 +341,15 @@ void APES::pump_stop() {
     }
 }
 
-void APES::spring_drive(int dir, int speed, int time) {
+void APES::spring_drive(int dir, int dc) {
     if (this->spring != nullptr) {
-        this->spring->motor_drive(dir, speed, time);
+        //this->spring->motor_drive(dir, speed, time);
     }
 }
 
 void APES::spring_stop() {
     if (this->spring != nullptr) {
-        this->spring->motor_stop();
+        //this->spring->motor_stop();
     }
 }
 
@@ -341,7 +360,7 @@ void APES::standby() {
     pump_stop();
     heater_0_off();
     heater_1_off();
-    spring_stop;
+    spring_stop();
     sol_0_close();
     sol_1_close();
     relay_0_off();
@@ -358,11 +377,10 @@ void APES::finish() {
     // the system if you call this func
     std::unique_lock<std::mutex> datalock(*(this->data_mtx));
     writeDataVector();
-    for (unsigned int  = 0; i < this->dataVector.size(); i++) {
+    for (unsigned int i = 0; i < this->dataVector.size(); i++) {
         delete this->dataVector.at(i);
     }
     this->dataVector.clear();
-    fclose(this->file);
     datalock.unlock();
 
     if (this->therm != nullptr) { delete this->therm; }

@@ -276,17 +276,20 @@ Drill::~Drill() {}
 /*
     STEPPER FUNCTIONS
 */
-Stepper::Stepper(int dir_pin, int step_pin) {
+Stepper::Stepper(int dir_pin, int pwm_pin) {
     this->dir_pin = dir_pin;
-    this->step_pin = step_pin;
+    this->pwm_pin = pwm_pin;
     
     pinMode(this->dir_pin, OUTPUT);
+    pinMode(this->pwm_pin, OUTPUT);
     digitalWrite(this->dir_pin, LOW);
+    digitalWrite(this->pwm_pin, LOW);
 
-    softPwmCreate(this->step_pin, 0, 100);
+    //softPwmCreate(this->pwm_pin, 0, 100);
 }
 
-void Stepper::stepper_drive(int dir) {
+void Stepper::stepper_drive(int steps, float freq) {
+    /*
     float pwmClock = PWM_MAX_FREQ / STEP_HZ / PWM_RANGE;
     pwmSetRange(PWM_RANGE);
     pwmSetClock(pwmClock);
@@ -295,11 +298,28 @@ void Stepper::stepper_drive(int dir) {
     } else {
         digitalWrite(this->dir_pin, HIGH);
     }
-    softPwmWrite(this->step_pin, STEP_DC);
+    softPwmWrite(this->pwm_pin, STEP_DC);
+    */
+    if (steps <= 0) {
+        digitalWrite(this->dir_pin, LOW);
+    } else {
+        digitalWrite(this->dir_pin, HIGH);
+    }
+
+    int steps_left = abs(steps);
+    while (steps_left > 0) {
+        digitalWrite(this->pwm_pin, HIGH);
+        delay(0.5/freq);
+        digitalWrite(this->pwm_pin, LOW);
+        delay(0.5/freq);
+
+        steps_left -= 1;
+    }
 }
 
 void Stepper::stepper_stop() {
-    softPwmWrite(this->step_pin, 0);
+    digitalWrite(this->pwm_pin, LOW);
+    //softPwmWrite(this->pwm_pin, 0);
 }
 
 Stepper::~Stepper() {}

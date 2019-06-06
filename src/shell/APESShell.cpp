@@ -11,11 +11,12 @@
 
 using std::thread;
 
-std::atomic_int stop_therm = {0};
-std::atomic_int stop_amm = {0};
-std::atomic_int stop_wlevel = {0};
-std::atomic_int stop_wob = {0};
-std::atomic_int stop_encoder = {0};
+std::atomic_int sensor_auto = {0};
+            
+constexpr const std::chrono::milliseconds therm_period(50);
+constexpr const std::chrono::milliseconds amm_period(50);
+constexpr const std::chrono::milliseconds wob_period(50);
+constexpr const std::chrono::milliseconds enc_period(50);
 
 APESShell::APESShell(sysArgs *args) {
     assert(args != nullptr);
@@ -25,7 +26,7 @@ APESShell::APESShell(sysArgs *args) {
     assert(args->cmdq != nullptr);
     assert(args->logq != nullptr);
 
-    this->robot = new APES("data.csv", data_mtx);
+    this->robot = new APES("data.csv", args->data_mtx);
     this->cmd_mtx = args->cmd_mtx;
     this->log_mtx = args->log_mtx;
     this->cmdq = args->cmdq;
@@ -217,7 +218,7 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
             ctk->command = STEPPER_DRIVE;
 
             try {
-                rc = std::stoi(ltk->argv[2]); // dir
+                rc = std::stoi(ltk->argv[2]); // steps
             } catch (...) {
                 ctk->command = NONE;
                 return;
@@ -225,20 +226,12 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
             ctk->argv[(ctk->argc)++].dataI = rc;
 
             try {
-                rc = std::stoi(ltk->argv[3]); // speed
+                rc = std::stof(ltk->argv[3]); // freq
             } catch (...) {
                 ctk->command = NONE;
                 return;
             }
-            ctk->argv[(ctk->argc)++].dataI = rc;
-
-            try {
-                rc = std::stoi(ltk->argv[4]); // time  
-            } catch (...) {
-                ctk->command = NONE;
-                return;
-            }
-            ctk->argv[(ctk->argc)++].dataI = rc;
+            ctk->argv[(ctk->argc)++].dataF = rc;
             return;
 
         } else if (ltk->argv[1] == "stop") {
@@ -261,20 +254,13 @@ void APESShell::parsecommand(parse_token *ltk, command_token *ctk) {
             ctk->argv[(ctk->argc)++].dataI = rc;
 
             try {
-                rc = std::stoi(ltk->argv[3]); // speed
+                rc = std::stoi(ltk->argv[3]); // dc
             } catch (...) {
                 ctk->command = NONE;
                 return;
             }
             ctk->argv[(ctk->argc)++].dataI = rc;
 
-            try {
-                rc = std::stoi(ltk->argv[4]); // time  
-            } catch (...) {
-                ctk->command = NONE;
-                return;
-            }
-            ctk->argv[(ctk->argc)++].dataI = rc;
             return;
 
         } else if (ltk->argv[1] == "stop") {
@@ -346,7 +332,7 @@ void APESShell::execute(parse_token *ltk) {
         case START:
             {
                 auto_off();
-                this->robot->setup("data.csv");
+                this->robot->setup();
                 this->robot->standby();
                 msg = "System started!\n";
                 toSend(msg);
@@ -565,11 +551,13 @@ void APESShell::execute(parse_token *ltk) {
 
         case STEPPER_DRIVE:
             {
-                int dir = ctk.argv[0].dataI;
-                int steps = ctk.argv[1].dataI;
-                this->robot->stepper_drive(dir, steps);
-                msg = "System's stepper motor enabled for " + std::to_string(steps) + " steps!\n";
+                int steps = ctk.argv[0].dataI;
+                float freq = ctk.argv[1].dataF;
+                msg = "System's stepper motor enabled for " +
+                      std::to_string(steps) + " steps at " +
+                      std::to_string(freq) + "Hz!\n";
                 toSend(msg);
+                this->robot->stepper_drive(steps, freq);
             }
             break;
 
@@ -584,10 +572,9 @@ void APESShell::execute(parse_token *ltk) {
         case PUMP_DRIVE:
             {
                 int dir = ctk.argv[0].dataI;
-                int speed = ctk.argv[1].dataI;
-                int time = ctk.argv[2].dataI;
-                this->robot->pump_drive(dir, speed, time);
-                msg = "System's pump enabled for " + std::to_string(time) + " us!\n";
+                int dc = ctk.argv[1].dataI;
+                this->robot->pump_drive(dir, dc);
+                msg = "System's pump enabled!\n";
                 toSend(msg);
             }
             break;
@@ -640,16 +627,27 @@ void APESShell::execute(parse_token *ltk) {
 }
 
 void APESShell::auto_on() {
-    stop_therm.store(0);
-    stop_amm.store(0);
-    stop_wlevel.store(0);
-    stop_wob.store(0);
-    stop_encoder.store(0);
     std::string msg;
-    while (1) {
+    if (sensor_auto.load()) {
+        msg = "Sensors already running!";
+        toSend(msg);
+        return;
+    }
 
-        // automated sensor readings
-        if (!stop_therm.load()) {
+    sensor_auto.store(1);
+    msg = "Initiated automatic sensing!";
+    toSend(msg);
+    std::chrono::time_point<std::chrono::high_resolution_clock> now, therm_next, amm_next, wob_next, enc_next;
+
+    therm_next = std::chrono::high_resolution_clock::now();
+    amm_next = std::chrono::high_resolution_clock::now();
+    wob_next = std::chrono::high_resolution_clock::now();
+    enc_next = std::chrono::high_resolution_clock::now();
+    while (sensor_auto.load()) {
+        now = std::chrono::high_resolution_clock::now();
+        
+        if (now > therm_next) { 
+            therm_next = now + therm_period;
             dataPt *data = this->robot->read_temp();
             float temp = data->dataField.dataF;
             long long int time = data->time;
@@ -657,7 +655,8 @@ void APESShell::auto_on() {
             toSend(msg);
         }
         
-        if (!stop_amm.load()) {
+        if (now > amm_next) {
+            amm_next = now + amm_period;
             dataPt *data = this->robot->read_curr();
             float curr = data->dataField.dataF;
             long long int time = data->time;
@@ -665,7 +664,8 @@ void APESShell::auto_on() {
             toSend(msg);
         }
 
-        if (!stop_wob.load()) {
+        if (now > wob_next) {
+            wob_next = now + wob_period;
             dataPt *data = this->robot->read_wob();
             float force = data->dataField.dataF;
             long long int time = data->time;
@@ -673,33 +673,22 @@ void APESShell::auto_on() {
             toSend(msg);
         }
 
-        if (!stop_encoder.load()) {
+        if (now > enc_next) {
+            enc_next = now + enc_period;
             dataPt *data = this->robot->read_encoder();
             unsigned int pulse = data->dataField.dataUI;
             long long int time = data->time;
             msg = "<data>" + std::to_string(time) + ", ENCODER, " + std::to_string(pulse) + "</data>";
             toSend(msg);
         }
-
-        if (stop_therm.load() && stop_amm.load() &&
-            stop_wlevel.load() && stop_wob.load() &&
-            stop_encoder.load()) {
-            return;
-        }
-
-        std::this_thread::sleep_for(
-            std::chrono::milliseconds(SLEEP_INTVL)
-        );
     }
-
 }
 
 void APESShell::auto_off() {
-        stop_therm.store(1);
-        stop_amm.store(1);
-        stop_wlevel.store(1);
-        stop_wob.store(1);
-        stop_encoder.store(1);
+    sensor_auto.store(0);
+    std::string msg;
+    msg = "Stopping automatic sensing!";
+    toSend(msg);
     return;
 }
 
