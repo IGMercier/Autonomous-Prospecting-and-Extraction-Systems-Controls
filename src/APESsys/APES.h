@@ -27,12 +27,12 @@
 #define RELAY_0_PIN         16
 #define RELAY_1_PIN         18
 
-#define THERM_CHAN          1
-#define THERM_BUS           1
-#define AMM_CHAN            2
-#define AMM_BUS             1
+#define THERM_CHAN          7
+#define THERM_BUS           0
+#define AMM_CHAN            6
+#define AMM_BUS             0
 #define WLEVEL_CHAN_START   0    
-#define WLEVEL_CHAN_END     7
+#define WLEVEL_CHAN_END     0
 #define WLEVEL_BUS          0
 #define ENCODER_ADDR        0x26 
 
@@ -112,7 +112,6 @@ class APES {
         void relay_0_off();
         void relay_1_on();
         void relay_1_off();
-        void readData(const char *filename);
         void saveData(dataPt *data);
         void writeDataVector();
         void standby();

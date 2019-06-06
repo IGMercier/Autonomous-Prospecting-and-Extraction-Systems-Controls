@@ -94,6 +94,7 @@ class Motor {
     protected:
         int dir_pin;
         int pwm_pin;
+    public:
         Motor(int dir_pin, int pwm_pin);
         ~Motor();
         void motor_drive(int dir, int dc);

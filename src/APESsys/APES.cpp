@@ -63,6 +63,7 @@ int APES::setup() {
     this->wlevel = new WLevel(WLEVEL_BUS, WLEVEL_CHAN_START, WLEVEL_CHAN_END);
     this->stepper = new Stepper(STEPPER_DIR_PIN, STEPPER_STP_PIN);
     this->pump = new Pump(PUMP_DIR_PIN, PUMP_SPEED_PIN);
+    this->spring = new Motor();
 
     int fd = wiringPiI2CSetup(ENCODER_ADDR);
     this->encoder = new Encoder(fd, 1024); // ppr from datasheet
@@ -277,12 +278,16 @@ void APES::relay_1_off() {
 void APES::stepper_drive(bool dir, int steps) {
     if (this->stepper != nullptr) {
 	    std::chrono::time_point<std::chrono::high_resolution_clock> time;
+
 	    int steps_time = steps * STEP_STEPS_TO_MS;
 	    dataPt *previous = read_encoder();
 	    time = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(steps_time);
+
 	    this->stepper->stepper_drive(dir);
+
 	    while(std::chrono::high_resolution_clock::now() < time);
 	    this->stepper->stepper_stop();
+
 	    dataPt *current = read_encoder();
 
         int actual = (int)(current->dataField.dataUI - previous->dataField.dataUI);
@@ -328,7 +333,6 @@ void APES::spring_stop() {
         this->spring->motor_stop();
     }
 }
-
 
 void APES::standby() {
 
