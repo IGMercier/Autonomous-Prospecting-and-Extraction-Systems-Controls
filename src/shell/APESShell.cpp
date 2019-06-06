@@ -12,11 +12,14 @@
 using std::thread;
 
 std::atomic_int sensor_auto = {0};
-            
+std::atomic_int shutdown_sig = {0};
+        
 constexpr const std::chrono::milliseconds therm_period(50);
 constexpr const std::chrono::milliseconds amm_period(50);
 constexpr const std::chrono::milliseconds wob_period(50);
 constexpr const std::chrono::milliseconds enc_period(50);
+
+static void sigsegv_handler(int sig);
 
 APESShell::APESShell(sysArgs *args) {
     assert(args != nullptr);
@@ -25,6 +28,7 @@ APESShell::APESShell(sysArgs *args) {
     assert(args->data_mtx != nullptr);
     assert(args->cmdq != nullptr);
     assert(args->logq != nullptr);
+    signal(SIGSEGV, sigsegv_handler);
 
     this->robot = new APES("data.csv", args->data_mtx);
     this->cmd_mtx = args->cmd_mtx;
@@ -34,7 +38,7 @@ APESShell::APESShell(sysArgs *args) {
 }
 
 void APESShell::run() {
-    while (1) {
+    while (!shutdown_sig.load()) {
         std::string cmdline;
         std::unique_lock<std::mutex> cmdlock(*(this->cmd_mtx));
         if (!this->cmdq->empty()) {
@@ -45,8 +49,10 @@ void APESShell::run() {
             continue;
         }
         cmdlock.unlock();
-        if (cmdline == shutdown_tag)
+        if (cmdline == shutdown_tag) {
+            shutdown_sig.store(1);
             break;
+        }
 
         evaluate(cmdline);
     }
@@ -362,6 +368,7 @@ void APESShell::execute(parse_token *ltk) {
 
         case QUIT:
             {
+                shutdown_sig.store(1);
                 shutdown();
                 msg = "System shutting down!\n";
                 toSend(msg);
@@ -780,4 +787,8 @@ void APESShell::listCommands() {
     toSend(msg);
 
     return;
+}
+
+static void sigsegv_handler() {
+    shutdown_sig.store(1);
 }
