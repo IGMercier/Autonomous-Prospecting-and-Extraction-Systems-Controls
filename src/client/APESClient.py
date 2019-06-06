@@ -53,7 +53,8 @@ class ConnTab(QDialog):
         self.parent = parent
         self.connected = False
         mainLayout = QVBoxLayout()
-        self.connLog = ConsoleLog(self)
+        self.dataBuf = dict()
+        self.connLog = ConsoleLog(self.dataBuf, self)
         self.writeback.connect(self.connLog.addText)
         self.writeback.emit("Connecting to {}:{}...".format(addr, port), "")
 
@@ -74,10 +75,25 @@ class ConnTab(QDialog):
         self.reconAuto = QCheckBox("Auto", self)
         recon.addWidget(self.reconButton)
         recon.addWidget(self.reconAuto)
+        
+        data = QVBoxLayout()
+        sensorWob = QLabel("WOB: N/A", self)
+        sensorTmp = QLabel("Temp: N/A", self)
+        sensorAmm = QLabel("Ammeter: N/A", self)
+        sensorEnc = QLabel("Encoder: N/A", self)
+        data.addWidget(sensorWob)
+        data.addWidget(sensorTmp)
+        data.addWidget(sensorAmm)
+        data.addWidget(sensorEnc)
+        self.dataBuf["TEMP"] = sensorTmp
+        self.dataBuf["CURR"] = sensorAmm
+        self.dataBuf["WOB"] = sensorWob
+        self.dataBuf["ENCODER"] = sensorEnc
 
         mainLayout.addWidget(self.connLog)
         mainLayout.addLayout(submit)
         mainLayout.addLayout(recon)
+        mainLayout.addLayout(data)
         self.setLayout(mainLayout)
 
         self.onlineSignal.connect(self.setOnline)
@@ -132,12 +148,13 @@ class commandLine(QLineEdit):
             super().keyPressEvent(event)
 
 class ConsoleLog(QTextEdit):
-    def __init__(self, parent=None):
+    def __init__(self, dataBuf, parent=None):
         super().__init__(parent)
         self.setReadOnly(True)
         self.setWordWrapMode(QTextOption.NoWrap)
         self.writeMutex = threading.Lock()
         self.data = []
+        self.dataBuf = dataBuf
         self.log = False
         self.file = None
         self.fileData = None
@@ -193,7 +210,9 @@ class ConsoleLog(QTextEdit):
                 self.fileData.write(data)
                 self.fileDataAll.write(data)
                 dataRaw = data.split(", ")
-
+                if dataRaw[1] in self.dataBuf:
+                    currTime = time.localTime(int(dataRaw[0])).strftime("%H:%M:%S")
+                    self.dataBuf[dataRaw[1]].setText("{}: {} ({})".format(dataRaw[1], dataRaw[2], currTime))
                 text = "DATA from {} at {}: {}".format(data[1], data[0], data[2])
                 color = "#0000ff"
             else:
