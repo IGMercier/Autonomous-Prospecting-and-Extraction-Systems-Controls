@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <error.h>
 #include "APES.h"
-//#include "libraries/pybind11/include/pybind11/embed.h"
 
 #define STEP_STEPS_TO_MS 1     // 1000 Hz
 
@@ -43,13 +42,18 @@ APES::APES(char *filename, std::mutex *data_mtx) {
     this->pump = nullptr;
     this->spring = nullptr;
 
-    // starts python interpreter
-    py::initialize_interpreter();
+    wiringPiSPISetup(0, 500000); // for adc
+    wiringPiSPISetup(1, 500000); // for adc (level)
+    wiringPiSetupPhys();
+    pwmSetMode(PWM_MODE_MS);
 }
 
 
 /* object methods */
 int APES::setup() {
+    // starts python interpreter
+    py::initialize_interpreter();
+
     this->sol_0 = new Solenoid(SOLENOID_0_PIN);
     this->sol_1 = new Solenoid(SOLENOID_1_PIN);
     this->heater_0 = new DCHeater(DC_HEATER_0_PIN);
@@ -68,10 +72,6 @@ int APES::setup() {
     int fd = wiringPiI2CSetup(ENCODER_ADDR);
     this->encoder = new Encoder(fd, 1024); // ppr from datasheet
     
-    wiringPiSPISetup(0, 500000); // for adc
-    wiringPiSPISetup(1, 500000); // for adc (level)
-    wiringPiSetupPhys();
-    pwmSetMode(PWM_MODE_MS);
     return 0;
 }
 

@@ -165,7 +165,7 @@ WLevel::~WLevel() {}
 Wob::Wob(int pinA, int pinB) {
     // this assumes the pybind interpreter has been initialized
     // in  APES::setup()!
-    py::object hx711 = py::module::import(".libraries.hx711py.hx711").attr("HX711");
+    py::object hx711 = py::module::import("libraries.hx711py.hx711").attr("HX711");
     assert(hx711 != NULL);
 
     this->HX711 = hx711(pinA, pinB);

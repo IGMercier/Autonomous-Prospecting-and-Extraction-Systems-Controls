@@ -18,9 +18,11 @@
 
 static std::string delim = "\r\n";
 static std::atomic_int shutdown_sig = {0};
+static void sigint_handler(int sig);
 
 APESServer::APESServer(sysArgs *args) {
     signal(SIGPIPE, SIG_IGN);
+    signal(SIGINT, sigint_handler);
     assert(args != nullptr);
     assert(args->cmd_mtx != nullptr);
     assert(args->log_mtx != nullptr);
@@ -169,3 +171,6 @@ void APESServer::shutdown() {
 APESServer::~APESServer() {
 }
 
+static void sigint_handler(int sig) {
+    exit(0);
+}

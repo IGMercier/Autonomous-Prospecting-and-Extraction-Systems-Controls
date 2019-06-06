@@ -1,14 +1,11 @@
 #ifndef _COMPONENTS_H_
 #define _COMPONENTS_H_
 
-#include "../libraries/pybind11/include/pybind11/embed.h"
+#include "libraries/pybind11/include/pybind11/embed.h"
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
 #include <wiringPiI2C.h>
 #include <softPwm.h>
-
-#include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
 
 #define PWM_RANGE 200
 #define PWM_MAX_FREQ 19.2e6
