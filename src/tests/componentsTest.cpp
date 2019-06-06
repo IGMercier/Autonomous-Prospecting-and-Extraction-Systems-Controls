@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 
     delete pump;
     */
-
+/*
     py::initialize_interpreter();
 
     Wob *wob = new Wob(22, 12);
@@ -65,7 +65,18 @@ int main(int argc, char **argv) {
     delete wob;
     
     py::finalize_interpreter();
+*/
+    int fd = wiringPiI2CSetup(0x26);
+    Encoder *enc = new Encoder(fd, 1024)
+    unsigned int prev = enc->getPulse();
 
+    Stepper *motor = new Stepper(35, 36);
+    motor->stepper_drive(250, 6000);
+    
+    unsigned int curr = enc->getPulse();
+    
+    printf("%u, %u, %u", prev, curr, curr-prev);
+    motor->stepper_drive(-250, 6000);
     /*
     Relay *relay = new Relay(16);
     relay->turnOn();
